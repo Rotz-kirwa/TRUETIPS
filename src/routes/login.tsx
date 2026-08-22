@@ -108,13 +108,13 @@ function LoginPage() {
             <p className="mt-1.5 text-sm text-white/50">Sign in to continue to your dashboard</p>
           </div>
 
-          <form onSubmit={submit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-4" suppressHydrationWarning>
             {/* Email field */}
-            <div className="group">
+            <div className="group" suppressHydrationWarning>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="email">
                 Email
               </label>
-              <div className="relative">
+              <div className="relative" suppressHydrationWarning>
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
                 <input
                   id="email"
@@ -126,6 +126,7 @@ function LoginPage() {
                   placeholder="you@example.com"
                   className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  suppressHydrationWarning
                   onFocus={(e) => {
                     e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.09)";
@@ -141,12 +142,12 @@ function LoginPage() {
             </div>
 
             {/* Password field */}
-            <div className="group">
+            <div className="group" suppressHydrationWarning>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="password">
                 Password
               </label>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
+              <div className="flex items-center gap-2" suppressHydrationWarning>
+                <div className="relative flex-1" suppressHydrationWarning>
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
                   <input
                     id="password"
@@ -158,6 +159,7 @@ function LoginPage() {
                     placeholder="••••••••"
                     className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
                     style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                    suppressHydrationWarning
                     onFocus={(e) => {
                       e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
                       e.currentTarget.style.background = "rgba(255,255,255,0.09)";
