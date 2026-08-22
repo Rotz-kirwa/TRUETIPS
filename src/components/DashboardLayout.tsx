@@ -11,6 +11,7 @@ import {
   X,
   Bot,
   Bug,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -18,8 +19,9 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/payments", label: "Payments", icon: CreditCard },
+  { to: "/predictions", label: "Predictions", icon: Trophy },
+  { to: "/sms-automation", label: "SMS Rules", icon: Bot },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/sms-automation", label: "Prediction Console", icon: Bot },
   { to: "/settings", label: "Settings", icon: Settings },
   { to: "/debug", label: "System Debug", icon: Bug },
 ] as const;

@@ -1,53 +1,71 @@
-# 💳 Paylix — M-Pesa Payment Dashboard & SMS Automation Engine
+# 🏆 Paylix — Sports Prediction Console & M-Pesa SMS Automation Platform
 
-Paylix (also known as Paykit) is a production-ready, full-stack payment management platform built for modern Kenyan businesses. It provides real-time M-Pesa collection tracking, automated C2B Buy Goods/Till reconciliation, STK Push initiation, and an automated customer SMS receipt engine with multi-provider support.
-
----
-
-## 🌟 Key Features
-
-* **⚡ Real-Time Payment Dashboard**: Live polling (every 10s) with key financial metrics (Today, Yesterday, Week, Month, Year, and Total Revenue).
-* **📊 Analytics & Visualizations**: Interactive revenue trends (Hourly, 7-Day, 30-Day, Yearly) and transaction status distributions powered by Recharts.
-* **📱 M-Pesa Integration (Safaricom Daraja API)**:
-  * **STK Push (LIPA NA M-PESA Online)**: Trigger STK push payment prompts directly to customer mobile numbers.
-  * **C2B Callbacks**: Webhook confirmation (`/api/payments/c2b/confirmation`) & validation endpoints for automatic Paybill & Buy Goods Till collection.
-  * **Status Reconciliation**: Automatic status verification (`/mpesa/stkpushquery/v1/query`) for pending transactions.
-* **💬 Automated SMS Receipts & Marketing**:
-  * **Range-Based Rules**: Define payment amount brackets with customized message templates.
-  * **Dynamic Placeholders**: `{customer_name}`, `{phone}`, `{amount}`, `{transaction_code}`, `{date}`, `{business_name}`.
-  * **Multi-Provider Dispatch**: Integrated with Onfon Media, Africa's Talking, Safaricom Daraja SMS, and custom HTTP providers.
-  * **Hashed MSISDN Support**: Special handling for 64-character SHA-256 hex hashes sent in C2B callbacks to ensure intact delivery via Onfon/Safaricom.
-* **🛠️ Developer Debug Tools**: Built-in C2B transaction simulator, diagnostic endpoints, and webhook audit log views.
+**Paylix** is an enterprise-grade, full-stack Sports Prediction Management System and automated M-Pesa SMS dispatch engine. Engineered for sports analytics platforms, tipster services, and subscription-based betting consoles, Paylix provides seamless prediction distribution, jackpot fixture management, instant payment reconciliation via Safaricom Daraja API, and dynamic automated SMS delivery to subscribers.
 
 ---
 
-## 🛠️ Technology Stack
+## 🌟 Key Modules & Feature Highlights
 
-* **Frontend & Full-Stack SSR**: React 19, TypeScript, TanStack Start (`@tanstack/react-start`), TanStack Router
-* **Build System**: Vite 7 with custom dev-server M-Pesa webhook middleware
-* **Styling**: Tailwind CSS v4, custom glassmorphic dark design system, Lucide React icons, Radix UI primitives
-* **Database & ORM**: PostgreSQL via Drizzle ORM (`drizzle-orm`)
-* **Auth & Security**: JWT session cookies (`jose`), `bcryptjs` password hashing
+### ⚽ 1. Sports Prediction Console
+* **Multi-Sport Management**: Full support for Football & Basketball match predictions with configurable odds, confidence scores, and league tagging.
+* **Tiered Access Control**: Organize predictions by access tier (*Gold*, *Silver*, *Platinum*) and publishing status (*Published*, *Draft*).
+* **Settlement Engine**: Real-time match outcome updates (Won, Lost, Void, Pending) with automatic record updates.
+* **Persistent Data System**: Hardened non-volatile prediction engine — user-defined predictions remain permanent and are never overwritten by background re-seeding.
+
+### 🏆 2. Jackpot Management System
+* **Custom Jackpot Fixtures**: Complete management of Mega Jackpots, Midweek Jackpots, and daily jackpot pools.
+* **Interactive Fixtures Order**: Order matches sequentially with home team, away team, predicted result, and scorelines.
+* **Live Status Tracking**: Toggle jackpot states (*OPEN*, *CLOSED*, *SETTLED*) with real-time total odds calculation.
+
+### 💬 3. M-Pesa Automated SMS Dispatch Engine
+* **Rule-Based Tier Automation**: Automatically matches customer payment amounts to specific prediction package rules (e.g., Daily Football ⚽, Jackpot Matches 🏆, Basketball Picks 🏀, Weekly & Monthly Subscriptions).
+* **Dual Editor Modes**:
+  * **Table Builder**: Interactive match fixture grid supporting team home/away entries, pick selection, inline row additions, and quick deletion.
+  * **Raw Text Editor**: Monospaced text input with live character counter, tag insertions (`{customer_name}`, `{phone}`, `{amount}`, `{transaction_code}`), and formatting tools.
+* **Smart Match Parser**: Automatic detection and auto-splitting of bulk-pasted text into structured match fixture rows.
+* **Clean Starter Templates**: Decoupled from hardcoded boilerplate fixtures — package rules preserve exact user edits with zero unwanted sample re-injections.
+
+### 💳 4. Safaricom Daraja M-Pesa Payment Integration
+* **STK Push (Lipa Na M-Pesa Online)**: Direct mobile payment initiation with instant push notification prompts.
+* **C2B Buy Goods & Paybill Reconciler**: Webhook listeners (`/api/payments/c2b/confirmation` and validation) for automated instant payment capture.
+* **Financial Metrics Dashboard**: Real-time transaction metrics tracking daily, weekly, monthly, and lifetime revenue.
+
+### 📊 5. Customer & Subscriber Analytics
+* **Subscriber Intelligence**: Detailed view of registered customer phones, total expenditure, tier breakdown, and payment history.
+* **Audit & Dispatch Logs**: Complete visibility into incoming payment callbacks and outgoing SMS delivery statuses.
 
 ---
 
-## ⚙️ Environment Variables
+## 🛠️ Tech Stack & Architecture
 
-Create a `.env` file in the project root with the following variables:
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | React 19, TanStack Start (`@tanstack/react-start`), TanStack Router |
+| **Language & Tooling** | TypeScript, Vite 7 |
+| **Styling & UI** | Tailwind CSS v4, Glassmorphic UI System, Lucide React Icons, Radix UI |
+| **Database & ORM** | PostgreSQL, Drizzle ORM (`drizzle-orm`, `postgres`) |
+| **Notifications** | Sonner Toast System |
+| **Authentication** | JWT HTTP-Only Cookies (`jose`), `bcryptjs` Hashing |
+
+---
+
+## ⚙️ Environment Configuration
+
+Create a `.env` file in the root directory:
 
 ```env
 # Database & Auth
-DATABASE_URL="postgres://user:password@localhost:5432/paylix"
-JWT_SECRET="your-secure-jwt-secret-key"
+DATABASE_URL="postgres://postgres@127.0.0.1:5432/paylix"
+JWT_SECRET="paylix-super-secret-jwt-key-2026-secure"
 
 # M-Pesa Daraja Configuration
 MPESA_ENVIRONMENT="sandbox" # "sandbox" or "production"
 MPESA_CONSUMER_KEY="your_consumer_key"
 MPESA_CONSUMER_SECRET="your_consumer_secret"
 MPESA_PASSKEY="your_passkey"
-MPESA_SHORTCODE="6270336"
-MPESA_TILL_NUMBER="895858"
-MPESA_CALLBACK_URL="https://your-public-domain.com"
+MPESA_SHORTCODE="174379"
+MPESA_TILL_NUMBER="174379"
+MPESA_CALLBACK_URL="http://localhost:8080"
 
 # SMS Provider Configuration
 SMS_PROVIDER="onfon" # "onfon" | "africastalking" | "safaricom" | "custom"
@@ -58,41 +76,53 @@ ONFON_SENDER_ID="STAR_CODE"
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start Guide
 
 ### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Run Database Migrations
+### 2. Initialize Paylix PostgreSQL Database
+Execute the database initialization script to provision schemas, create default package tiers, and set initialization flags:
 ```bash
-npx drizzle-kit push
+node scratch/init-paylix-db.js
 ```
 
-### 3. Start Development Server with Tunnel & Auto C2B Registration
-The included `start.sh` script launches the Vite dev server on port 8080, establishes an Ngrok HTTPS tunnel, updates `.env`, and registers your C2B URLs automatically with Safaricom Daraja:
-
-```bash
-bash start.sh
-```
-
-Alternatively, run Vite directly:
+### 3. Start Development Server
+Launch the development environment:
 ```bash
 npm run dev
 ```
+Access the application at `http://localhost:8080`.
+
+### 4. Build for Production
+Validate code integrity and generate the optimized build:
+```bash
+npm run build
+```
 
 ---
 
-## 📦 Production Deployment
+## 📋 Database Maintenance Utilities
 
-Paylix includes built-in adapters for multiple deployment targets:
+The project includes utility scripts inside the `scratch/` directory for database administration:
 
-* **Standalone Node Server / Render**: `node api/render-server.js` (serves static assets from `dist/client` and delegates SSR/API requests).
-* **Vercel Serverless**: Configured via `vercel.json` and `api/server.js` adapter.
+* **Initialize Database**: `node scratch/init-paylix-db.js` — Sets up all tables and clean package tiers.
+* **Clear Predictions Slate**: `node scratch/clear-predictions.js` — Purges active predictions and jackpots while retaining seeded settings.
+* **Clean Package Rule Templates**: `node scratch/clean-rule-templates.js` — Cleans sample match fixtures from all SMS package rules.
 
 ---
 
-## 📝 License
+## 🛡️ Production Deployment
 
-Private & Confidential — Mobosoft Enterprise HQ.
+Paylix supports flexible production execution models:
+
+* **Node.js Production Server**: `node api/render-server.js` (Serves static client assets while delegating server RPCs and API webhooks).
+* **Serverless Deployment**: Ready for Vercel / Render deployment via `api/server.js`.
+
+---
+
+## 📄 License
+
+Private & Confidential — **Paylix HQ**. All Rights Reserved.

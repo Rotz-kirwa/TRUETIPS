@@ -109,14 +109,10 @@ const deleteJackpotFn = createServerFn({ method: "POST" })
 
 // ─── Route Definition ─────────────────────────────────────────────────────────
 
-import { redirect } from "@tanstack/react-router";
-
 export const Route = createFileRoute("/_app/predictions")({
-  beforeLoad: () => {
-    throw redirect({ to: "/sms-automation" });
-  },
+  head: () => ({ meta: [{ title: "Predictions — Paylix Admin" }] }),
   loader: () => fetchPredictionsDataFn(),
-  component: () => null,
+  component: PredictionsPage,
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────

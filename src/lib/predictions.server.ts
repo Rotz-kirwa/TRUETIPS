@@ -1,6 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "./db/client";
-import { jackpots, jackpotMatches, predictions, type Prediction, type Jackpot, type JackpotMatch } from "./db/schema";
+import { jackpots, jackpotMatches, predictions, appSettings, type Prediction, type Jackpot, type JackpotMatch } from "./db/schema";
 
 export type PredictionInput = {
   sport?: "football" | "basketball";
@@ -41,6 +41,12 @@ export async function ensurePredictionTables() {
   if (tablesChecked) return;
   try {
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS predictions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         sport TEXT NOT NULL DEFAULT 'football',
@@ -96,145 +102,165 @@ export async function seedDefaultPredictions() {
   await ensurePredictionTables();
 
   try {
-    const existingPreds = await db.select({ id: predictions.id }).from(predictions).limit(1);
-    if (existingPreds.length === 0) {
-      await db.insert(predictions).values([
-        {
-          sport: "football",
-          league: "English Premier League",
-          team1: "Arsenal",
-          team2: "Everton",
-          prediction: "Team 1 Win (1)",
-          odds: "1.75",
-          predictionType: "Gold",
-          confidence: 88,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "English Premier League",
-          team1: "Chelsea",
-          team2: "West Ham",
-          prediction: "Over 2.5 Goals",
-          odds: "1.85",
-          predictionType: "Gold",
-          confidence: 85,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "La Liga",
-          team1: "Real Madrid",
-          team2: "Sevilla",
-          prediction: "Team 1 Win (1)",
-          odds: "1.65",
-          predictionType: "Platinum",
-          confidence: 92,
-          score1: 2,
-          score2: 1,
-          actualResult: "2 - 1",
-          status: "won",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "La Liga",
-          team1: "Barcelona",
-          team2: "Real Betis",
-          prediction: "Both Teams To Score (GG)",
-          odds: "1.78",
-          predictionType: "Platinum",
-          confidence: 86,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "UEFA Champions League",
-          team1: "Inter Milan",
-          team2: "Lazio",
-          prediction: "1X & Over 1.5",
-          odds: "1.95",
-          predictionType: "Sapphire",
-          confidence: 90,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "English Premier League",
-          team1: "Liverpool",
-          team2: "Manchester United",
-          prediction: "Team 1 Win & GG",
-          odds: "2.35",
-          predictionType: "Ruby",
-          confidence: 84,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "football",
-          league: "UEFA Champions League",
-          team1: "Manchester City",
-          team2: "Bayern Munich",
-          prediction: "Over 3.5 Goals",
-          odds: "2.60",
-          predictionType: "Emerald",
-          confidence: 82,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "basketball",
-          league: "NBA",
-          team1: "Boston Celtics",
-          team2: "LA Lakers",
-          prediction: "Boston Celtics -5.5",
-          odds: "1.90",
-          predictionType: "Gold",
-          confidence: 87,
-          status: "pending",
-          isPublished: true,
-        },
-        {
-          sport: "basketball",
-          league: "NBA",
-          team1: "Golden State Warriors",
-          team2: "Phoenix Suns",
-          prediction: "Over 224.5 Points",
-          odds: "1.85",
-          predictionType: "Platinum",
-          confidence: 89,
-          status: "pending",
-          isPublished: true,
-        },
-      ]);
-    }
+    // Only seed predictions ONCE if the system setting has not been marked as seeded
+    const [predSeeded] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, "predictions_seeded"))
+      .limit(1);
 
-    const existingJackpots = await db.select({ id: jackpots.id }).from(jackpots).limit(1);
-    if (existingJackpots.length === 0) {
-      const [newJackpot] = await db
-        .insert(jackpots)
-        .values({
-          jackpotCode: "JA-001",
-          title: "ODDSARENA 5-GAME MEGA JACKPOT",
-          totalOdds: "14.85",
-          status: "OPEN",
-          isPublished: true,
-        })
-        .returning();
-
-      if (newJackpot) {
-        await db.insert(jackpotMatches).values([
-          { jackpotId: newJackpot.id, matchOrder: 1, team1: "Arsenal", team2: "Everton", prediction: "1" },
-          { jackpotId: newJackpot.id, matchOrder: 2, team1: "Chelsea", team2: "West Ham", prediction: "X" },
-          { jackpotId: newJackpot.id, matchOrder: 3, team1: "Real Madrid", team2: "Sevilla", prediction: "1" },
-          { jackpotId: newJackpot.id, matchOrder: 4, team1: "Barcelona", team2: "Real Betis", prediction: "2" },
-          { jackpotId: newJackpot.id, matchOrder: 5, team1: "Inter Milan", team2: "Lazio", prediction: "1" },
+    if (!predSeeded) {
+      const existingPreds = await db.select({ id: predictions.id }).from(predictions).limit(1);
+      if (existingPreds.length === 0) {
+        await db.insert(predictions).values([
+          {
+            sport: "football",
+            league: "English Premier League",
+            team1: "Arsenal",
+            team2: "Everton",
+            prediction: "Team 1 Win (1)",
+            odds: "1.75",
+            predictionType: "Gold",
+            confidence: 88,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "English Premier League",
+            team1: "Chelsea",
+            team2: "West Ham",
+            prediction: "Over 2.5 Goals",
+            odds: "1.85",
+            predictionType: "Gold",
+            confidence: 85,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "La Liga",
+            team1: "Real Madrid",
+            team2: "Sevilla",
+            prediction: "Team 1 Win (1)",
+            odds: "1.65",
+            predictionType: "Platinum",
+            confidence: 92,
+            score1: 2,
+            score2: 1,
+            actualResult: "2 - 1",
+            status: "won",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "La Liga",
+            team1: "Barcelona",
+            team2: "Real Betis",
+            prediction: "Both Teams To Score (GG)",
+            odds: "1.78",
+            predictionType: "Platinum",
+            confidence: 86,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "UEFA Champions League",
+            team1: "Inter Milan",
+            team2: "Lazio",
+            prediction: "1X & Over 1.5",
+            odds: "1.95",
+            predictionType: "Sapphire",
+            confidence: 90,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "English Premier League",
+            team1: "Liverpool",
+            team2: "Manchester United",
+            prediction: "Team 1 Win & GG",
+            odds: "2.35",
+            predictionType: "Ruby",
+            confidence: 84,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "football",
+            league: "UEFA Champions League",
+            team1: "Manchester City",
+            team2: "Bayern Munich",
+            prediction: "Over 3.5 Goals",
+            odds: "2.60",
+            predictionType: "Emerald",
+            confidence: 82,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "basketball",
+            league: "NBA",
+            team1: "Boston Celtics",
+            team2: "LA Lakers",
+            prediction: "Boston Celtics -5.5",
+            odds: "1.90",
+            predictionType: "Gold",
+            confidence: 87,
+            status: "pending",
+            isPublished: true,
+          },
+          {
+            sport: "basketball",
+            league: "NBA",
+            team1: "Golden State Warriors",
+            team2: "Phoenix Suns",
+            prediction: "Over 224.5 Points",
+            odds: "1.85",
+            predictionType: "Platinum",
+            confidence: 89,
+            status: "pending",
+            isPublished: true,
+          },
         ]);
       }
+      await db.insert(appSettings).values({ key: "predictions_seeded", value: "true" }).onConflictDoNothing();
+    }
+
+    // Only seed jackpots ONCE if system setting has not been marked as seeded
+    const [jpSeeded] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, "jackpots_seeded"))
+      .limit(1);
+
+    if (!jpSeeded) {
+      const existingJackpots = await db.select({ id: jackpots.id }).from(jackpots).limit(1);
+      if (existingJackpots.length === 0) {
+        const [newJackpot] = await db
+          .insert(jackpots)
+          .values({
+            jackpotCode: "JA-001",
+            title: "ODDSARENA 5-GAME MEGA JACKPOT",
+            totalOdds: "14.85",
+            status: "OPEN",
+            isPublished: true,
+          })
+          .returning();
+
+        if (newJackpot) {
+          await db.insert(jackpotMatches).values([
+            { jackpotId: newJackpot.id, matchOrder: 1, team1: "Arsenal", team2: "Everton", prediction: "1" },
+            { jackpotId: newJackpot.id, matchOrder: 2, team1: "Chelsea", team2: "West Ham", prediction: "X" },
+            { jackpotId: newJackpot.id, matchOrder: 3, team1: "Real Madrid", team2: "Sevilla", prediction: "1" },
+            { jackpotId: newJackpot.id, matchOrder: 4, team1: "Barcelona", team2: "Real Betis", prediction: "2" },
+            { jackpotId: newJackpot.id, matchOrder: 5, team1: "Inter Milan", team2: "Lazio", prediction: "1" },
+          ]);
+        }
+      }
+      await db.insert(appSettings).values({ key: "jackpots_seeded", value: "true" }).onConflictDoNothing();
     }
   } catch (err) {
     console.error("Error seeding default predictions:", err);

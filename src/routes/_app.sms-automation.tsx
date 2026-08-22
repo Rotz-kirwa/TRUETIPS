@@ -140,9 +140,9 @@ const TIER_PRESETS = [
     icon: "⚽",
     badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
     description: "Short-term daily football predictions",
-    matches: "10 Matches",
+    matches: "0 Matches",
     validity: "24 Hours",
-    template: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\n🏆 Play Smart, Win Big`,
+    template: `DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Jackpot Matches 🏆",
@@ -150,9 +150,9 @@ const TIER_PRESETS = [
     icon: "🏆",
     badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
     description: "Complete jackpot predictions list",
-    matches: "15 Fixtures",
+    matches: "0 Fixtures",
     validity: "Jackpot Access",
-    template: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\n🏆 Play Smart, Win Big`,
+    template: `JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Basket Matches 🏀",
@@ -160,9 +160,9 @@ const TIER_PRESETS = [
     icon: "🏀",
     badgeBg: "bg-orange-500/10 text-orange-400 border-orange-500/30",
     description: "Daily basketball predictions and picks",
-    matches: "8 Matches",
+    matches: "0 Matches",
     validity: "24 Hours",
-    template: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\n🏆 Play Smart, Win Big`,
+    template: `BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Weekly Subscription 📅",
@@ -172,7 +172,7 @@ const TIER_PRESETS = [
     description: "Full access to predictions for 7 days",
     matches: "All Access",
     validity: "7 Days",
-    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Monthly Subscription 📆",
@@ -182,7 +182,7 @@ const TIER_PRESETS = [
     description: "Complete premium access for 30 days",
     matches: "All Access + Updates",
     validity: "30 Days",
-    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
   },
 ];
 
@@ -367,11 +367,7 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
   if (!rawTemplate || !rawTemplate.trim()) {
     return {
       header: fallbackTitle,
-      matches: [
-        { id: "m1", team1: "Arsenal", team2: "Everton", pick: "1" },
-        { id: "m2", team1: "Chelsea", team2: "West Ham", pick: "Over 2.5" },
-        { id: "m3", team1: "Man City", team2: "Fulham", pick: "1X" },
-      ],
+      matches: [],
       footer: "🏆 Play Smart, Win Big",
     };
   }
@@ -403,14 +399,6 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
   }
 
   const matches = parseBulkMatchesText(matchLines.join("\n"));
-
-  if (matches.length === 0) {
-    matches.push(
-      { id: "m1", team1: "Arsenal", team2: "Everton", pick: "1" },
-      { id: "m2", team1: "Chelsea", team2: "West Ham", pick: "Over 2.5" },
-      { id: "m3", team1: "Man City", team2: "Fulham", pick: "1X" },
-    );
-  }
 
   const rawFooter = footerLines.join("\n");
   const cleanedFooter = rawFooter
@@ -470,7 +458,7 @@ function RuleModal({
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
       initialPreset?.template ??
-      "DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\n🏆 Play Smart, Win Big",
+      "DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big",
   );
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
@@ -556,13 +544,7 @@ function RuleModal({
     }
 
     setMatchRows((prev) => {
-      const isPlaceholderOnly =
-        prev.length === 3 &&
-        prev[0].team1 === "Arsenal" &&
-        prev[0].team2 === "Everton" &&
-        prev[1].team1 === "Chelsea";
-
-      const updated = isPlaceholderOnly ? parsed : [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
+      const updated = [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
       updateTemplateFromTable(headerText, updated, footerText);
       return updated;
     });
@@ -580,13 +562,7 @@ function RuleModal({
       const parsed = parseBulkMatchesText(text);
       if (parsed.length > 0) {
         setMatchRows((prev) => {
-          const isPlaceholderOnly =
-            prev.length === 3 &&
-            prev[0].team1 === "Arsenal" &&
-            prev[0].team2 === "Everton" &&
-            prev[1].team1 === "Chelsea";
-
-          const updated = isPlaceholderOnly ? parsed : [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
+          const updated = [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
           updateTemplateFromTable(headerText, updated, footerText);
           return updated;
         });
