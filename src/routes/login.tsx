@@ -39,11 +39,11 @@ function LoginPage() {
 
   return (
     <div
-      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-slate-950"
+      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-black"
       style={{
         backgroundImage: "url('/images/ronaldo-messi-bg.jpg')",
         backgroundSize: "cover",
-        backgroundPosition: "center 25%",
+        backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
       }}
     >
@@ -60,22 +60,16 @@ function LoginPage() {
         }
       `}</style>
 
-      {/* Dark cinematic stadium overlays for high contrast and readability */}
+      {/* Subtle top/bottom vignette to enhance depth while preserving Ronaldo and Messi visibility */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
+
+      {/* Subdued dark glow behind the central login card for high text contrast */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none flex items-center justify-center"
         style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(6, 10, 20, 0.55) 0%, rgba(4, 7, 14, 0.82) 65%, rgba(2, 4, 8, 0.95) 100%)",
+          background: "radial-gradient(circle at center, rgba(5, 8, 18, 0.75) 0%, rgba(5, 8, 18, 0.40) 35%, transparent 70%)",
         }}
       />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to right, rgba(2, 4, 8, 0.60) 0%, rgba(2, 4, 8, 0.85) 50%, rgba(2, 4, 8, 0.60) 100%)",
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/85 pointer-events-none" />
 
       {/* Animated card wrapper */}
       <div
