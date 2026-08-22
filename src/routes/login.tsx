@@ -2,8 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { ronaldoMessiBg } from "@/assets/bg";
-import { ronaldoImg, messiImg } from "@/assets/players";
+import { trophyBg } from "@/assets/bg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -41,9 +40,9 @@ function LoginPage() {
 
   return (
     <div
-      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-emerald-950"
+      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-black"
       style={{
-        backgroundImage: `url(${ronaldoMessiBg})`,
+        backgroundImage: `url(${trophyBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
@@ -63,51 +62,15 @@ function LoginPage() {
       `}</style>
 
       {/* Subtle top/bottom vignette to enhance depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none" />
 
       {/* Subdued dark glow behind the central login card for high text contrast */}
       <div
         className="absolute inset-0 pointer-events-none flex items-center justify-center"
         style={{
-          background: "radial-gradient(circle at center, rgba(5, 8, 18, 0.75) 0%, rgba(5, 8, 18, 0.40) 35%, transparent 70%)",
+          background: "radial-gradient(circle at center, rgba(5, 8, 18, 0.70) 0%, rgba(5, 8, 18, 0.35) 40%, transparent 75%)",
         }}
       />
-
-      {/* Cristiano Ronaldo Hero Card on Left */}
-      <div className="hidden lg:flex fixed left-8 bottom-0 z-10 flex-col items-center pointer-events-none transition-all duration-700"
-        style={{ opacity: mounted ? 0.95 : 0, transform: mounted ? "translateY(0)" : "translateY(40px)" }}>
-        <div className="relative overflow-hidden rounded-t-3xl border-t border-x border-emerald-500/30 shadow-2xl bg-slate-950/70 backdrop-blur-md p-2">
-          <img
-            src={ronaldoImg}
-            alt="Cristiano Ronaldo"
-            className="h-[460px] w-[290px] object-cover object-top rounded-t-2xl shadow-inner"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-85" />
-          <div className="absolute bottom-4 left-4 right-4 text-center">
-            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold tracking-widest text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 uppercase shadow-lg">
-              Cristiano Ronaldo #7
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Lionel Messi Hero Card on Right */}
-      <div className="hidden lg:flex fixed right-8 bottom-0 z-10 flex-col items-center pointer-events-none transition-all duration-700"
-        style={{ opacity: mounted ? 0.95 : 0, transform: mounted ? "translateY(0)" : "translateY(40px)" }}>
-        <div className="relative overflow-hidden rounded-t-3xl border-t border-x border-teal-500/30 shadow-2xl bg-slate-950/70 backdrop-blur-md p-2">
-          <img
-            src={messiImg}
-            alt="Lionel Messi"
-            className="h-[460px] w-[290px] object-cover object-top rounded-t-2xl shadow-inner"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-85" />
-          <div className="absolute bottom-4 left-4 right-4 text-center">
-            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold tracking-widest text-teal-400 bg-teal-950/90 border border-teal-500/40 uppercase shadow-lg">
-              Lionel Messi #10
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Animated card wrapper */}
       <div
