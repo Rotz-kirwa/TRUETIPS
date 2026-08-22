@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import bgImage from "../assets/ronaldo-messi-bg.jpg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -41,7 +42,7 @@ function LoginPage() {
     <div
       className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-black"
       style={{
-        backgroundImage: "url('/images/ronaldo-messi-bg.jpg')",
+        backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
