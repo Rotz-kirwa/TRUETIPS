@@ -102,7 +102,7 @@ const testSmsFn = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
   component: SmsAutomationPage,
-  head: () => ({ meta: [{ title: "Prediction Console — Payvora Admin" }] }),
+  head: () => ({ meta: [{ title: "Prediction Console — Paylix Admin" }] }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ function buildPreview(template: string): string {
     .replace(/\{amount\}/gi, "150.00")
     .replace(/\{transaction_code\}/gi, "UGK7X2Y9AB")
     .replace(/\{date\}/gi, "02 May 2026, 14:30")
-    .replace(/\{business_name\}/gi, "PAYVORA");
+    .replace(/\{business_name\}/gi, "PAYLIX");
 }
 
 // ─── Rule Modal ───────────────────────────────────────────────────────────────

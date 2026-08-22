@@ -115,7 +115,7 @@ const app = http.createServer(async (req, res) => {
 });
 
 app.listen(port, host, () => {
-  console.log(`Payvora listening on http://${host}:${port}`);
+  console.log(`Paylix listening on http://${host}:${port}`);
   console.log(`Serving static files from: ${CLIENT_DIR}`);
 
   const required = [

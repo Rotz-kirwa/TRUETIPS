@@ -1,6 +1,6 @@
-# 💳 Payvora — M-Pesa Payment Dashboard & SMS Automation Engine
+# 💳 Paylix — M-Pesa Payment Dashboard & SMS Automation Engine
 
-Payvora (also known as Paykit) is a production-ready, full-stack payment management platform built for modern Kenyan businesses. It provides real-time M-Pesa collection tracking, automated C2B Buy Goods/Till reconciliation, STK Push initiation, and an automated customer SMS receipt engine with multi-provider support.
+Paylix (also known as Paykit) is a production-ready, full-stack payment management platform built for modern Kenyan businesses. It provides real-time M-Pesa collection tracking, automated C2B Buy Goods/Till reconciliation, STK Push initiation, and an automated customer SMS receipt engine with multi-provider support.
 
 ---
 
@@ -37,7 +37,7 @@ Create a `.env` file in the project root with the following variables:
 
 ```env
 # Database & Auth
-DATABASE_URL="postgres://user:password@localhost:5432/payvora"
+DATABASE_URL="postgres://user:password@localhost:5432/paylix"
 JWT_SECRET="your-secure-jwt-secret-key"
 
 # M-Pesa Daraja Configuration
@@ -86,7 +86,7 @@ npm run dev
 
 ## 📦 Production Deployment
 
-Payvora includes built-in adapters for multiple deployment targets:
+Paylix includes built-in adapters for multiple deployment targets:
 
 * **Standalone Node Server / Render**: `node api/render-server.js` (serves static assets from `dist/client` and delegates SSR/API requests).
 * **Vercel Serverless**: Configured via `vercel.json` and `api/server.js` adapter.

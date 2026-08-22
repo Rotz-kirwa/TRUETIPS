@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import { Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { newBg } from "@/assets/bg";
-import { payvoraLogo } from "@/assets/logo";
+import { paylixLogo } from "@/assets/logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Sign in — Payvora" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Paylix" }] }),
 });
 
 function LoginPage() {
@@ -84,10 +84,10 @@ function LoginPage() {
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
-            <img src={payvoraLogo} alt="Payvora" className="h-full w-full object-cover" />
+            <img src={paylixLogo} alt="Paylix" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Payvora</h2>
+            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Paylix</h2>
             <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
           </div>
         </div>
@@ -216,7 +216,7 @@ function LoginPage() {
         {/* Bottom brand text */}
         <div className="mt-8 text-center">
           <p className="text-xs tracking-widest text-white/50 uppercase font-semibold">
-            Payvora Admin Portal
+            Paylix Admin Portal
           </p>
         </div>
       </div>

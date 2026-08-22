@@ -17,7 +17,7 @@ const AUTH_COOKIE_OPTIONS = {
 };
 
 function getSecret() {
-  const s = process.env.JWT_SECRET || "payvora-super-secret-jwt-key-2026-secure";
+  const s = process.env.JWT_SECRET || "paylix-super-secret-jwt-key-2026-secure";
   return new TextEncoder().encode(s);
 }
 

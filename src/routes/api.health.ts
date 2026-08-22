@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/health")({
       GET: async () =>
         Response.json({
           ok: true,
-          service: "payvora",
+          service: "paylix",
           timestamp: new Date().toISOString(),
         }),
     },
