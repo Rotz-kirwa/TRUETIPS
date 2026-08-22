@@ -39,11 +39,11 @@ function LoginPage() {
 
   return (
     <div
-      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden"
+      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-slate-950"
       style={{
-        backgroundImage: "url('https://i.pinimg.com/736x/91/7d/a4/917da4ebb7424c3f6dc4892470178976.jpg')",
+        backgroundImage: "url('/images/ronaldo-messi-bg.jpg')",
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "center 25%",
         backgroundRepeat: "no-repeat",
       }}
     >
@@ -60,9 +60,22 @@ function LoginPage() {
         }
       `}</style>
 
-      {/* Layered overlays for depth */}
-      <div className="absolute inset-0 bg-black/60" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+      {/* Dark cinematic stadium overlays for high contrast and readability */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(6, 10, 20, 0.55) 0%, rgba(4, 7, 14, 0.82) 65%, rgba(2, 4, 8, 0.95) 100%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to right, rgba(2, 4, 8, 0.60) 0%, rgba(2, 4, 8, 0.85) 50%, rgba(2, 4, 8, 0.60) 100%)",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/85 pointer-events-none" />
 
       {/* Animated card wrapper */}
       <div
