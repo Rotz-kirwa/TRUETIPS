@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { newBg } from "@/assets/bg";
+import { payvoraLogo } from "@/assets/logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -83,7 +84,7 @@ function LoginPage() {
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
-            <img src="/favicon.jpg" alt="Payvora" className="h-full w-full object-cover" />
+            <img src={payvoraLogo} alt="Payvora" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
             <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Payvora</h2>
