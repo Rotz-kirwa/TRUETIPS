@@ -5,8 +5,8 @@ const dbUrl = process.env.DATABASE_URL || "postgresql://payvora_db_user:lYAJv1Gv
 const sql = postgres(dbUrl);
 
 async function run() {
-  const targetEmail = "eliudkirwa451@gmail.com";
-  const rawPassword = "Rotz1362$";
+  const targetEmail = "joelesabu2@gmail.com";
+  const rawPassword = "Joel@2030";
 
   console.log(`Hashing password for ${targetEmail}...`);
   const passwordHash = await bcrypt.hash(rawPassword, 10);
