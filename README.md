@@ -71,7 +71,7 @@ MPESA_CALLBACK_URL="http://localhost:8080"
 SMS_PROVIDER="onfon" # "onfon" | "africastalking" | "safaricom" | "custom"
 ONFON_API_KEY="your_onfon_api_key"
 ONFON_CLIENT_ID="your_onfon_client_id"
-ONFON_SENDER_ID="STAR_CODE"
+ONFON_SENDER_ID="NEBULA"
 ```
 
 ---

@@ -28,11 +28,60 @@
  *   SMS_CUSTOM_MESSAGE_FIELD - Body field name for message (default: "message")
  */
 
+import https from "node:https";
+import http from "node:http";
+
 export interface SmsSendResult {
   success: boolean;
   messageId?: string;
   response: Record<string, unknown>;
   error?: string;
+}
+
+/** Robust HTTP POST helper enforcing IPv4 to prevent Node undici dual-stack socket timeouts. */
+async function httpPostJson(
+  urlStr: string,
+  bodyJson: unknown,
+  extraHeaders: Record<string, string> = {},
+): Promise<{ status: number; text: string; ok: boolean }> {
+  return new Promise((resolve, reject) => {
+    try {
+      const u = new URL(urlStr);
+      const postData = JSON.stringify(bodyJson);
+      const lib = u.protocol === "https:" ? https : http;
+
+      const req = lib.request(
+        u,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(postData),
+            ...extraHeaders,
+          },
+          family: 4,
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+          res.on("end", () => {
+            const text = Buffer.concat(chunks).toString("utf8");
+            const status = res.statusCode ?? 500;
+            resolve({ status, text, ok: status >= 200 && status < 300 });
+          });
+        },
+      );
+
+      req.on("error", (err) => reject(err));
+      req.setTimeout(15000, () => {
+        req.destroy(new Error("HTTP Request Timed Out (15s)"));
+      });
+      req.write(postData);
+      req.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 /** Ensure phone is in E.164 format for the provider (+254...). */
@@ -59,7 +108,7 @@ function toOnfonPhone(phone: string): string {
 async function sendOnfon(phone: string, message: string): Promise<SmsSendResult> {
   const apiKey = process.env.ONFON_API_KEY?.trim();
   const clientId = process.env.ONFON_CLIENT_ID?.trim();
-  const senderId = process.env.ONFON_SENDER_ID?.trim() || "STAR_CODE";
+  const senderId = process.env.ONFON_SENDER_ID?.trim() || "NEBULA";
   const apiUrl =
     process.env.ONFON_API_URL?.trim() ||
     "https://api.onfonmedia.co.ke/v1/sms/SendBulkSMS";
@@ -78,13 +127,8 @@ async function sendOnfon(phone: string, message: string): Promise<SmsSendResult>
 
   console.log(`[sms/onfon] Sending to ${toOnfonPhone(phone)} via ${apiUrl}`);
 
-  const res = await fetch(apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const text = await res.text();
+  const res = await httpPostJson(apiUrl, body);
+  const text = res.text;
   let data: Record<string, unknown> = {};
   try {
     data = JSON.parse(text);
