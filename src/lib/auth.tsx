@@ -12,7 +12,12 @@ export const loginFn = createServerFn({ method: "POST" })
   .handler(async (ctx) => {
     const { email, password } = ctx.data as z.infer<typeof loginSchema>;
     const { authenticateUser } = await import("./auth.server");
-    return authenticateUser(email, password);
+    try {
+      return await authenticateUser(email, password);
+    } catch (err: any) {
+      console.error("[loginFn error]", err);
+      throw new Error(err?.message || "Invalid email or password");
+    }
   });
 
 export const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
