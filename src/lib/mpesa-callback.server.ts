@@ -295,15 +295,17 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
 
   // Trigger SMS automation — errors must never fail the payment
   if (inserted?.id && amount != null) {
-    processPaymentSms({
-      paymentId: inserted.id,
-      phone: smsPhone,
-      amount,
-      transactionCode: mpesaReceiptNumber,
-      paidAt,
-    }).catch((err) => {
-      console.error("[sms-automation] Background SMS trigger failed:", err);
-    });
+    try {
+      await processPaymentSms({
+        paymentId: inserted.id,
+        phone: smsPhone,
+        amount,
+        transactionCode: mpesaReceiptNumber,
+        paidAt,
+      });
+    } catch (err) {
+      console.error("[sms-automation] SMS trigger failed:", err);
+    }
   }
 
   return accepted();

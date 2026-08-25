@@ -82,9 +82,9 @@ export async function getSmsAutomationEnabled(): Promise<boolean> {
       .from(appSettings)
       .where(eq(appSettings.key, "sms_automation_enabled"))
       .limit(1);
-    return row?.value === "true";
+    return row ? row.value === "true" : true;
   } catch {
-    return false;
+    return true;
   }
 }
 
