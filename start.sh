@@ -15,6 +15,14 @@ else
   DARAJA_BASE="https://sandbox.safaricom.co.ke"
 fi
 
+echo "==> Ensuring PostgreSQL is running..."
+if ! pg_isready -h 127.0.0.1 -p 5432 >/dev/null 2>&1; then
+  echo "    Starting local PostgreSQL server..."
+  mkdir -p .pglog
+  /usr/lib/postgresql/16/bin/postgres -D "$(dirname "$0")/.pgdata" -p 5432 -k /tmp > "$(dirname "$0")/.pglog/postgres.log" 2>&1 &
+  sleep 2
+fi
+
 echo "==> Killing any old dev server / tunnel..."
 fuser -k 8080/tcp 2>/dev/null || true
 pkill -x ngrok 2>/dev/null || true
@@ -71,7 +79,7 @@ node --input-type=module <<EOF
 const DARAJA_BASE = "$DARAJA_BASE";
 const KEY = "$MPESA_CONSUMER_KEY";
 const SECRET = "$MPESA_CONSUMER_SECRET";
-const SHORTCODE = "${MPESA_SHORTCODE:-6270335}";
+const SHORTCODE = "${MPESA_SHORTCODE:-4980406}";
 const BASE_URL = "$TUNNEL_URL";
 
 async function main() {

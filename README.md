@@ -1,6 +1,6 @@
-# 🏆 Paylix — Sports Prediction Console & M-Pesa SMS Automation Platform
+# 🏆 PredictionLab — Sports Prediction Console & M-Pesa SMS Automation Platform
 
-**Paylix** is an enterprise-grade, full-stack Sports Prediction Management System and automated M-Pesa SMS dispatch engine. Engineered for sports analytics platforms, tipster services, and subscription-based betting consoles, Paylix provides seamless prediction distribution, jackpot fixture management, instant payment reconciliation via Safaricom Daraja API, and dynamic automated SMS delivery to subscribers.
+**PredictionLab** is an enterprise-grade, full-stack Sports Prediction Management System and automated M-Pesa SMS dispatch engine. Engineered for sports analytics platforms, tipster services, and subscription-based betting consoles, PredictionLab provides seamless prediction distribution, jackpot fixture management, instant payment reconciliation via Safaricom Daraja API, and dynamic automated SMS delivery to subscribers.
 
 ---
 
@@ -55,8 +55,8 @@ Create a `.env` file in the root directory:
 
 ```env
 # Database & Auth
-DATABASE_URL="postgres://postgres@127.0.0.1:5432/paylix"
-JWT_SECRET="paylix-super-secret-jwt-key-2026-secure"
+DATABASE_URL="postgres://postgres@127.0.0.1:5432/predictionlab"
+JWT_SECRET="predictionlab-super-secret-jwt-key-2026-secure"
 
 # M-Pesa Daraja Configuration
 MPESA_ENVIRONMENT="sandbox" # "sandbox" or "production"
@@ -83,7 +83,7 @@ ONFON_SENDER_ID="STAR_CODE"
 npm install
 ```
 
-### 2. Initialize Paylix PostgreSQL Database
+### 2. Initialize PredictionLab PostgreSQL Database
 Execute the database initialization script to provision schemas, create default package tiers, and set initialization flags:
 ```bash
 node scratch/init-paylix-db.js
@@ -116,7 +116,7 @@ The project includes utility scripts inside the `scratch/` directory for databas
 
 ## 🛡️ Production Deployment
 
-Paylix supports flexible production execution models:
+PredictionLab supports flexible production execution models:
 
 * **Node.js Production Server**: `node api/render-server.js` (Serves static client assets while delegating server RPCs and API webhooks).
 * **Serverless Deployment**: Ready for Vercel / Render deployment via `api/server.js`.
@@ -125,4 +125,4 @@ Paylix supports flexible production execution models:
 
 ## 📄 License
 
-Private & Confidential — **Paylix HQ**. All Rights Reserved.
+Private & Confidential — **PredictionLab HQ**. All Rights Reserved.

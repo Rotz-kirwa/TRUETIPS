@@ -102,7 +102,7 @@ const testSmsFn = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
   component: SmsAutomationPage,
-  head: () => ({ meta: [{ title: "Prediction Console — Paylix Admin" }] }),
+  head: () => ({ meta: [{ title: "Prediction Console — PredictionLab Admin" }] }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ const TIER_PRESETS = [
     description: "Full access to predictions for 7 days",
     matches: "All Access",
     validity: "7 Days",
-    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Monthly Subscription 📆",
@@ -182,7 +182,7 @@ const TIER_PRESETS = [
     description: "Complete premium access for 30 days",
     matches: "All Access + Updates",
     validity: "30 Days",
-    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
   },
 ];
 
@@ -228,12 +228,19 @@ function buildPreview(template: string): string {
     .replace(/\{amount\}/gi, "150.00")
     .replace(/\{transaction_code\}/gi, "UGK7X2Y9AB")
     .replace(/\{date\}/gi, "02 May 2026, 14:30")
-    .replace(/\{business_name\}/gi, "PAYLIX");
+    .replace(/\{business_name\}/gi, "PREDICTIONLAB");
 }
 
 // ─── Rule Modal ───────────────────────────────────────────────────────────────
 
-type ModalMode = { mode: "add"; initialPreset?: typeof TIER_PRESETS[0] } | { mode: "edit"; rule: RuleRow };
+export type ModalMode = { mode: "add"; initialPreset?: typeof TIER_PRESETS[0] } | { mode: "edit"; rule: RuleRow };
+
+export type MatchRow = {
+  id: string;
+  team1: string;
+  team2: string;
+  pick: string;
+};
 
 export function parseBulkMatchesText(rawText: string): MatchRow[] {
   if (!rawText || !rawText.trim()) return [];
@@ -572,7 +579,7 @@ function RuleModal({
   }
 
   function insertTag(tag: string) {
-    setTemplate((t) => t + tag);
+    setTemplate((t: string) => t + tag);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -1453,12 +1460,12 @@ function SmsAutomationPage() {
   const [resettingTiers, setResettingTiers] = useState(false);
 
   async function handleResetDefaultTiers() {
-    if (!confirm("Reset rules to 5 OddsArena Packages (Daily, Jackpot, Basket, Weekly, Monthly)?")) return;
+    if (!confirm("Reset rules to 5 PredictionLab Packages (Daily, Jackpot, Basket, Weekly, Monthly)?")) return;
     setResettingTiers(true);
     try {
       const defaultRules = await resetDefaultTiersFn();
       setRules(defaultRules.sort((a, b) => a.minAmount - b.minAmount));
-      toast.success("Seeded 5 OddsArena packages successfully!");
+      toast.success("Seeded 5 PredictionLab packages successfully!");
     } catch {
       toast.error("Failed to reset tier rules");
     } finally {
@@ -1500,7 +1507,7 @@ function SmsAutomationPage() {
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">OddsArena Prediction Console</h1>
+          <h1 className="text-2xl font-bold tracking-tight">PredictionLab Prediction Console</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Manage daily sports predictions, jackpot fixtures, basketball picks, and subscription packages.
           </p>
@@ -1531,7 +1538,7 @@ function SmsAutomationPage() {
           <button
             onClick={handleResetDefaultTiers}
             disabled={resettingTiers}
-            title="Reset rules to OddsArena 5 Packages (Daily, Jackpot, Basket, Weekly, Monthly)"
+            title="Reset rules to PredictionLab 5 Packages (Daily, Jackpot, Basket, Weekly, Monthly)"
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60 text-xs"
           >
             {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
@@ -1552,7 +1559,7 @@ function SmsAutomationPage() {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <span>OddsArena Categories Overview</span>
+            <span>PredictionLab Categories Overview</span>
           </h2>
           <span className="text-[11px] text-muted-foreground font-mono">5 Active Packages</span>
         </div>
@@ -1676,7 +1683,7 @@ function SmsAutomationPage() {
               </div>
               <p className="text-base font-semibold">No rules yet</p>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Create your first SMS automation rule or reset to standard OddsArena packages.
+                Create your first SMS automation rule or reset to standard PredictionLab packages.
               </p>
               <button
                 onClick={handleResetDefaultTiers}

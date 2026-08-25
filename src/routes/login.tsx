@@ -2,12 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { newBg } from "@/assets/bg";
-import { paylixLogo } from "@/assets/logo";
+import { predictionLabLogo } from "@/assets/logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Sign in — Paylix" }] }),
+  head: () => ({ meta: [{ title: "Sign in — PredictionLab" }] }),
 });
 
 function LoginPage() {
@@ -40,15 +39,7 @@ function LoginPage() {
   };
 
   return (
-    <div
-      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-black"
-      style={{
-        backgroundImage: `url(${newBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-background">
       {/* Suppress browser built-in password reveal / autofill overlay icons */}
       <style>{`
         input[type="password"]::-ms-reveal,
@@ -84,10 +75,10 @@ function LoginPage() {
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
-            <img src={paylixLogo} alt="Paylix" className="h-full w-full object-cover" />
+            <img src={predictionLabLogo} alt="PredictionLab" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Paylix</h2>
+            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">PredictionLab</h2>
             <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
           </div>
         </div>
@@ -218,7 +209,7 @@ function LoginPage() {
         {/* Bottom brand text */}
         <div className="mt-8 text-center">
           <p className="text-xs tracking-widest text-white/50 uppercase font-semibold">
-            Paylix Admin Portal
+            PredictionLab Admin Portal
           </p>
         </div>
       </div>

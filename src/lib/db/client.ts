@@ -5,7 +5,7 @@ import * as schema from "./schema";
 function createDb() {
   const url =
     process.env.DATABASE_URL ||
-    "postgres://postgres@127.0.0.1:5432/paylix";
+    "postgres://postgres@127.0.0.1:5432/predictionlab";
 
   const client = postgres(url, {
     max: 1, // single connection per worker instance

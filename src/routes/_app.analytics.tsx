@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_app/analytics")({
   loader: () => fetchPaymentsFn(),
   component: AnalyticsPage,
-  head: () => ({ meta: [{ title: "Analytics — Paylix Admin" }] }),
+  head: () => ({ meta: [{ title: "Analytics — PredictionLab Admin" }] }),
 });
 
 const KES = (n: number) =>

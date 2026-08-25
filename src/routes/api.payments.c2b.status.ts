@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/payments/c2b/status")({
 
         return Response.json({
           ok: database.ok,
-          service: "paylix-c2b",
+          service: "predictionlab-c2b",
           shortcode: process.env.MPESA_SHORTCODE?.trim() ?? null,
           tillNumber: process.env.MPESA_TILL_NUMBER?.trim() ?? null,
           mpesaEnvironment: process.env.MPESA_ENVIRONMENT?.trim() ?? "sandbox",

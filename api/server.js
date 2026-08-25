@@ -8,12 +8,22 @@ export default async function handler(req, res) {
 
   let body;
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    body = await new Promise((resolve, reject) => {
-      const chunks = [];
-      req.on('data', (c) => chunks.push(c));
-      req.on('end', () => resolve(Buffer.concat(chunks)));
-      req.on('error', reject);
-    });
+    if (req.body !== undefined && req.body !== null) {
+      if (Buffer.isBuffer(req.body)) {
+        body = req.body;
+      } else if (typeof req.body === 'string') {
+        body = Buffer.from(req.body);
+      } else {
+        body = Buffer.from(JSON.stringify(req.body));
+      }
+    } else {
+      body = await new Promise((resolve, reject) => {
+        const chunks = [];
+        req.on('data', (c) => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+        req.on('error', reject);
+      });
+    }
   }
 
   const headers = {};
@@ -29,10 +39,20 @@ export default async function handler(req, res) {
 
   const response = await server.fetch(request);
 
-  res.status(response.status);
+  if (typeof res.status === 'function') {
+    res.status(response.status);
+  } else {
+    res.statusCode = response.status;
+  }
+
   for (const [key, value] of response.headers.entries()) {
-    res.setHeader(key, value);
+    if (key.toLowerCase() === 'set-cookie' && typeof response.headers.getSetCookie === 'function') {
+      res.setHeader('set-cookie', response.headers.getSetCookie());
+    } else {
+      res.setHeader(key, value);
+    }
   }
 
   res.end(Buffer.from(await response.arrayBuffer()));
 }
+

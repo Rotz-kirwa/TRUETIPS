@@ -1,6 +1,6 @@
 import postgres from "postgres";
 
-const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/payvora";
+const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/predictionlab";
 const sql = postgres(url);
 
 async function clearPredictions() {

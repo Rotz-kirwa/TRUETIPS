@@ -7,7 +7,7 @@ import { fetchPaymentsFn, type MpesaPayment } from "@/lib/payments";
 export const Route = createFileRoute("/_app/customers")({
   loader: () => fetchPaymentsFn(),
   component: CustomersPage,
-  head: () => ({ meta: [{ title: "Customers — Paylix Admin" }] }),
+  head: () => ({ meta: [{ title: "Customers — PredictionLab Admin" }] }),
 });
 
 const KES = (n: number) =>

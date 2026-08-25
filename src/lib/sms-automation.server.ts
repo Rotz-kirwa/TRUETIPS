@@ -41,6 +41,7 @@ export function resolvePlaceholders(
     transactionCode: string | null;
     date: Date;
     businessName?: string;
+    predictionsText?: string;
   },
 ): string {
   const formattedAmount = new Intl.NumberFormat("en-KE", {
@@ -59,7 +60,7 @@ export function resolvePlaceholders(
   });
 
   const customerName = `0${data.phone.slice(-9)}`;
-  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "OddsArena";
+  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "PredictionLab";
   const defaultPredictions = data.predictionsText ?? "⚽ Chelsea vs Arsenal → 1X (1.45)\n⚽ Real Madrid vs Sevilla → OVER 2.5 (1.70)";
 
   return template
@@ -99,7 +100,11 @@ export async function setSmsAutomationEnabled(enabled: boolean): Promise<void> {
 
 // ─── Overlap detection ────────────────────────────────────────────────────────
 
-export async function findOverlappingActiveRules(): Promise<RuleRow[]> {
+export async function findOverlappingActiveRules(
+  _minAmount?: number,
+  _maxAmount?: number,
+  _excludeId?: string,
+): Promise<RuleRow[]> {
   return [];
 }
 
@@ -145,16 +150,19 @@ export async function fetchAllRules(): Promise<RuleRow[]> {
       .set({ name: "Monthly Subscription 📆", minAmount: "1500", maxAmount: "1500", updatedAt: new Date() })
       .where(eq(smsAutomationRules.name, "Emerald"));
 
-    // Replace old "Thank you... Receipt..." text or previous sign-offs in existing database records
+    // Replace old legacy branding or "Thank you... Receipt..." text in existing database records
     const allRules = await db.select().from(smsAutomationRules);
     for (const rule of allRules) {
+      let updatedTemplate = rule.messageTemplate;
       if (
-        rule.messageTemplate.includes("Thank you") ||
-        rule.messageTemplate.includes("Receipt:") ||
-        rule.messageTemplate.includes("Good luck") ||
-        rule.messageTemplate.includes("Best of luck")
+        /odds\s*arena|paylix|payvora/i.test(updatedTemplate) ||
+        updatedTemplate.includes("Thank you") ||
+        updatedTemplate.includes("Receipt:") ||
+        updatedTemplate.includes("Good luck") ||
+        updatedTemplate.includes("Best of luck")
       ) {
-        const updatedTemplate = rule.messageTemplate
+        updatedTemplate = updatedTemplate
+          .replace(/OddsArena|Odds Arena|Paylix|Payvora/gi, "PredictionLab")
           .replace(
             /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
             "🏆 Play Smart, Win Big",
@@ -282,14 +290,14 @@ export async function resetDefaultTiers(): Promise<RuleRow[]> {
       name: "Weekly Subscription 📅",
       minAmount: "500",
       maxAmount: "500",
-      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Monthly Subscription 📆",
       minAmount: "1500",
       maxAmount: "1500",
-      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
   ];

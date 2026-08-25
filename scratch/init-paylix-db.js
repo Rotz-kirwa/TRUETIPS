@@ -1,11 +1,11 @@
 import postgres from "postgres";
 
-const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/paylix";
+const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/predictionlab";
 const sql = postgres(url);
 
-async function initPaylixDb() {
+async function initPredictionLabDb() {
   try {
-    console.log("Initializing paylix database tables...");
+    console.log("Initializing PredictionLab database tables...");
 
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS users (
@@ -93,7 +93,7 @@ async function initPaylixDb() {
       CREATE TABLE IF NOT EXISTS jackpots (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         jackpot_code TEXT NOT NULL UNIQUE,
-        title TEXT NOT NULL DEFAULT 'ODDSARENA MEGA JACKPOT',
+        title TEXT NOT NULL DEFAULT 'PREDICTIONLAB MEGA JACKPOT',
         total_odds NUMERIC(8,2) NOT NULL DEFAULT 10.00,
         status TEXT NOT NULL DEFAULT 'OPEN',
         is_published BOOLEAN NOT NULL DEFAULT true,
@@ -122,8 +122,8 @@ async function initPaylixDb() {
         ('Daily Matches ⚽', 50, 50, 'DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big', true),
         ('Jackpot Matches 🏆', 100, 100, 'JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big', true),
         ('Basket Matches 🏀', 50, 50, 'BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big', true),
-        ('Weekly Subscription 📅', 500, 500, 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', true),
-        ('Monthly Subscription 📆', 1500, 1500, 'MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', true);
+        ('Weekly Subscription 📅', 500, 500, 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', true),
+        ('Monthly Subscription 📆', 1500, 1500, 'MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', true);
     `;
 
     // Ensure predictions & jackpots are clean and marked seeded
@@ -136,12 +136,12 @@ async function initPaylixDb() {
       ON CONFLICT (key) DO UPDATE SET value = 'true';
     `;
 
-    console.log("Paylix database initialized successfully!");
+    console.log("PredictionLab database initialized successfully!");
   } catch (err) {
-    console.error("Error initializing paylix database:", err);
+    console.error("Error initializing PredictionLab database:", err);
   } finally {
     await sql.end();
   }
 }
 
-initPaylixDb();
+initPredictionLabDb();

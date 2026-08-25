@@ -1,6 +1,6 @@
 import postgres from "postgres";
 
-const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/payvora";
+const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/predictionlab";
 const sql = postgres(url);
 
 async function setCleanTemplates() {
@@ -27,13 +27,13 @@ async function setCleanTemplates() {
 
     await sql`
       UPDATE sms_automation_rules
-      SET message_template = 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', updated_at = NOW()
+      SET message_template = 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', updated_at = NOW()
       WHERE name LIKE '%Weekly%';
     `;
 
     await sql`
       UPDATE sms_automation_rules
-      SET message_template = 'MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', updated_at = NOW()
+      SET message_template = 'MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', updated_at = NOW()
       WHERE name LIKE '%Monthly%';
     `;
 

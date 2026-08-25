@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { compare } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import { db } from "./db/client";
 import { users } from "./db/schema";
@@ -17,7 +17,7 @@ const AUTH_COOKIE_OPTIONS = {
 };
 
 function getSecret() {
-  const s = process.env.JWT_SECRET || "paylix-super-secret-jwt-key-2026-secure";
+  const s = process.env.JWT_SECRET || "predictionlab-super-secret-jwt-key-2026-secure";
   return new TextEncoder().encode(s);
 }
 
@@ -25,7 +25,27 @@ function clearAuthCookie() {
   deleteCookie(AUTH_COOKIE_NAME, { path: "/" });
 }
 
+let usersTableEnsured = false;
+async function ensureUsersTable() {
+  if (usersTableEnsured) return;
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+    usersTableEnsured = true;
+  } catch (err) {
+    console.error("[auth] Failed to ensure users table:", err);
+  }
+}
+
 async function findUserById(id: string) {
+  await ensureUsersTable();
   const [user] = await db
     .select({
       id: users.id,
@@ -40,6 +60,7 @@ async function findUserById(id: string) {
 }
 
 export async function authenticateUser(email: string, password: string) {
+  await ensureUsersTable();
   const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
   if (!user) throw new Error("Invalid email or password");

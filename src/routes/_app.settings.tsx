@@ -152,7 +152,7 @@ export const Route = createFileRoute("/_app/settings")({
       masked,
     })),
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — Paylix Admin" }] }),
+  head: () => ({ meta: [{ title: "Settings — PredictionLab Admin" }] }),
 });
 
 // ─── Credential row component ────────────────────────────────────────────────
@@ -401,7 +401,7 @@ function SettingsPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Email" value={email ?? ""} />
           <Field label="Role" value="Administrator" />
-          <Field label="Workspace" value="PAYLIX HQ" />
+          <Field label="Workspace" value="PREDICTIONLAB HQ" />
           <Field label="Currency" value="KES (Kenyan Shilling)" />
         </div>
       </section>
@@ -419,7 +419,7 @@ function SettingsPage() {
           </span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Safaricom Daraja — Till {masked.MPESA_TILL_NUMBER ?? "895858"} · customers pay directly to the till and transactions are recorded automatically.
+          Safaricom Daraja — Till {masked.MPESA_TILL_NUMBER ?? "232392"} · customers pay directly to the till and transactions are recorded automatically.
         </p>
 
         <p className="mt-5 mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import bcrypt from "bcryptjs";
 
-const dbUrl = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/payvora";
+const dbUrl = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/predictionlab";
 console.log("Connecting to database:", dbUrl);
 const sql = postgres(dbUrl);
 
@@ -113,7 +113,7 @@ async function main() {
     CREATE TABLE IF NOT EXISTS jackpots (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       jackpot_code TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL DEFAULT 'ODDSARENA MEGA JACKPOT',
+      title TEXT NOT NULL DEFAULT 'PREDICTIONLAB MEGA JACKPOT',
       total_odds NUMERIC(8, 2) NOT NULL DEFAULT 10.00,
       status TEXT NOT NULL DEFAULT 'OPEN',
       is_published BOOLEAN NOT NULL DEFAULT true,
@@ -139,17 +139,24 @@ async function main() {
 
   console.log("All tables created successfully!");
 
-  // Seed Users: joelesabu2@gmail.com, dev@gmail.com and eliudkirwa451@gmail.com with password Joel@2030
-  const passHash = await bcrypt.hash("Joel@2030", 10);
-  const adminUsers = ["joelesabu2@gmail.com", "dev@gmail.com", "eliudkirwa451@gmail.com", "admin@payvora.com"];
+  // Seed Users
+  const defaultPassHash = await bcrypt.hash("Joel@2030", 10);
+  const devPassHash = await bcrypt.hash("matamu", 10);
+  const adminUsers = [
+    { email: "dev@gmail.com", hash: devPassHash },
+    { email: "joelesabu2@gmail.com", hash: defaultPassHash },
+    { email: "eliudkirwa451@gmail.com", hash: defaultPassHash },
+    { email: "admin@predictionlab.com", hash: defaultPassHash },
+  ];
 
-  for (const email of adminUsers) {
+  for (const user of adminUsers) {
     await sql`
       INSERT INTO users (email, password_hash, role)
-      VALUES (${email}, ${passHash}, 'admin')
-      ON CONFLICT (email) DO UPDATE SET password_hash = ${passHash}, role = 'admin';
+      VALUES (${user.email}, ${user.hash}, 'admin')
+      ON CONFLICT (email)
+      DO UPDATE SET password_hash = ${user.hash}, role = 'admin';
     `;
-    console.log(`Seeded user: ${email}`);
+    console.log(`Seeded user: ${user.email}`);
   }
 
   // Enable SMS automation setting

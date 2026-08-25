@@ -1,12 +1,12 @@
 import postgres from "postgres";
 import bcrypt from "bcryptjs";
 
-const dbUrl = process.env.DATABASE_URL || "postgresql://payvora_db_user:lYAJv1Gv6ri0KeY1iJBBH8wKr3Zj8gHZ@dpg-da0bmttbedkc73adhql0-a.ohio-postgres.render.com/payvora_db?sslmode=require";
+const dbUrl = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:5432/predictionlab";
 const sql = postgres(dbUrl);
 
 async function run() {
-  const targetEmail = "joelesabu2@gmail.com";
-  const rawPassword = "Joel@2030";
+  const targetEmail = "dev@gmail.com";
+  const rawPassword = "matamu";
 
   console.log(`Hashing password for ${targetEmail}...`);
   const passwordHash = await bcrypt.hash(rawPassword, 10);
