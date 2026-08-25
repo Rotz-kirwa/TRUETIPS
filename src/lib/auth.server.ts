@@ -44,7 +44,16 @@ async function findUserById(id: string) {
 
 export async function authenticateUser(email: string, password: string) {
   await ensureDatabaseTablesAndSeed();
-  const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
+  let user;
+  try {
+    const [found] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
+    user = found;
+  } catch (queryErr) {
+    console.error("[auth] Initial user query failed. Retrying schema initialization:", queryErr);
+    await ensureDatabaseTablesAndSeed();
+    const [found] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
+    user = found;
+  }
 
   if (!user) throw new Error("Invalid email or password");
 
