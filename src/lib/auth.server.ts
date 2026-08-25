@@ -25,27 +25,10 @@ function clearAuthCookie() {
   deleteCookie(AUTH_COOKIE_NAME, { path: "/" });
 }
 
-let usersTableEnsured = false;
-async function ensureUsersTable() {
-  if (usersTableEnsured) return;
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-    usersTableEnsured = true;
-  } catch (err) {
-    console.error("[auth] Failed to ensure users table:", err);
-  }
-}
+import { ensureDatabaseTablesAndSeed } from "./db/init-schema.server";
 
 async function findUserById(id: string) {
-  await ensureUsersTable();
+  await ensureDatabaseTablesAndSeed();
   const [user] = await db
     .select({
       id: users.id,
@@ -60,7 +43,7 @@ async function findUserById(id: string) {
 }
 
 export async function authenticateUser(email: string, password: string) {
-  await ensureUsersTable();
+  await ensureDatabaseTablesAndSeed();
   const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
   if (!user) throw new Error("Invalid email or password");
