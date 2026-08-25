@@ -22,8 +22,11 @@ function createDb() {
     url = "postgres://postgres@127.0.0.1:5432/predictionlab";
   }
 
+  const isLocal = url.includes("127.0.0.1") || url.includes("localhost");
+
   const client = postgres(url, {
     max: 1, // single connection per worker instance
+    ssl: isLocal ? false : { rejectUnauthorized: false },
     types: {
       // parse NUMERIC columns as JS numbers instead of strings
       numeric: {
