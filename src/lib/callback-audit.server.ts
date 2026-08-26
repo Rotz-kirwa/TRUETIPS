@@ -119,37 +119,31 @@ async function ensureCallbackAuditTable() {
   `);
 }
 
-export async function readAndAuditCallbackRequest(
-  request: Request,
+export async function auditCallbackPayload(
+  body: unknown,
   route: string,
   eventType: CallbackAuditEventType,
+  requestInfo?: { method?: string; sourceIp?: string; userAgent?: string; contentType?: string },
 ): Promise<CallbackAuditResult> {
-  const rawBody = await request.text();
-  let body: unknown = null;
-  let parseError: string | null = null;
-
-  try {
-    body = rawBody ? JSON.parse(rawBody) : {};
-  } catch (error) {
-    parseError = error instanceof Error ? error.message : "Invalid JSON body";
-    body = { invalidJson: true };
-  }
-
   const fields = extractFields(eventType, body);
+  const rawBody = JSON.stringify(body ?? {});
+  const method = requestInfo?.method ?? "POST";
+  const sourceIp = requestInfo?.sourceIp ?? null;
+  const userAgent = requestInfo?.userAgent ?? null;
+  const contentType = requestInfo?.contentType ?? "application/json";
 
-  console.log("[callback-audit] Incoming callback request:", {
+  console.log("[callback-audit] Incoming callback payload:", {
     route,
-    method: request.method,
+    method,
     eventType,
-    sourceIp: getSourceIp(request),
-    userAgent: getHeader(request, "user-agent"),
-    contentType: getHeader(request, "content-type"),
+    sourceIp,
+    userAgent,
+    contentType,
     transId: fields.transId,
     checkoutRequestId: fields.checkoutRequestId,
     phoneMasked: fields.phoneMasked,
     amount: fields.amount,
     shortcode: fields.shortcode,
-    parseError,
   });
 
   try {
@@ -174,31 +168,57 @@ export async function readAndAuditCallbackRequest(
       )
       values (
         ${route},
-        ${request.method},
+        ${method},
         ${eventType},
-        ${getSourceIp(request)},
-        ${getHeader(request, "user-agent")},
-        ${getHeader(request, "content-type")},
+        ${sourceIp},
+        ${userAgent},
+        ${contentType},
         ${fields.transId},
         ${fields.checkoutRequestId},
         ${fields.phoneMasked},
         ${fields.amount},
         ${fields.shortcode},
-        ${JSON.stringify(body)}::jsonb,
+        ${JSON.stringify(body ?? {})}::jsonb,
         ${rawBody.slice(0, 10000)},
-        ${parseError ? "parse_failed" : "received"},
-        ${parseError}
+        'received',
+        null
       )
       returning id
     `);
-    // postgres.js returns an array-like Result; rows can be on .rows or the result itself
     const rows = Array.isArray(inserted) ? inserted : ((inserted as { rows?: unknown[] }).rows ?? []);
     const auditId = rows.length > 0 ? String((rows[0] as { id?: string })?.id ?? "") : "";
-    return { auditId: auditId || null, body, rawBody, parseError };
+    return { auditId: auditId || null, body, rawBody, parseError: null };
   } catch (error) {
     console.error("[callback-audit] Failed to record callback event:", error);
-    return { auditId: null, body, rawBody, parseError };
+    return { auditId: null, body, rawBody, parseError: null };
   }
+}
+
+export async function readAndAuditCallbackRequest(
+  request: Request,
+  route: string,
+  eventType: CallbackAuditEventType,
+): Promise<CallbackAuditResult> {
+  const requestInfo = {
+    method: request.method,
+    sourceIp: getSourceIp(request),
+    userAgent: getHeader(request, "user-agent") ?? undefined,
+    contentType: getHeader(request, "content-type") ?? undefined,
+  };
+
+  let rawBody = "";
+  let body: unknown = null;
+  let parseError: string | null = null;
+
+  try {
+    rawBody = await request.text();
+    body = rawBody ? JSON.parse(rawBody) : {};
+  } catch (error) {
+    parseError = error instanceof Error ? error.message : "Invalid JSON body";
+    body = { invalidJson: true };
+  }
+
+  return auditCallbackPayload(body, route, eventType, requestInfo);
 }
 
 export async function markCallbackAuditResult(

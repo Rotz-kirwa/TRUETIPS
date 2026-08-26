@@ -4,7 +4,7 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Read raw body once
+        // Parse request body and headers immediately before returning response
         let body: unknown = {};
         try {
           body = await request.clone().json();
@@ -16,15 +16,27 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
           }
         }
 
+        const requestInfo = {
+          method: request.method,
+          sourceIp:
+            request.headers.get("cf-connecting-ip") ??
+            request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+            request.headers.get("x-real-ip") ??
+            undefined,
+          userAgent: request.headers.get("user-agent") ?? undefined,
+          contentType: request.headers.get("content-type") ?? undefined,
+        };
+
         // Process callback asynchronously in background so Safaricom receives HTTP 200 immediately (< 50ms)
         (async () => {
           let auditId: string | null = null;
           try {
-            const { readAndAuditCallbackRequest } = await import("../lib/callback-audit.server");
-            const audit = await readAndAuditCallbackRequest(
-              request,
+            const { auditCallbackPayload } = await import("../lib/callback-audit.server");
+            const audit = await auditCallbackPayload(
+              body,
               "/api/payments/c2b/confirmation",
               "c2b_confirmation",
+              requestInfo,
             );
             auditId = audit.auditId;
           } catch (auditErr) {
