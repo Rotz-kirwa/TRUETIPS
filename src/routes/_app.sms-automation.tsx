@@ -1507,32 +1507,17 @@ function SmsAutomationPage() {
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">PredictionLab Prediction Console</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Sure-10 Predict Prediction Console</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Manage daily sports predictions, jackpot fixtures, basketball picks, and subscription packages.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Global toggle */}
-          <button
-            onClick={handleGlobalToggle}
-            disabled={globalToggling}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-all disabled:opacity-60",
-              globalEnabled
-                ? "border-success/30 bg-success/10 text-success hover:bg-success/15"
-                : "border-border bg-secondary text-muted-foreground hover:bg-secondary/80",
-            )}
-          >
-            {globalToggling ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : globalEnabled ? (
-              <Zap className="h-4 w-4" />
-            ) : (
-              <ZapOff className="h-4 w-4" />
-            )}
-            {globalEnabled ? "Automation ON" : "Automation OFF"}
-          </button>
+          {/* Always Active Badge */}
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-success/30 bg-success/10 px-3.5 py-2 text-xs font-bold text-success shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+            SMS Automation Active
+          </span>
 
           {/* Reset 5 Packages */}
           <button

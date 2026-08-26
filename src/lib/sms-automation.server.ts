@@ -76,25 +76,16 @@ export function resolvePlaceholders(
 // ─── Global enabled flag ──────────────────────────────────────────────────────
 
 export async function getSmsAutomationEnabled(): Promise<boolean> {
-  try {
-    const [row] = await db
-      .select({ value: appSettings.value })
-      .from(appSettings)
-      .where(eq(appSettings.key, "sms_automation_enabled"))
-      .limit(1);
-    return row ? row.value === "true" : true;
-  } catch {
-    return true;
-  }
+  return true;
 }
 
-export async function setSmsAutomationEnabled(enabled: boolean): Promise<void> {
+export async function setSmsAutomationEnabled(_enabled: boolean): Promise<void> {
   await db
     .insert(appSettings)
-    .values({ key: "sms_automation_enabled", value: String(enabled) })
+    .values({ key: "sms_automation_enabled", value: "true" })
     .onConflictDoUpdate({
       target: appSettings.key,
-      set: { value: String(enabled), updatedAt: new Date() },
+      set: { value: "true", updatedAt: new Date() },
     });
 }
 
