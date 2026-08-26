@@ -30,8 +30,20 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
         );
 
         let body: unknown = {};
+        let rawBodyText = "";
         try {
-          body = await request.clone().json();
+          rawBodyText = await request.clone().text();
+          if (rawBodyText) {
+            try {
+              body = JSON.parse(rawBodyText);
+            } catch {
+              // Handle URL encoded form parameters if Safaricom sends form data
+              const params = new URLSearchParams(rawBodyText);
+              const obj: Record<string, string> = {};
+              for (const [k, v] of params.entries()) obj[k] = v;
+              body = Object.keys(obj).length > 0 ? obj : { rawText: rawBodyText };
+            }
+          }
         } catch {
           try {
             body = await request.json();
