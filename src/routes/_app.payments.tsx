@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar, Plus } from "lucide-react";
+import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar } from "lucide-react";
 import { useLivePayments } from "@/hooks/use-live-payments";
 import { cn } from "@/lib/utils";
-import { fetchPaymentsFn, recheckPaymentStatusFn, recordManualPaymentFn, type MpesaPayment } from "@/lib/payments";
+import { fetchPaymentsFn, recheckPaymentStatusFn, type MpesaPayment } from "@/lib/payments";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/payments")({
@@ -127,112 +127,6 @@ function StatusBadge({ payment, onRefresh }: { payment: MpesaPayment; onRefresh:
   );
 }
 
-function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRecorded: () => void }) {
-  const [phone, setPhone] = useState("");
-  const [amount, setAmount] = useState("30");
-  const [mpesaCode, setMpesaCode] = useState("");
-  const [payerName, setPayerName] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!phone || !amount || !mpesaCode) {
-      toast.error("Please fill in Phone, Amount, and M-Pesa Receipt Code");
-      return;
-    }
-    setLoading(true);
-    try {
-      await recordManualPaymentFn({
-        data: {
-          phone,
-          amount: Number(amount),
-          mpesaReceiptNumber: mpesaCode,
-          payerName: payerName || undefined,
-        },
-      });
-      toast.success(`Payment KES ${amount} recorded & SMS predictions dispatched!`);
-      onRecorded();
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to record payment");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-border pb-3">
-          <h3 className="font-bold text-base text-foreground flex items-center gap-2">
-            <span>⚡</span> Record M-Pesa Till Payment
-          </h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary">
-            ✕
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">M-Pesa Receipt Code (e.g. SIM8329...)</label>
-            <input
-              type="text"
-              required
-              value={mpesaCode}
-              onChange={(e) => setMpesaCode(e.target.value.toUpperCase())}
-              placeholder="e.g. SIM83293987"
-              className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-mono uppercase outline-none focus:border-primary"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">Customer Phone Number</label>
-            <input
-              type="text"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0712345678 or 254712345678"
-              className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">Amount (KES)</label>
-            <input
-              type="number"
-              required
-              min="1"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">Customer Name (Optional)</label>
-            <input
-              type="text"
-              value={payerName}
-              onChange={(e) => setPayerName(e.target.value)}
-              placeholder="e.g. John Doe"
-              className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-          </div>
-          <div className="pt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-xs font-semibold hover:bg-secondary">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50"
-            >
-              {loading ? "Recording & Sending SMS..." : "Record & Send Predictions SMS"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function PaymentsPage() {
   const loaderData = Route.useLoaderData();
   const { payments, refresh, isRefreshing, lastUpdated } = useLivePayments(loaderData);
@@ -240,7 +134,6 @@ function PaymentsPage() {
   const [sortDesc, setSortDesc] = useState(true);
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [page, setPage] = useState(1);
-  const [showRecordModal, setShowRecordModal] = useState(false);
 
   const stats = useMemo(() => {
     const success = payments.filter((p) => p.status === "Success");
@@ -361,12 +254,6 @@ function PaymentsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowRecordModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-all"
-          >
-            <Plus className="h-4 w-4" /> Record Payment & Send SMS
-          </button>
           <button
             onClick={exportCsv}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-secondary"
