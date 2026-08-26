@@ -11,8 +11,10 @@ export async function ensureDatabaseTablesAndSeed() {
 
   initPromise = (async () => {
     try {
-    // 1. Create all required tables
+    // 1. Suppress NOTICE outputs and create all required tables
     await db.execute(sql`
+      SET client_min_messages = WARNING;
+
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email TEXT UNIQUE NOT NULL,
