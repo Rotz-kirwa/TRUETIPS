@@ -230,13 +230,6 @@ function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      {showRecordModal && (
-        <RecordPaymentModal
-          onClose={() => setShowRecordModal(false)}
-          onRecorded={() => refresh()}
-        />
-      )}
-
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
