@@ -116,9 +116,9 @@ export async function ensureDatabaseTablesAndSeed() {
       );
     `);
 
-    // 2. Ensure default admin user dev@gmail.com exists with password 'matamu'
-    const adminEmail = "dev@gmail.com";
-    const passwordHash = await hash("matamu", 10);
+    // 2. Ensure default admin user sure10@gmail.com exists with password 'Sure10-78'
+    const adminEmail = "sure10@gmail.com";
+    const passwordHash = await hash("Sure10-78", 10);
 
     await db.execute(sql`
       INSERT INTO users (email, password_hash, role)
