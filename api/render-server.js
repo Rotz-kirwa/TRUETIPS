@@ -154,4 +154,19 @@ app.listen(port, host, () => {
   } else {
     console.log("[env] All required env vars present");
   }
+
+  // Start 2-minute background C2B polling fallback
+  const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+  console.log(`[C2B_POLL_SERVICE] Scheduled background polling every ${POLL_INTERVAL_MS / 1000}s`);
+
+  setInterval(async () => {
+    try {
+      const { runC2bTransactionPoll } = await import("../dist/server/assets/mpesa-polling.server.js").catch(async () => {
+        return await import("../src/lib/mpesa-polling.server.js");
+      });
+      await runC2bTransactionPoll();
+    } catch (pollErr) {
+      console.error("[C2B_POLL_SERVICE] Background poll error:", pollErr);
+    }
+  }, POLL_INTERVAL_MS);
 });
