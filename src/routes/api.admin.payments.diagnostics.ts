@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/admin/payments/diagnostics")({
 
         try {
           const now = new Date();
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const oneDayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
           // 1. Last callback received timestamp
           const lastCallbackRes = await db.execute(sql`
@@ -45,12 +45,12 @@ export const Route = createFileRoute("/api/admin/payments/diagnostics")({
                 )
               : null;
 
-          // 3. 24h count metrics
+          // 3. 24h count metrics using ISO timestamp strings
           const countsRes = await db.execute(sql`
             SELECT
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgo} AND source = 'recovered_via_poll') AS recovered_via_poll_24h,
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgo} AND source = 'c2b_till') AS webhook_received_24h,
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgo}) AS total_payments_24h
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz AND source = 'recovered_via_poll') AS recovered_via_poll_24h,
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz AND source = 'c2b_till') AS webhook_received_24h,
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz) AS total_payments_24h
           `);
           const countsRows = Array.isArray(countsRes)
             ? countsRes
@@ -69,11 +69,11 @@ export const Route = createFileRoute("/api/admin/payments/diagnostics")({
           const webhookReceivedCount24h = metrics.webhook_received_24h ?? 0;
           const totalPayments24h = metrics.total_payments_24h ?? 0;
 
-          // 4. Calculate callback health
+          // 4. Calculate callback health status
           let callbackHealth: "HEALTHY" | "CALLBACK_DEGRADED" | "NO_ACTIVITY" = "HEALTHY";
           if (recoveredViaPollCount24h > 0 && webhookReceivedCount24h === 0) {
             callbackHealth = "CALLBACK_DEGRADED";
-          } else if (totalPayments24h === 0) {
+          } else if (totalPayments24h === 0 && webhookReceivedCount24h === 0) {
             callbackHealth = "NO_ACTIVITY";
           }
 

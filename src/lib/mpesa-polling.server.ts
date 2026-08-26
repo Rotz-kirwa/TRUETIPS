@@ -85,8 +85,8 @@ export async function runC2bTransactionPoll(): Promise<PollResult> {
   }
 
   // Count callbacks vs recovered payments in last 1 hour
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const oneDayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   let recoveredCount = 0;
   const recoveredReceipts: string[] = [];
@@ -100,17 +100,17 @@ export async function runC2bTransactionPoll(): Promise<PollResult> {
       createdAt: mpesaPayments.createdAt,
     })
     .from(mpesaPayments)
-    .where(sql`${mpesaPayments.createdAt} >= ${oneDayAgo}`);
+    .where(sql`${mpesaPayments.createdAt} >= ${oneDayAgoIso}::timestamptz`);
 
   const webhook1hCountResult = await db.execute(sql`
     SELECT COUNT(*)::int as count FROM mpesa_callback_events
-    WHERE created_at >= ${oneHourAgo} AND processing_status = 'accepted'
+    WHERE created_at >= ${oneHourAgoIso}::timestamptz AND processing_status = 'accepted'
   `);
   const webhook1hCount = (webhook1hCountResult[0] as { count?: number })?.count ?? 0;
 
   const pollRecovered1hResult = await db.execute(sql`
     SELECT COUNT(*)::int as count FROM mpesa_payments
-    WHERE created_at >= ${oneHourAgo} AND source = 'recovered_via_poll'
+    WHERE created_at >= ${oneHourAgoIso}::timestamptz AND source = 'recovered_via_poll'
   `);
   const pollRecovered1hCount = (pollRecovered1hResult[0] as { count?: number })?.count ?? 0;
 
