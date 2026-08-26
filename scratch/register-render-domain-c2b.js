@@ -4,8 +4,15 @@ const key = "OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG";
 const secret = "vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd";
 const domain = "https://moonlight-games.onrender.com";
 
-const confirmationUrl = `${domain}/api/payments/c2b/confirmation`;
-const validationUrl = `${domain}/api/payments/c2b/validation`;
+const confirmationUrls = [
+  `${domain}/api/payments/c2b/confirmation`,
+  `${domain}/c2b/confirmation`,
+];
+
+const validationUrls = [
+  `${domain}/api/payments/c2b/validation`,
+  `${domain}/c2b/validation`,
+];
 
 const BASE = "https://api.safaricom.co.ke";
 
@@ -47,9 +54,7 @@ async function httpPostJson(urlStr, headers, payload) {
 
 async function main() {
   console.log("=================================================");
-  console.log("⚡ TESTING C2B REGISTRATION WITH RENDER DOMAIN");
-  console.log(`ConfirmationURL: ${confirmationUrl}`);
-  console.log(`ValidationURL:   ${validationUrl}`);
+  console.log("⚡ REGISTERING SAFARICOM C2B URLS FOR MOONLIGHT-GAMES");
   console.log("=================================================");
 
   const authHeader = "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
@@ -65,22 +70,30 @@ async function main() {
   const token = authRes.body.access_token;
   console.log("✓ OAuth Token obtained!");
 
-  const shortcode = "4980406";
-  const registerPayload = {
-    ShortCode: shortcode,
-    ResponseType: "Completed",
-    ConfirmationURL: confirmationUrl,
-    ValidationURL: validationUrl
-  };
-
-  console.log(`\nSending registration request to ${BASE}/mpesa/c2b/v2/registerurl ...`);
-  const res = await httpPostJson(
+  const shortcodes = ["4980406", "232392"];
+  const endpoints = [
+    `${BASE}/mpesa/c2b/v1/registerurl`,
     `${BASE}/mpesa/c2b/v2/registerurl`,
-    { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    registerPayload
-  );
+  ];
 
-  console.log(`Response (${res.status}):`, JSON.stringify(res.body, null, 2));
+  for (const shortcode of shortcodes) {
+    for (const ep of endpoints) {
+      console.log(`\n-------------------------------------------------`);
+      console.log(`📡 ShortCode: ${shortcode} | Endpoint: ${ep}`);
+      const payload = {
+        ShortCode: shortcode,
+        ResponseType: "Completed",
+        ConfirmationURL: `${domain}/api/payments/c2b/confirmation`,
+        ValidationURL: `${domain}/api/payments/c2b/validation`
+      };
+      const res = await httpPostJson(
+        ep,
+        { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        payload
+      );
+      console.log(`Result (${res.status}):`, JSON.stringify(res.body, null, 2));
+    }
+  }
 }
 
 main().catch(console.error);
