@@ -38,8 +38,8 @@ export async function queryTransactionStatusFromSafaricom(mpesaReceiptNumber: st
       TransactionID: mpesaReceiptNumber,
       PartyA: SHORTCODE,
       IdentifierType: "4", // 4 = Organization ShortCode
-      ResultURL: `${process.env.MPESA_CALLBACK_URL ?? "https://moonlight-games.onrender.com"}/api/payments/c2b/confirmation`,
-      QueueTimeOutURL: `${process.env.MPESA_CALLBACK_URL ?? "https://moonlight-games.onrender.com"}/api/payments/c2b/validation`,
+      ResultURL: `${process.env.MPESA_CALLBACK_URL ?? "https://www.sure-10.com"}/api/payments/c2b/confirmation`,
+      QueueTimeOutURL: `${process.env.MPESA_CALLBACK_URL ?? "https://www.sure-10.com"}/api/payments/c2b/validation`,
       Remarks: "C2B Polling Fallback",
       Occasion: "Polling Fallback",
     };
