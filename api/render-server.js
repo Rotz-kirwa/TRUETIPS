@@ -169,10 +169,30 @@ app.listen(port, host, () => {
 
   setInterval(async () => {
     try {
-      const { runC2bTransactionPoll } = await import("../dist/server/assets/mpesa-polling.server.js").catch(async () => {
-        return await import("../src/lib/mpesa-polling.server.js");
-      });
-      await runC2bTransactionPoll();
+      let runC2bTransactionPoll;
+      try {
+        const { readdirSync } = await import("node:fs");
+        const assetsDir = join(__dirname, "../dist/server/assets");
+        const files = readdirSync(assetsDir);
+        const pollFile = files.find((f) => f.startsWith("mpesa-polling.server") && f.endsWith(".js"));
+        if (pollFile) {
+          const mod = await import(`../dist/server/assets/${pollFile}`);
+          runC2bTransactionPoll = mod.runC2bTransactionPoll;
+        }
+      } catch {}
+
+      if (!runC2bTransactionPoll) {
+        try {
+          const mod = await import("../src/lib/mpesa-polling.server.ts");
+          runC2bTransactionPoll = mod.runC2bTransactionPoll;
+        } catch {}
+      }
+
+      if (runC2bTransactionPoll) {
+        await runC2bTransactionPoll();
+      } else {
+        console.warn("[C2B_POLL_SERVICE] Could not locate runC2bTransactionPoll module.");
+      }
     } catch (pollErr) {
       console.error("[C2B_POLL_SERVICE] Background poll error:", pollErr);
     }

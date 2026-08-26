@@ -183,26 +183,52 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
       ...(status === "Success" ? { paidAt } : {}),
     })
     .where(eq(mpesaPayments.checkoutRequestId, checkoutRequestId))
-    .returning({
-      id: mpesaPayments.id,
-      status: mpesaPayments.status,
-      phone: mpesaPayments.phone,
-      amount: mpesaPayments.amount,
-    });
+  let finalPayment = updated[0];
 
-  console.log("[handleStkCallback] DB update result:", {
+  if (!finalPayment && status === "Success") {
+    const amountVal = parseAmount(getItemValue("Amount")) ?? "0";
+    const phoneVal = parseString(getItemValue("PhoneNumber")) ?? "254700000000";
+
+    const [inserted] = await db
+      .insert(mpesaPayments)
+      .values({
+        source: "stk_push",
+        status: "Success",
+        phone: phoneVal,
+        amount: amountVal,
+        checkoutRequestId,
+        merchantRequestId,
+        mpesaReceiptNumber,
+        resultCode,
+        resultDesc,
+        rawCallbackJson,
+        paidAt,
+        createdAt: paidAt,
+        updatedAt: now,
+      })
+      .onConflictDoNothing()
+      .returning({
+        id: mpesaPayments.id,
+        status: mpesaPayments.status,
+        phone: mpesaPayments.phone,
+        amount: mpesaPayments.amount,
+      });
+    finalPayment = inserted;
+  }
+
+  console.log("[handleStkCallback] DB processing result:", {
     checkoutRequestId,
     updated: updated.length,
+    inserted: !updated[0] && !!finalPayment,
     status,
   });
 
-  // Trigger SMS automation for successful STK push payments (phone is always known here)
-  if (status === "Success" && updated[0]) {
-    const p = updated[0];
+  // Trigger SMS automation for successful STK push payments
+  if (status === "Success" && finalPayment) {
     processPaymentSms({
-      paymentId: p.id,
-      phone: p.phone,
-      amount: Number(p.amount),
+      paymentId: finalPayment.id,
+      phone: finalPayment.phone,
+      amount: Number(finalPayment.amount),
       transactionCode: mpesaReceiptNumber,
       paidAt,
     }).catch((err) => {
