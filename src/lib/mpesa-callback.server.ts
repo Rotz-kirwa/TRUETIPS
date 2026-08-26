@@ -49,19 +49,19 @@ function parseAmount(value: unknown): number | null {
 
 function sanitizeC2bBody(body: UnknownRecord) {
   return {
-    TransactionType: parseString(body.TransactionType),
-    TransID: parseString(body.TransID),
-    TransTime: parseString(body.TransTime),
-    TransAmount: parseString(body.TransAmount) ?? parseAmount(body.TransAmount),
-    BusinessShortCode: parseString(body.BusinessShortCode),
-    BillRefNumber: parseString(body.BillRefNumber),
-    InvoiceNumber: parseString(body.InvoiceNumber),
-    OrgAccountBalance: parseString(body.OrgAccountBalance),
-    ThirdPartyTransID: parseString(body.ThirdPartyTransID),
-    MSISDN: normalizePhone(body.MSISDN),
-    FirstName: parseString(body.FirstName),
-    MiddleName: parseString(body.MiddleName),
-    LastName: parseString(body.LastName),
+    TransactionType: parseString(body.TransactionType ?? body.transactionType ?? body.Transactiontype),
+    TransID: parseString(body.TransID ?? body.transID ?? body.transId ?? body.TransId ?? body.transactionId ?? body.TransactionId),
+    TransTime: parseString(body.TransTime ?? body.transTime ?? body.transtime ?? body.transactionTime),
+    TransAmount: parseAmount(body.TransAmount ?? body.transAmount ?? body.transamount ?? body.amount ?? body.Amount),
+    BusinessShortCode: parseString(body.BusinessShortCode ?? body.businessShortCode ?? body.businessShortcode ?? body.ShortCode ?? body.shortCode),
+    BillRefNumber: parseString(body.BillRefNumber ?? body.billRefNumber ?? body.billrefnumber ?? body.AccountReference ?? body.accountReference),
+    InvoiceNumber: parseString(body.InvoiceNumber ?? body.invoiceNumber),
+    OrgAccountBalance: parseString(body.OrgAccountBalance ?? body.orgAccountBalance),
+    ThirdPartyTransID: parseString(body.ThirdPartyTransID ?? body.thirdPartyTransID),
+    MSISDN: normalizePhone(body.MSISDN ?? body.msisdn ?? body.Msisdn ?? body.Phone ?? body.phone ?? body.PhoneNumber ?? body.phoneNumber),
+    FirstName: parseString(body.FirstName ?? body.firstName ?? body.firstname),
+    MiddleName: parseString(body.MiddleName ?? body.middleName ?? body.middlename),
+    LastName: parseString(body.LastName ?? body.lastName ?? body.lastname ?? body.Surname ?? body.surname),
   };
 }
 
@@ -214,18 +214,13 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
 
   await ensurePayerNameColumn();
 
-  console.log("[handleC2bConfirmation] Received callback:", sanitizeC2bBody(body));
+  const sanitized = sanitizeC2bBody(body);
+  console.log("[handleC2bConfirmation] Received callback:", sanitized);
 
-  const mpesaReceiptNumber = parseString(body.TransID);
-  const phone = normalizePhone(body.MSISDN);
-  const amount = parseAmount(body.TransAmount);
-  // Safaricom sends LastName or Surname depending on API version
-  const lastName = parseString(body.LastName) ?? parseString(body.Surname);
-  const payerName = [
-    parseString(body.FirstName),
-    parseString(body.MiddleName),
-    lastName,
-  ]
+  const mpesaReceiptNumber = sanitized.TransID;
+  const phone = sanitized.MSISDN;
+  const amount = sanitized.TransAmount;
+  const payerName = [sanitized.FirstName, sanitized.MiddleName, sanitized.LastName]
     .filter(Boolean)
     .join(" ") || null;
 
@@ -234,25 +229,22 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
   }
 
   const now = new Date();
-  const accountReference =
-    parseString(body.BillRefNumber) ??
-    parseString(body.InvoiceNumber) ??
-    parseString(body.AccountReference);
+  const accountReference = sanitized.BillRefNumber ?? sanitized.InvoiceNumber;
 
   // Safaricom hashes the MSISDN for Buy Goods. If BillRefNumber looks like a phone
   // (some customers type their number as the reference), use it as the SMS target.
-  const billRefPhone = normalizePhone(body.BillRefNumber);
+  const billRefPhone = normalizePhone(sanitized.BillRefNumber);
   const smsPhone = isValidKenyanPhone(phone ?? "")
     ? phone!
     : isValidKenyanPhone(billRefPhone ?? "")
       ? billRefPhone!
       : phone ?? "";
-  const paidAt = parseMpesaDate(body.TransTime) ?? now;
+  const paidAt = parseMpesaDate(sanitized.TransTime) ?? now;
   const rawCallbackJson = body;
   // For Buy Goods: BusinessShortCode in callback = the till number; store is the parent
-  const tillNumber = parseString(body.BusinessShortCode) ?? process.env.MPESA_TILL_NUMBER ?? null;
+  const tillNumber = sanitized.BusinessShortCode ?? process.env.MPESA_TILL_NUMBER ?? null;
   const businessShortcode = process.env.MPESA_SHORTCODE ?? null;
-  const transactionDesc = parseString(body.TransactionType) ?? "CustomerPayBillOnline";
+  const transactionDesc = sanitized.TransactionType ?? "CustomerPayBillOnline";
 
   const [inserted] = await db
     .insert(mpesaPayments)

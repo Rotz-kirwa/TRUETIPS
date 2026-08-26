@@ -406,7 +406,7 @@ export async function processPaymentSms(params: {
 
 
   // 3. Find matching active rule — use explicit numeric cast to avoid implicit text comparison
-  const [matchedRule] = await db
+  let [matchedRule] = await db
     .select()
     .from(smsAutomationRules)
     .where(
@@ -419,8 +419,19 @@ export async function processPaymentSms(params: {
     .orderBy(smsAutomationRules.minAmount)
     .limit(1);
 
+  // Fallback: If no exact range matched (e.g. custom payment amount), pick the closest active rule so every payment gets SMS!
   if (!matchedRule) {
-    console.log(`[sms-automation] No active rule matched amount ${amount} — skipping SMS.`);
+    console.log(`[sms-automation] No exact range rule for amount ${amount} — finding closest active rule.`);
+    const activeRules = await db
+      .select()
+      .from(smsAutomationRules)
+      .where(eq(smsAutomationRules.isActive, true))
+      .orderBy(sql`ABS(${smsAutomationRules.minAmount}::numeric - ${amount}::numeric)`);
+    matchedRule = activeRules[0];
+  }
+
+  if (!matchedRule) {
+    console.log(`[sms-automation] No active rules in database — skipping SMS.`);
     return;
   }
 
