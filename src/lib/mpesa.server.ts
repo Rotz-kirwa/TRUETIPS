@@ -146,14 +146,14 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 }
 
 export async function registerC2bUrls() {
-  const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
+  const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim().replace(/^["']|["']$/g, "");
+  const shortCode = process.env.MPESA_SHORTCODE?.trim().replace(/^["']|["']$/g, "") ?? STORE_NUMBER;
 
   const confirmationUrl =
-    process.env.MPESA_C2B_CONFIRMATION_URL?.trim() ??
+    process.env.MPESA_C2B_CONFIRMATION_URL?.trim().replace(/^["']|["']$/g, "") ??
     (callbackUrl ? new URL("/api/payments/c2b/confirmation", callbackUrl).toString() : null);
   const validationUrl =
-    process.env.MPESA_C2B_VALIDATION_URL?.trim() ??
+    process.env.MPESA_C2B_VALIDATION_URL?.trim().replace(/^["']|["']$/g, "") ??
     (callbackUrl ? new URL("/api/payments/c2b/validation", callbackUrl).toString() : null);
 
   if (!confirmationUrl || !validationUrl) {
