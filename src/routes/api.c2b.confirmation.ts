@@ -5,19 +5,9 @@ export const Route = createFileRoute("/api/c2b/confirmation")({
     handlers: {
       POST: async ({ request }) => {
         let body: unknown = {};
-        let auditId: string | null = null;
-
         try {
-          const { readAndAuditCallbackRequest } = await import("../lib/callback-audit.server");
-          const audit = await readAndAuditCallbackRequest(
-            request,
-            "/api/c2b/confirmation",
-            "c2b_confirmation",
-          );
-          body = audit.body;
-          auditId = audit.auditId;
-        } catch (auditErr) {
-          console.error("[api/c2b/confirmation] Audit failed, attempting direct JSON parse:", auditErr);
+          body = await request.clone().json();
+        } catch {
           try {
             body = await request.json();
           } catch {
@@ -25,42 +15,32 @@ export const Route = createFileRoute("/api/c2b/confirmation")({
           }
         }
 
-        try {
-          const { handleC2bConfirmation } = await import("../lib/mpesa-callback.server");
-          const result = await handleC2bConfirmation(body);
-
-          if (auditId) {
-            const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
-            await markCallbackAuditResult(
-              auditId,
-              "accepted",
-              result.ResultCode,
-              result.ResultDesc,
+        (async () => {
+          let auditId: string | null = null;
+          try {
+            const { readAndAuditCallbackRequest } = await import("../lib/callback-audit.server");
+            const audit = await readAndAuditCallbackRequest(
+              request,
+              "/api/c2b/confirmation",
+              "c2b_confirmation",
             );
-          }
+            auditId = audit.auditId;
+          } catch {}
 
-          return Response.json(result);
-        } catch (error) {
-          console.error("[api/c2b/confirmation] Handler error:", error);
+          try {
+            const { handleC2bConfirmation } = await import("../lib/mpesa-callback.server");
+            const result = await handleC2bConfirmation(body);
 
-          if (auditId) {
-            try {
+            if (auditId) {
               const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
-              await markCallbackAuditResult(
-                auditId,
-                "failed",
-                1,
-                "Failed to process confirmation",
-                error,
-              );
-            } catch {}
+              await markCallbackAuditResult(auditId, "accepted", result.ResultCode, result.ResultDesc);
+            }
+          } catch (error) {
+            console.error("[api/c2b/confirmation] Processing error:", error);
           }
+        })().catch(() => {});
 
-          return Response.json(
-            { ResultCode: 0, ResultDesc: "Accepted" },
-            { status: 200 },
-          );
-        }
+        return Response.json({ ResultCode: 0, ResultDesc: "Accepted" }, { status: 200 });
       },
     },
   },
