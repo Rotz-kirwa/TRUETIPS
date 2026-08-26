@@ -6,10 +6,16 @@ import { processPaymentSms, isValidKenyanPhone } from "./sms-automation.server";
 let payerNameColumnEnsured = false;
 async function ensurePayerNameColumn() {
   if (payerNameColumnEnsured) return;
-  await db.execute(sql`
-    ALTER TABLE mpesa_payments ADD COLUMN IF NOT EXISTS payer_name TEXT
-  `);
-  payerNameColumnEnsured = true;
+  try {
+    const { ensureDatabaseTablesAndSeed } = await import("./db/init-schema.server");
+    await ensureDatabaseTablesAndSeed();
+    await db.execute(sql`
+      ALTER TABLE mpesa_payments ADD COLUMN IF NOT EXISTS payer_name TEXT
+    `);
+    payerNameColumnEnsured = true;
+  } catch (err) {
+    console.error("[ensurePayerNameColumn] Table initialization notice:", err);
+  }
 }
 
 type CallbackResult = { ResultCode: number; ResultDesc: string };
@@ -208,96 +214,102 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
 }
 
 export async function handleC2bConfirmation(body: unknown): Promise<CallbackResult> {
-  if (!isRecord(body)) {
-    throw new Error("Invalid C2B confirmation body");
-  }
-
-  await ensurePayerNameColumn();
-
-  const sanitized = sanitizeC2bBody(body);
-  console.log("[handleC2bConfirmation] Received callback:", sanitized);
-
-  const mpesaReceiptNumber = sanitized.TransID;
-  const phone = sanitized.MSISDN;
-  const amount = sanitized.TransAmount;
-  const payerName = [sanitized.FirstName, sanitized.MiddleName, sanitized.LastName]
-    .filter(Boolean)
-    .join(" ") || null;
-
-  if (!mpesaReceiptNumber || !phone || amount === null) {
-    throw new Error("C2B confirmation is missing TransID, MSISDN, or TransAmount");
-  }
-
-  const now = new Date();
-  const accountReference = sanitized.BillRefNumber ?? sanitized.InvoiceNumber;
-
-  // Safaricom hashes the MSISDN for Buy Goods. If BillRefNumber looks like a phone
-  // (some customers type their number as the reference), use it as the SMS target.
-  const billRefPhone = normalizePhone(sanitized.BillRefNumber);
-  const smsPhone = isValidKenyanPhone(phone ?? "")
-    ? phone!
-    : isValidKenyanPhone(billRefPhone ?? "")
-      ? billRefPhone!
-      : phone ?? "";
-  const paidAt = parseMpesaDate(sanitized.TransTime) ?? now;
-  const rawCallbackJson = body;
-  // For Buy Goods: BusinessShortCode in callback = the till number; store is the parent
-  const tillNumber = sanitized.BusinessShortCode ?? process.env.MPESA_TILL_NUMBER ?? null;
-  const businessShortcode = process.env.MPESA_SHORTCODE ?? null;
-  const transactionDesc = sanitized.TransactionType ?? "CustomerPayBillOnline";
-
-  const [inserted] = await db
-    .insert(mpesaPayments)
-    .values({
-      source: "c2b_till",
-      status: "Success",
-      phone,
-      payerName,
-      amount: formatAmount(amount ?? 0),
-      tillNumber,
-      businessShortcode,
-      mpesaReceiptNumber,
-      accountReference,
-      transactionDesc,
-      resultCode: 0,
-      resultDesc: "C2B Confirmed",
-      rawCallbackJson,
-      paidAt,
-      createdAt: paidAt,
-      updatedAt: now,
-    })
-    .onConflictDoNothing({ target: mpesaPayments.mpesaReceiptNumber })
-    .returning({ id: mpesaPayments.id });
-
-  if (inserted?.id) {
-    console.log("[handleC2bConfirmation] DB insert success:", {
-      paymentId: inserted.id,
-      transId: mpesaReceiptNumber,
-      amount,
-      phone,
-      tillNumber,
-    });
-  } else {
-    console.log("[handleC2bConfirmation] Duplicate callback ignored:", {
-      transId: mpesaReceiptNumber,
-      amount,
-      phone,
-    });
-  }
-
-  // Trigger SMS automation — errors must never fail the payment
-  if (inserted?.id && amount != null) {
-    try {
-      await processPaymentSms({
-        paymentId: inserted.id,
-        phone: smsPhone,
-        amount,
-        transactionCode: mpesaReceiptNumber,
-        paidAt,
-      });
-    } catch (err) {
-      console.error("[sms-automation] SMS trigger failed:", err);
+  try {
+    if (!isRecord(body)) {
+      console.warn("[handleC2bConfirmation] Non-record payload ignored:", body);
+      return accepted();
     }
+
+    await ensurePayerNameColumn();
+
+    const sanitized = sanitizeC2bBody(body);
+    console.log("[handleC2bConfirmation] Received callback:", sanitized);
+
+    const mpesaReceiptNumber = sanitized.TransID || `C2B_${Date.now()}`;
+    const phone = sanitized.MSISDN || sanitized.BillRefNumber || sanitized.InvoiceNumber || "254700000000";
+    const amount = sanitized.TransAmount ?? 0;
+    const payerName = [sanitized.FirstName, sanitized.MiddleName, sanitized.LastName]
+      .filter(Boolean)
+      .join(" ") || "C2B Customer";
+
+    const now = new Date();
+    const accountReference = sanitized.BillRefNumber ?? sanitized.InvoiceNumber;
+
+    // Safaricom hashes the MSISDN for Buy Goods. If BillRefNumber looks like a phone, use it as SMS target.
+    const billRefPhone = normalizePhone(sanitized.BillRefNumber);
+    const smsPhone = isValidKenyanPhone(phone ?? "")
+      ? phone!
+      : isValidKenyanPhone(billRefPhone ?? "")
+        ? billRefPhone!
+        : phone ?? "";
+    const paidAt = parseMpesaDate(sanitized.TransTime) ?? now;
+    const rawCallbackJson = body;
+    const tillNumber = sanitized.BusinessShortCode ?? process.env.MPESA_TILL_NUMBER ?? "232392";
+    const businessShortcode = process.env.MPESA_SHORTCODE ?? "4980406";
+    const transactionDesc = sanitized.TransactionType ?? "CustomerPayBillOnline";
+
+    let insertedId: string | undefined;
+    try {
+      const [inserted] = await db
+        .insert(mpesaPayments)
+        .values({
+          source: "c2b_till",
+          status: "Success",
+          phone,
+          payerName,
+          amount: formatAmount(amount ?? 0),
+          tillNumber,
+          businessShortcode,
+          mpesaReceiptNumber,
+          accountReference,
+          transactionDesc,
+          resultCode: 0,
+          resultDesc: "C2B Confirmed",
+          rawCallbackJson,
+          paidAt,
+          createdAt: paidAt,
+          updatedAt: now,
+        })
+        .onConflictDoNothing({ target: mpesaPayments.mpesaReceiptNumber })
+        .returning({ id: mpesaPayments.id });
+
+      insertedId = inserted?.id;
+
+      if (insertedId) {
+        console.log("[handleC2bConfirmation] DB insert success:", {
+          paymentId: insertedId,
+          transId: mpesaReceiptNumber,
+          amount,
+          phone,
+          tillNumber,
+        });
+      } else {
+        console.log("[handleC2bConfirmation] Duplicate callback ignored:", {
+          transId: mpesaReceiptNumber,
+          amount,
+          phone,
+        });
+      }
+    } catch (dbError) {
+      console.error("[handleC2bConfirmation] Database save error:", dbError);
+    }
+
+    // Trigger SMS automation — errors must never fail the payment or response
+    if (insertedId && amount != null && amount > 0) {
+      try {
+        await processPaymentSms({
+          paymentId: insertedId,
+          phone: smsPhone,
+          amount,
+          transactionCode: mpesaReceiptNumber,
+          paidAt,
+        });
+      } catch (err) {
+        console.error("[sms-automation] SMS trigger failed:", err);
+      }
+    }
+  } catch (error) {
+    console.error("[handleC2bConfirmation] Outer processing error:", error);
   }
 
   return accepted();

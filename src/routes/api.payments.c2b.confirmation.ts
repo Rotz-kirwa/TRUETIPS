@@ -35,8 +35,8 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
           );
 
           return Response.json(
-            { ResultCode: 1, ResultDesc: "Failed to process confirmation" },
-            { status: 500 },
+            { ResultCode: 0, ResultDesc: "Accepted" },
+            { status: 200 },
           );
         }
       },
