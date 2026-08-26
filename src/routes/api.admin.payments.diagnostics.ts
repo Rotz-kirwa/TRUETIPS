@@ -45,12 +45,12 @@ export const Route = createFileRoute("/api/admin/payments/diagnostics")({
                 )
               : null;
 
-          // 3. 24h count metrics using ISO timestamp strings
+          // 3. 24h count metrics using sql.raw for robust PostgreSQL timestamptz handling
           const countsRes = await db.execute(sql`
             SELECT
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz AND source = 'recovered_via_poll') AS recovered_via_poll_24h,
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz AND source = 'c2b_till') AS webhook_received_24h,
-              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${oneDayAgoIso}::timestamptz) AS total_payments_24h
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${sql.raw(`'${oneDayAgoIso}'::timestamptz`)} AND source = 'recovered_via_poll') AS recovered_via_poll_24h,
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${sql.raw(`'${oneDayAgoIso}'::timestamptz`)} AND source = 'c2b_till') AS webhook_received_24h,
+              (SELECT COUNT(*)::int FROM mpesa_payments WHERE created_at >= ${sql.raw(`'${oneDayAgoIso}'::timestamptz`)}) AS total_payments_24h
           `);
           const countsRows = Array.isArray(countsRes)
             ? countsRes
