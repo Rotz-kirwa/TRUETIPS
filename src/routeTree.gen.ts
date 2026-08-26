@@ -30,6 +30,8 @@ import { Route as ApiDebugSimulateC2bRouteImport } from './routes/api.debug.simu
 import { Route as ApiDebugPaymentStatusRouteImport } from './routes/api.debug.payment-status'
 import { Route as ApiDebugHealthRouteImport } from './routes/api.debug.health'
 import { Route as ApiDebugCallbacksRouteImport } from './routes/api.debug.callbacks'
+import { Route as ApiC2bValidationRouteImport } from './routes/api.c2b.validation'
+import { Route as ApiC2bConfirmationRouteImport } from './routes/api.c2b.confirmation'
 import { Route as ApiPaymentsC2bValidationRouteImport } from './routes/api.payments.c2b.validation'
 import { Route as ApiPaymentsC2bStatusRouteImport } from './routes/api.payments.c2b.status'
 import { Route as ApiPaymentsC2bConfirmationRouteImport } from './routes/api.payments.c2b.confirmation'
@@ -138,6 +140,16 @@ const ApiDebugCallbacksRoute = ApiDebugCallbacksRouteImport.update({
   path: '/api/debug/callbacks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiC2bValidationRoute = ApiC2bValidationRouteImport.update({
+  id: '/api/c2b/validation',
+  path: '/api/c2b/validation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiC2bConfirmationRoute = ApiC2bConfirmationRouteImport.update({
+  id: '/api/c2b/confirmation',
+  path: '/api/c2b/confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaymentsC2bValidationRoute =
   ApiPaymentsC2bValidationRouteImport.update({
     id: '/api/payments/c2b/validation',
@@ -171,6 +183,8 @@ export interface FileRoutesByFullPath {
   '/c2b/confirmation': typeof C2bConfirmationRoute
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
+  '/api/c2b/confirmation': typeof ApiC2bConfirmationRoute
+  '/api/c2b/validation': typeof ApiC2bValidationRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
   '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
@@ -196,6 +210,8 @@ export interface FileRoutesByTo {
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
   '/': typeof AppIndexRoute
+  '/api/c2b/confirmation': typeof ApiC2bConfirmationRoute
+  '/api/c2b/validation': typeof ApiC2bValidationRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
   '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
@@ -223,6 +239,8 @@ export interface FileRoutesById {
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
   '/_app/': typeof AppIndexRoute
+  '/api/c2b/confirmation': typeof ApiC2bConfirmationRoute
+  '/api/c2b/validation': typeof ApiC2bValidationRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
   '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
@@ -250,6 +268,8 @@ export interface FileRouteTypes {
     | '/c2b/confirmation'
     | '/c2b/validation'
     | '/mpesa/callback'
+    | '/api/c2b/confirmation'
+    | '/api/c2b/validation'
     | '/api/debug/callbacks'
     | '/api/debug/health'
     | '/api/debug/payment-status'
@@ -275,6 +295,8 @@ export interface FileRouteTypes {
     | '/c2b/validation'
     | '/mpesa/callback'
     | '/'
+    | '/api/c2b/confirmation'
+    | '/api/c2b/validation'
     | '/api/debug/callbacks'
     | '/api/debug/health'
     | '/api/debug/payment-status'
@@ -301,6 +323,8 @@ export interface FileRouteTypes {
     | '/c2b/validation'
     | '/mpesa/callback'
     | '/_app/'
+    | '/api/c2b/confirmation'
+    | '/api/c2b/validation'
     | '/api/debug/callbacks'
     | '/api/debug/health'
     | '/api/debug/payment-status'
@@ -321,6 +345,8 @@ export interface RootRouteChildren {
   C2bConfirmationRoute: typeof C2bConfirmationRoute
   C2bValidationRoute: typeof C2bValidationRoute
   MpesaCallbackRoute: typeof MpesaCallbackRoute
+  ApiC2bConfirmationRoute: typeof ApiC2bConfirmationRoute
+  ApiC2bValidationRoute: typeof ApiC2bValidationRoute
   ApiDebugCallbacksRoute: typeof ApiDebugCallbacksRoute
   ApiDebugHealthRoute: typeof ApiDebugHealthRoute
   ApiDebugPaymentStatusRoute: typeof ApiDebugPaymentStatusRoute
@@ -481,6 +507,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugCallbacksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/c2b/validation': {
+      id: '/api/c2b/validation'
+      path: '/api/c2b/validation'
+      fullPath: '/api/c2b/validation'
+      preLoaderRoute: typeof ApiC2bValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/c2b/confirmation': {
+      id: '/api/c2b/confirmation'
+      path: '/api/c2b/confirmation'
+      fullPath: '/api/c2b/confirmation'
+      preLoaderRoute: typeof ApiC2bConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/payments/c2b/validation': {
       id: '/api/payments/c2b/validation'
       path: '/api/payments/c2b/validation'
@@ -536,6 +576,8 @@ const rootRouteChildren: RootRouteChildren = {
   C2bConfirmationRoute: C2bConfirmationRoute,
   C2bValidationRoute: C2bValidationRoute,
   MpesaCallbackRoute: MpesaCallbackRoute,
+  ApiC2bConfirmationRoute: ApiC2bConfirmationRoute,
+  ApiC2bValidationRoute: ApiC2bValidationRoute,
   ApiDebugCallbacksRoute: ApiDebugCallbacksRoute,
   ApiDebugHealthRoute: ApiDebugHealthRoute,
   ApiDebugPaymentStatusRoute: ApiDebugPaymentStatusRoute,
