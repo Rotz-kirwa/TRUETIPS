@@ -152,7 +152,7 @@ export const Route = createFileRoute("/_app/settings")({
       masked,
     })),
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — PredictionLab Admin" }] }),
+  head: () => ({ meta: [{ title: "Settings — Sure-10 Predict Admin" }] }),
 });
 
 // ─── Credential row component ────────────────────────────────────────────────

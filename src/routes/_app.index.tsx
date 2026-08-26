@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/")({
   component: DashboardPage,
   head: () => ({
     meta: [
-      { title: "Dashboard — PredictionLab Admin" },
+      { title: "Dashboard — Sure-10 Predict Admin" },
       { name: "description", content: "Track M-Pesa till payments in real time." },
     ],
   }),

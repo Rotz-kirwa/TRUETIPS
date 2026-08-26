@@ -115,7 +115,7 @@ const app = http.createServer(async (req, res) => {
 });
 
 app.listen(port, host, () => {
-  console.log(`PredictionLab listening on http://${host}:${port}`);
+  console.log(`Sure-10 Predict listening on http://${host}:${port}`);
   console.log(`Serving static files from: ${CLIENT_DIR}`);
 
   const required = [

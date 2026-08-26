@@ -102,7 +102,7 @@ const testSmsFn = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
   component: SmsAutomationPage,
-  head: () => ({ meta: [{ title: "Prediction Console — PredictionLab Admin" }] }),
+  head: () => ({ meta: [{ title: "Prediction Console — Sure-10 Predict Admin" }] }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

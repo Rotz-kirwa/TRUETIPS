@@ -60,7 +60,7 @@ export function resolvePlaceholders(
   });
 
   const customerName = `0${data.phone.slice(-9)}`;
-  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "PredictionLab";
+  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "Sure-10 Predict";
   const defaultPredictions = data.predictionsText ?? "⚽ Chelsea vs Arsenal → 1X (1.45)\n⚽ Real Madrid vs Sevilla → OVER 2.5 (1.70)";
 
   return template
@@ -290,14 +290,14 @@ export async function resetDefaultTiers(): Promise<RuleRow[]> {
       name: "Weekly Subscription 📅",
       minAmount: "500",
       maxAmount: "500",
-      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium Sure-10 Predict predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Monthly Subscription 📆",
       minAmount: "1500",
       maxAmount: "1500",
-      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to Sure-10 Predict premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
   ];
