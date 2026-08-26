@@ -15,14 +15,26 @@ export const Route = createFileRoute("/api/c2b/validation")({
           }
         }
 
+        const requestInfo = {
+          method: request.method,
+          sourceIp:
+            request.headers.get("cf-connecting-ip") ??
+            request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+            request.headers.get("x-real-ip") ??
+            undefined,
+          userAgent: request.headers.get("user-agent") ?? undefined,
+          contentType: request.headers.get("content-type") ?? undefined,
+        };
+
         (async () => {
           let auditId: string | null = null;
           try {
-            const { readAndAuditCallbackRequest } = await import("../lib/callback-audit.server");
-            const audit = await readAndAuditCallbackRequest(
-              request,
+            const { auditCallbackPayload } = await import("../lib/callback-audit.server");
+            const audit = await auditCallbackPayload(
+              body,
               "/api/c2b/validation",
               "c2b_validation",
+              requestInfo,
             );
             auditId = audit.auditId;
           } catch {}
