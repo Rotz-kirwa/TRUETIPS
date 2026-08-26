@@ -8,7 +8,7 @@ const STORE_NUMBER = process.env.MPESA_SHORTCODE?.trim() ?? "4980406";
 // Till number that actually receives Buy Goods payments.
 const TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "232392";
 
-async function getToken(): Promise<string> {
+export async function getToken(): Promise<string> {
   const key = process.env.MPESA_CONSUMER_KEY;
   const secret = process.env.MPESA_CONSUMER_SECRET;
   if (!key || !secret) throw new Error("MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET must be set");

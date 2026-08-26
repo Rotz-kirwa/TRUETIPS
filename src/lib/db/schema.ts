@@ -23,7 +23,7 @@ export const users = pgTable("users", {
 
 export const mpesaPayments = pgTable("mpesa_payments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  source: text("source", { enum: ["stk_push", "c2b_till"] }).notNull().default("stk_push"),
+  source: text("source", { enum: ["stk_push", "c2b_till", "recovered_via_poll"] }).notNull().default("stk_push"),
   status: text("status", { enum: ["Pending", "Success", "Failed", "Cancelled"] })
     .notNull()
     .default("Pending"),
