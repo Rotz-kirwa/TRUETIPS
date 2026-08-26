@@ -398,10 +398,11 @@ export async function processPaymentSms(params: {
     console.log("[sms-automation] Global automation disabled — skipping.");
     return;
   }
-
-  // 2. Phone validation — Safaricom Daraja support confirmed that Onfon (and other
-  //    registered Kenyan SMS providers) can deliver to the hashed MSISDN that comes
-  //    in C2B Buy Goods callbacks. Pass the phone through as-is to the provider.
+  // 2. Phone validation — Skip if phone is shortcode/till number like "232392"
+  if (!phone || phone === "232392" || phone === "4980406" || phone.length < 10) {
+    console.log(`[sms-automation] Invalid recipient phone number (${phone}) — skipping SMS dispatch.`);
+    return;
+  }
   console.log(`[sms-automation] Phone: ${phone.slice(0, 10)}... (may be hashed MSISDN — provider will resolve)`);
 
 
