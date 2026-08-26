@@ -132,7 +132,13 @@ export async function auditCallbackPayload(
   const userAgent = requestInfo?.userAgent ?? null;
   const contentType = requestInfo?.contentType ?? "application/json";
 
-  console.log("[callback-audit] Incoming callback payload:", {
+  const isCurl = !!userAgent && userAgent.toLowerCase().includes("curl");
+  const isPostman = !!userAgent && userAgent.toLowerCase().includes("postman");
+  const isTestTransId = !!fields.transId && (fields.transId.includes("TEST") || fields.transId.includes("C2B_"));
+  const classification = (isCurl || isPostman || isTestTransId) ? "SYNTHETIC_TEST" : "GENUINE_SAFARICOM";
+
+  console.log(`[C2B_CALLBACK_AUDIT] [${classification}] Timestamp: ${new Date().toISOString()}`, {
+    classification,
     route,
     method,
     eventType,
@@ -140,10 +146,10 @@ export async function auditCallbackPayload(
     userAgent,
     contentType,
     transId: fields.transId,
-    checkoutRequestId: fields.checkoutRequestId,
-    phoneMasked: fields.phoneMasked,
     amount: fields.amount,
     shortcode: fields.shortcode,
+    checkoutRequestId: fields.checkoutRequestId,
+    phoneMasked: fields.phoneMasked,
   });
 
   try {
