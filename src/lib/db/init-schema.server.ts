@@ -123,7 +123,6 @@ export async function ensureDatabaseTablesAndSeed() {
         route TEXT NOT NULL,
         method TEXT NOT NULL,
         event_type TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'received',
         source_ip TEXT,
         user_agent TEXT,
         content_type TEXT,
@@ -132,15 +131,22 @@ export async function ensureDatabaseTablesAndSeed() {
         phone_masked TEXT,
         amount NUMERIC(12,2),
         shortcode TEXT,
-        raw_headers JSONB,
+        payload JSONB,
         raw_body TEXT,
-        parsed_body JSONB,
-        parse_error TEXT,
-        processing_result_code INTEGER,
-        processing_result_desc TEXT,
-        error_details JSONB,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        result_code INTEGER,
+        result_desc TEXT,
+        processing_status TEXT NOT NULL DEFAULT 'received',
+        error_message TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS payload JSONB;
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS processing_status TEXT DEFAULT 'received';
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS error_message TEXT;
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS result_code INTEGER;
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS result_desc TEXT;
+      ALTER TABLE mpesa_callback_events ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
       CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_created_at ON mpesa_callback_events(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_trans_id ON mpesa_callback_events(trans_id);
