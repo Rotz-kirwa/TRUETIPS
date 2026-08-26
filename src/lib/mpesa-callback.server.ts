@@ -239,10 +239,13 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
   return accepted();
 }
 
-export async function handleC2bConfirmation(body: unknown): Promise<CallbackResult> {
+export async function handleC2bConfirmation(
+  body: unknown,
+  correlationId = "c2b_unknown",
+): Promise<CallbackResult> {
   try {
     if (!isRecord(body)) {
-      console.warn("[handleC2bConfirmation] Non-record payload ignored:", body);
+      console.warn(`[C2B_RECEIVED] CorrelationID:${correlationId} | Non-record payload ignored:`, body);
       return accepted();
     }
 
@@ -250,7 +253,11 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
 
     const rawCallbackJson = isRecord(body) ? body : { payload: body };
     const sanitized = sanitizeC2bBody(body);
-    console.log("[handleC2bConfirmation] Received callback:", sanitized);
+    
+    console.log(
+      `[C2B_RECEIVED] CorrelationID:${correlationId} | TransID:${sanitized.TransID ?? "none"} | Amount:${sanitized.TransAmount ?? "none"} | Phone:${sanitized.MSISDN ?? "none"} | Shortcode:${sanitized.BusinessShortCode ?? "none"} | BillRef:${sanitized.BillRefNumber ?? "none"}`,
+      sanitized,
+    );
 
     const mpesaReceiptNumber = sanitized.TransID || `C2B_${Date.now()}`;
     const phone = sanitized.MSISDN || sanitized.BillRefNumber || sanitized.InvoiceNumber || "254700000000";
@@ -277,7 +284,7 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
     // If BusinessShortCode is 4980406, shortcode is 4980406 and till is 232392 (or BillRefNumber).
     const businessShortcode = rawShortcode === "232392" ? "4980406" : rawShortcode;
     const tillNumber = rawShortcode === "232392" ? "232392" : (rawTill || "232392");
-    const transactionDesc = sanitized.TransactionType ?? "CustomerPayBillOnline";
+    const transactionDesc = sanitized.TransactionType ?? "CustomerBuyGoods";
 
     let insertedId: string | undefined;
     try {
@@ -307,27 +314,22 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
       insertedId = inserted?.id;
 
       if (insertedId) {
-        console.log("[handleC2bConfirmation] DB insert success:", {
-          paymentId: insertedId,
-          transId: mpesaReceiptNumber,
-          amount,
-          phone,
-          tillNumber,
-        });
+        console.log(
+          `[C2B_PAYMENT_CREATED] CorrelationID:${correlationId} | PaymentID:${insertedId} | TransID:${mpesaReceiptNumber} | Amount:${amount} | Phone:${phone} | Till:${tillNumber}`,
+        );
       } else {
-        console.log("[handleC2bConfirmation] Duplicate callback ignored:", {
-          transId: mpesaReceiptNumber,
-          amount,
-          phone,
-        });
+        console.log(
+          `[C2B_DUPLICATE_IGNORED] CorrelationID:${correlationId} | TransID:${mpesaReceiptNumber} | Payment already exists in DB`,
+        );
       }
     } catch (dbError) {
-      console.error("[handleC2bConfirmation] Database save error:", dbError);
+      console.error(`[C2B_DB_SAVE_ERROR] CorrelationID:${correlationId}:`, dbError);
     }
 
     // Trigger SMS automation — errors must never fail the payment or response
     if (insertedId && amount != null && amount > 0) {
       try {
+        console.log(`[C2B_SMS_TRIGGERED] CorrelationID:${correlationId} | Phone:${smsPhone} | Amount:${amount}`);
         await processPaymentSms({
           paymentId: insertedId,
           phone: smsPhone,
@@ -336,19 +338,22 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
           paidAt,
         });
       } catch (err) {
-        console.error("[sms-automation] SMS trigger failed:", err);
+        console.error(`[C2B_SMS_ERROR] CorrelationID:${correlationId}:`, err);
       }
     }
   } catch (error) {
-    console.error("[handleC2bConfirmation] Outer processing error:", error);
+    console.error(`[C2B_CONFIRMATION_OUTER_ERROR] CorrelationID:${correlationId}:`, error);
   }
 
   return accepted();
 }
 
-export async function handleC2bValidation(body: unknown): Promise<CallbackResult> {
+export async function handleC2bValidation(
+  body: unknown,
+  correlationId = "val_unknown",
+): Promise<CallbackResult> {
   console.log(
-    "[handleC2bValidation] Received callback:",
+    `[C2B_VALIDATION_RECEIVED] CorrelationID:${correlationId}:`,
     isRecord(body) ? sanitizeC2bBody(body) : { validJsonObject: false },
   );
   return accepted();
