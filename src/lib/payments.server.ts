@@ -232,3 +232,70 @@ export async function recheckPaymentStatus(paymentId: string) {
     throw error;
   }
 }
+
+export async function recordManualPayment({
+  phone,
+  amount,
+  mpesaReceiptNumber,
+  tillNumber,
+  payerName,
+}: {
+  phone: string;
+  amount: number;
+  mpesaReceiptNumber: string;
+  tillNumber?: string;
+  payerName?: string;
+}) {
+  await requireCurrentUser();
+  const normalizedPhone = normalizeKenyanPhone(phone);
+  const formattedReceipt = mpesaReceiptNumber.trim().toUpperCase();
+  const now = new Date();
+
+  const { processPaymentSms } = await import("./sms-automation.server");
+
+  const [inserted] = await db
+    .insert(mpesaPayments)
+    .values({
+      source: "c2b_till",
+      status: "Success",
+      phone: normalizedPhone,
+      payerName: payerName || "Direct Customer",
+      amount: String(amount),
+      tillNumber: tillNumber || process.env.MPESA_TILL_NUMBER || "232392",
+      businessShortcode: process.env.MPESA_SHORTCODE || "4980406",
+      mpesaReceiptNumber: formattedReceipt,
+      accountReference: "Manual Admin Entry",
+      transactionDesc: "CustomerPayBillOnline",
+      resultCode: 0,
+      resultDesc: "Manual Entry Verified",
+      paidAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: mpesaPayments.mpesaReceiptNumber,
+      set: {
+        status: "Success",
+        phone: normalizedPhone,
+        amount: String(amount),
+        updatedAt: now,
+      },
+    })
+    .returning({ id: mpesaPayments.id });
+
+  if (inserted?.id) {
+    try {
+      await processPaymentSms({
+        paymentId: inserted.id,
+        phone: normalizedPhone,
+        amount,
+        transactionCode: formattedReceipt,
+        paidAt: now,
+      });
+    } catch (err) {
+      console.error("[recordManualPayment] SMS dispatch error:", err);
+    }
+  }
+
+  return { success: true, paymentId: inserted?.id };
+}

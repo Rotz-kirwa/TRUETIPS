@@ -56,3 +56,21 @@ export const recheckPaymentStatusFn = createServerFn({ method: "POST" })
     const { recheckPaymentStatus } = await import("./payments.server");
     return recheckPaymentStatus(id);
   });
+
+const manualPaymentSchema = z.object({
+  phone: z.string().min(9),
+  amount: z.number().positive(),
+  mpesaReceiptNumber: z.string().min(4),
+  tillNumber: z.string().optional(),
+  payerName: z.string().optional(),
+});
+
+type ManualPaymentInput = z.infer<typeof manualPaymentSchema>;
+
+export const recordManualPaymentFn = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => manualPaymentSchema.parse(input))
+  .handler(async (ctx) => {
+    const data = ctx.data as ManualPaymentInput;
+    const { recordManualPayment } = await import("./payments.server");
+    return recordManualPayment(data);
+  });
