@@ -4,8 +4,14 @@ import { fetchPaymentsFn, type MpesaPayment } from "@/lib/payments";
 export function useLivePayments(initialPayments: MpesaPayment[], intervalMs = 10000) {
   const [payments, setPayments] = useState(initialPayments);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const pendingRef = useRef(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setLastUpdated(new Date());
+  }, []);
 
   useEffect(() => {
     setPayments(initialPayments);
@@ -40,5 +46,5 @@ export function useLivePayments(initialPayments: MpesaPayment[], intervalMs = 10
     };
   }, [intervalMs]);
 
-  return { payments, refresh, isRefreshing, lastUpdated };
+  return { payments, refresh, isRefreshing, lastUpdated, isMounted };
 }

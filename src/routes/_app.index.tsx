@@ -181,9 +181,9 @@ function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Welcome back — live data updated at{" "}
-            <span suppressHydrationWarning>
-              {lastUpdated.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}
-            </span>
+            {lastUpdated
+              ? lastUpdated.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })
+              : "—"}
           </p>
         </div>
         <div className="flex items-center gap-2">

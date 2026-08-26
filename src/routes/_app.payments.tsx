@@ -222,11 +222,13 @@ function PaymentsPage() {
     }
   };
 
-  const updatedLabel = lastUpdated.toLocaleTimeString("en-KE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("en-KE", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    : "—";
 
   return (
     <div className="space-y-6">
@@ -241,7 +243,7 @@ function PaymentsPage() {
                 isRefreshing ? "bg-warning animate-pulse" : "bg-success animate-pulse",
               )}
             />
-            <span suppressHydrationWarning>Live · updated {updatedLabel}</span>
+            <span>Live · updated {updatedLabel}</span>
             <span className="text-border">·</span>
             <span>{payments.length} total transactions</span>
           </div>
