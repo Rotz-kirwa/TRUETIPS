@@ -25,7 +25,9 @@ const MIME = {
   ".map":   "application/json",
 };
 
-async function tryServeStatic(pathname, res) {
+import { gzipSync } from "node:zlib";
+
+async function tryServeStatic(pathname, req, res) {
   try {
     const filePath = join(CLIENT_DIR, pathname);
     const content = await readFile(filePath);
@@ -33,7 +35,17 @@ async function tryServeStatic(pathname, res) {
     res.statusCode = 200;
     res.setHeader("Content-Type", mime);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.end(content);
+
+    const acceptEncoding = req.headers["accept-encoding"] ?? "";
+    if (acceptEncoding.includes("gzip") && content.length > 512) {
+      const compressed = gzipSync(content);
+      res.setHeader("Content-Encoding", "gzip");
+      res.setHeader("Content-Length", compressed.length);
+      res.end(compressed);
+    } else {
+      res.setHeader("Content-Length", content.length);
+      res.end(content);
+    }
     return true;
   } catch {
     return false;
@@ -60,7 +72,7 @@ const app = http.createServer(async (req, res) => {
 
   try {
     // Serve static files from dist/client/ first
-    const servedStatic = await tryServeStatic(pathname, res);
+    const servedStatic = await tryServeStatic(pathname, req, res);
     if (servedStatic) return;
 
     // /assets/* not found → hard 404, don't fall through to SSR
@@ -100,7 +112,20 @@ const app = http.createServer(async (req, res) => {
     for (const [key, value] of response.headers.entries()) {
       res.setHeader(key, value);
     }
-    res.end(Buffer.from(await response.arrayBuffer()));
+
+    const responseBuf = Buffer.from(await response.arrayBuffer());
+    const acceptEncoding = req.headers["accept-encoding"] ?? "";
+    const contentType = response.headers.get("content-type") ?? "";
+    const compressible = contentType.includes("text") || contentType.includes("json") || contentType.includes("javascript");
+
+    if (acceptEncoding.includes("gzip") && compressible && responseBuf.length > 512) {
+      const compressed = gzipSync(responseBuf);
+      res.setHeader("Content-Encoding", "gzip");
+      res.setHeader("Content-Length", compressed.length);
+      res.end(compressed);
+    } else {
+      res.end(responseBuf);
+    }
 
     if (req.method !== "GET" || isApi) {
       console.log(

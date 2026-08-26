@@ -3,11 +3,14 @@ import { sql } from "drizzle-orm";
 import { db } from "./client";
 
 let dbInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 export async function ensureDatabaseTablesAndSeed() {
   if (dbInitialized) return;
+  if (initPromise) return initPromise;
 
-  try {
+  initPromise = (async () => {
+    try {
     // 1. Create all required tables
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -146,5 +149,9 @@ export async function ensureDatabaseTablesAndSeed() {
     console.log("[db-init] Database tables & admin user initialized successfully.");
   } catch (err) {
     console.error("[db-init] Error initializing database tables:", err);
+  } finally {
+    initPromise = null;
   }
+})();
+return initPromise;
 }

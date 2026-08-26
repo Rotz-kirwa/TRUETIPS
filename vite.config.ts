@@ -96,6 +96,27 @@ export default defineConfig(({ command }) => ({
   optimizeDeps: {
     exclude: ["postgres", "drizzle-orm", "drizzle-orm/postgres-js"],
   },
+  build: {
+    target: "es2022",
+    minify: "esbuild",
+    cssMinify: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-")) {
+            return "vendor-charts";
+          }
+          if (id.includes("node_modules/lucide-react")) {
+            return "vendor-icons";
+          }
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+        },
+      },
+    },
+  },
   server: {
     host: "::",
     port: 8080,
