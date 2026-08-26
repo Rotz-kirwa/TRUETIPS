@@ -181,7 +181,9 @@ function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Welcome back — live data updated at{" "}
-            {lastUpdated.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}
+            <span suppressHydrationWarning>
+              {lastUpdated.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -263,7 +265,7 @@ function DashboardPage() {
           </div>
           <div className="h-64">
             {chartsReady ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={chartData} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
                     <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -449,8 +451,8 @@ function DashboardPage() {
                   </span>
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-bold">{KES(Number(p.amount))}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.createdAt.toLocaleDateString("en-KE", {
+                    <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+                      {new Date(p.createdAt).toLocaleDateString("en-KE", {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",

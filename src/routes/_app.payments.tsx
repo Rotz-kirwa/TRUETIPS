@@ -241,7 +241,7 @@ function PaymentsPage() {
                 isRefreshing ? "bg-warning animate-pulse" : "bg-success animate-pulse",
               )}
             />
-            <span>Live · updated {updatedLabel}</span>
+            <span suppressHydrationWarning>Live · updated {updatedLabel}</span>
             <span className="text-border">·</span>
             <span>{payments.length} total transactions</span>
           </div>
@@ -355,7 +355,7 @@ function PaymentsPage() {
                   <td className="px-6 py-3.5">
                     <StatusBadge payment={p} onRefresh={refresh} />
                   </td>
-                  <td className="px-6 py-3.5 text-muted-foreground">
+                  <td className="px-6 py-3.5 text-muted-foreground" suppressHydrationWarning>
                     {new Date(p.createdAt).toLocaleString("en-KE", {
                       month: "short",
                       day: "numeric",
