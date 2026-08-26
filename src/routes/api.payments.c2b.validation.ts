@@ -4,39 +4,56 @@ export const Route = createFileRoute("/api/payments/c2b/validation")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { readAndAuditCallbackRequest, markCallbackAuditResult } = await import(
-          "../lib/callback-audit.server"
-        );
-        const audit = await readAndAuditCallbackRequest(
-          request,
-          "/api/payments/c2b/validation",
-          "c2b_validation",
-        );
+        let body: unknown = {};
+        let auditId: string | null = null;
+
+        try {
+          const { readAndAuditCallbackRequest } = await import("../lib/callback-audit.server");
+          const audit = await readAndAuditCallbackRequest(
+            request,
+            "/api/payments/c2b/validation",
+            "c2b_validation",
+          );
+          body = audit.body;
+          auditId = audit.auditId;
+        } catch (auditErr) {
+          console.error("[api/payments/c2b/validation] Audit failed:", auditErr);
+        }
 
         try {
           const { handleC2bValidation } = await import("../lib/mpesa-callback.server");
-          const result = await handleC2bValidation(audit.body);
-          await markCallbackAuditResult(
-            audit.auditId,
-            "accepted",
-            result.ResultCode,
-            result.ResultDesc,
-          );
+          const result = await handleC2bValidation(body);
+
+          if (auditId) {
+            const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
+            await markCallbackAuditResult(
+              auditId,
+              "accepted",
+              result.ResultCode,
+              result.ResultDesc,
+            );
+          }
 
           return Response.json(result);
         } catch (error) {
-          console.error("[api/payments/c2b/validation]", error);
-          await markCallbackAuditResult(
-            audit.auditId,
-            "failed",
-            1,
-            "Failed to process validation",
-            error,
-          );
+          console.error("[api/payments/c2b/validation] Handler error:", error);
+
+          if (auditId) {
+            try {
+              const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
+              await markCallbackAuditResult(
+                auditId,
+                "failed",
+                1,
+                "Failed to process validation",
+                error,
+              );
+            } catch {}
+          }
 
           return Response.json(
-            { ResultCode: 1, ResultDesc: "Failed to process validation" },
-            { status: 500 },
+            { ResultCode: 0, ResultDesc: "Accepted" },
+            { status: 200 },
           );
         }
       },
