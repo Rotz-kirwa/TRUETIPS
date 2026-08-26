@@ -65,8 +65,16 @@ const app = http.createServer(async (req, res) => {
     "-";
 
   if (req.method !== "GET" || isApi) {
+    const timestamp = new Date().toISOString();
+    const hostHeader = req.headers.host ?? "-";
+    const contentType = req.headers["content-type"] ?? "-";
+    const contentLength = req.headers["content-length"] ?? "-";
+    const userAgent = req.headers["user-agent"] ?? "-";
+    const remoteAddr = req.socket?.remoteAddress ?? "-";
+    const fwdIp = req.headers["x-forwarded-for"] ?? "-";
+
     console.log(
-      `[req] ${req.method} ${pathname} | ip=${ip} | ua=${req.headers["user-agent"] ?? "-"} | ct=${req.headers["content-type"] ?? "-"}`,
+      `[HTTP_INGRESS_CAPTURE] [${timestamp}] ${req.method} ${pathname} | Host:${hostHeader} | RemoteIP:${remoteAddr} | FwdIP:${fwdIp} | ClientIP:${ip} | ContentType:${contentType} | ContentLength:${contentLength} | UA:${userAgent}`,
     );
   }
 
