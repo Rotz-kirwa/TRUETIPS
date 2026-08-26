@@ -117,6 +117,33 @@ export async function ensureDatabaseTablesAndSeed() {
         score2 INTEGER,
         status TEXT NOT NULL DEFAULT 'pending'
       );
+
+      CREATE TABLE IF NOT EXISTS mpesa_callback_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        route TEXT NOT NULL,
+        method TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'received',
+        source_ip TEXT,
+        user_agent TEXT,
+        content_type TEXT,
+        trans_id TEXT,
+        checkout_request_id TEXT,
+        phone_masked TEXT,
+        amount NUMERIC(12,2),
+        shortcode TEXT,
+        raw_headers JSONB,
+        raw_body TEXT,
+        parsed_body JSONB,
+        parse_error TEXT,
+        processing_result_code INTEGER,
+        processing_result_desc TEXT,
+        error_details JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_created_at ON mpesa_callback_events(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_trans_id ON mpesa_callback_events(trans_id);
     `);
 
     // 2. Ensure default admin user sure10@gmail.com exists with password 'Sure10-78'
