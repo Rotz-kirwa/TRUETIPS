@@ -169,9 +169,12 @@ export async function getDebugLogStats() {
 // ─── Auth helper for debug endpoints ─────────────────────────────────────────
 
 export function isDebugAuthorized(request: Request): boolean {
-  const url = new URL(request.url);
-  if (url.searchParams.get("secret") === "paylix-debug-2026") return true;
   const token = request.headers.get("x-debug-token");
+  if (token === "paylix-debug-2026") return true;
+  try {
+    const url = new URL(request.url, "http://localhost");
+    if (url.searchParams.get("secret") === "paylix-debug-2026") return true;
+  } catch {}
   const expected =
     process.env.ADMIN_DEBUG_TOKEN ?? process.env.JWT_SECRET?.slice(0, 16) ?? "";
   return !!token && token === expected;
