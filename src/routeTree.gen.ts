@@ -27,6 +27,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as ApiMpesaCallbackRouteImport } from './routes/api.mpesa.callback'
 import { Route as ApiDebugTestPaymentRouteImport } from './routes/api.debug.test-payment'
 import { Route as ApiDebugSimulateC2bRouteImport } from './routes/api.debug.simulate-c2b'
+import { Route as ApiDebugPaymentStatusRouteImport } from './routes/api.debug.payment-status'
 import { Route as ApiDebugHealthRouteImport } from './routes/api.debug.health'
 import { Route as ApiDebugCallbacksRouteImport } from './routes/api.debug.callbacks'
 import { Route as ApiPaymentsC2bValidationRouteImport } from './routes/api.payments.c2b.validation'
@@ -122,6 +123,11 @@ const ApiDebugSimulateC2bRoute = ApiDebugSimulateC2bRouteImport.update({
   path: '/api/debug/simulate-c2b',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDebugPaymentStatusRoute = ApiDebugPaymentStatusRouteImport.update({
+  id: '/api/debug/payment-status',
+  path: '/api/debug/payment-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDebugHealthRoute = ApiDebugHealthRouteImport.update({
   id: '/api/debug/health',
   path: '/api/debug/health',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/mpesa/callback': typeof MpesaCallbackRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
+  '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
+  '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/api/debug/callbacks': typeof ApiDebugCallbacksRoute
   '/api/debug/health': typeof ApiDebugHealthRoute
+  '/api/debug/payment-status': typeof ApiDebugPaymentStatusRoute
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/mpesa/callback'
     | '/api/debug/callbacks'
     | '/api/debug/health'
+    | '/api/debug/payment-status'
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/debug/callbacks'
     | '/api/debug/health'
+    | '/api/debug/payment-status'
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/api/debug/callbacks'
     | '/api/debug/health'
+    | '/api/debug/payment-status'
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   MpesaCallbackRoute: typeof MpesaCallbackRoute
   ApiDebugCallbacksRoute: typeof ApiDebugCallbacksRoute
   ApiDebugHealthRoute: typeof ApiDebugHealthRoute
+  ApiDebugPaymentStatusRoute: typeof ApiDebugPaymentStatusRoute
   ApiDebugSimulateC2bRoute: typeof ApiDebugSimulateC2bRoute
   ApiDebugTestPaymentRoute: typeof ApiDebugTestPaymentRoute
   ApiMpesaCallbackRoute: typeof ApiMpesaCallbackRoute
@@ -447,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugSimulateC2bRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/debug/payment-status': {
+      id: '/api/debug/payment-status'
+      path: '/api/debug/payment-status'
+      fullPath: '/api/debug/payment-status'
+      preLoaderRoute: typeof ApiDebugPaymentStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/debug/health': {
       id: '/api/debug/health'
       path: '/api/debug/health'
@@ -518,6 +538,7 @@ const rootRouteChildren: RootRouteChildren = {
   MpesaCallbackRoute: MpesaCallbackRoute,
   ApiDebugCallbacksRoute: ApiDebugCallbacksRoute,
   ApiDebugHealthRoute: ApiDebugHealthRoute,
+  ApiDebugPaymentStatusRoute: ApiDebugPaymentStatusRoute,
   ApiDebugSimulateC2bRoute: ApiDebugSimulateC2bRoute,
   ApiDebugTestPaymentRoute: ApiDebugTestPaymentRoute,
   ApiMpesaCallbackRoute: ApiMpesaCallbackRoute,

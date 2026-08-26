@@ -222,6 +222,7 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
 
     await ensurePayerNameColumn();
 
+    const rawCallbackJson = isRecord(body) ? body : { payload: body };
     const sanitized = sanitizeC2bBody(body);
     console.log("[handleC2bConfirmation] Received callback:", sanitized);
 

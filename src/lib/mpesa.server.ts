@@ -147,13 +147,18 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  // Safaricom confirmed: use store number 6270336 (not HO shortcode 6270335 — HO doesn't support C2B).
   const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
 
-  if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
+  const confirmationUrl =
+    process.env.MPESA_C2B_CONFIRMATION_URL?.trim() ??
+    (callbackUrl ? new URL("/api/payments/c2b/confirmation", callbackUrl).toString() : null);
+  const validationUrl =
+    process.env.MPESA_C2B_VALIDATION_URL?.trim() ??
+    (callbackUrl ? new URL("/api/payments/c2b/validation", callbackUrl).toString() : null);
 
-  const confirmationUrl = new URL("/api/payments/c2b/confirmation", callbackUrl).toString();
-  const validationUrl = new URL("/api/payments/c2b/validation", callbackUrl).toString();
+  if (!confirmationUrl || !validationUrl) {
+    throw new Error("MPESA_CALLBACK_URL or explicit MPESA_C2B_CONFIRMATION_URL / MPESA_C2B_VALIDATION_URL must be set");
+  }
 
   const token = await getToken();
   const res = await fetch(`${BASE}/mpesa/c2b/v2/registerurl`, {
@@ -175,6 +180,8 @@ export async function registerC2bUrls() {
     response = { raw: text.slice(0, 500) };
   }
   const errorMessage = typeof response.errorMessage === "string" ? response.errorMessage : null;
+  const isAlreadyRegistered =
+    errorMessage === "URLs are already registered" || text.includes("already registered");
 
   console.log("[registerC2bUrls] Safaricom response:", {
     httpStatus: res.status,
@@ -187,7 +194,7 @@ export async function registerC2bUrls() {
     errorMessage,
   });
 
-  if (!res.ok && errorMessage !== "URLs are already registered") {
+  if (!res.ok && !isAlreadyRegistered) {
     throw new Error(`C2B URL registration failed (${res.status}): ${text}`);
   }
 
@@ -196,6 +203,6 @@ export async function registerC2bUrls() {
     confirmationUrl,
     validationUrl,
     response,
-    alreadyRegistered: errorMessage === "URLs are already registered",
+    alreadyRegistered: isAlreadyRegistered,
   };
 }
