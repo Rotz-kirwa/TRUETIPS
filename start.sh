@@ -79,7 +79,7 @@ node --input-type=module <<EOF
 const DARAJA_BASE = "$DARAJA_BASE";
 const KEY = "$MPESA_CONSUMER_KEY";
 const SECRET = "$MPESA_CONSUMER_SECRET";
-const SHORTCODE = "${MPESA_SHORTCODE:-4980406}";
+const SHORTCODE = "${MPESA_SHORTCODE:-4980404}";
 const BASE_URL = "$TUNNEL_URL";
 
 async function main() {

@@ -11,7 +11,8 @@ The application uses **Safaricom Daraja C2B (Customer to Business)** for Buy Goo
 | Parameter | Production Value | Environment Variable Key |
 | :--- | :--- | :--- |
 | **M-Pesa Environment** | `production` | `MPESA_ENVIRONMENT` |
-| **Head Office Shortcode** | `4980406` | `MPESA_SHORTCODE` |
+| **Child Shortcode (C2B URL Target)** | `4980404` | `MPESA_SHORTCODE` |
+| **Head Office (HO) Shortcode** | `4980406` | — |
 | **Buy Goods Store Till Number** | `232392` | `MPESA_TILL_NUMBER` |
 | **Consumer Key** | `OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG` | `MPESA_CONSUMER_KEY` |
 | **Consumer Secret** | `vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd` | `MPESA_CONSUMER_SECRET` |
@@ -156,7 +157,7 @@ Ensure the following variables are set in your **Render Environment Tab**:
 
 - [x] `DATABASE_URL` = `postgres://...`
 - [x] `MPESA_ENVIRONMENT` = `production`
-- [x] `MPESA_SHORTCODE` = `4980406`
+- [x] `MPESA_SHORTCODE` = `4980404` (Child shortcode for C2B registration)
 - [x] `MPESA_TILL_NUMBER` = `232392`
 - [x] `MPESA_CONSUMER_KEY` = `OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG`
 - [x] `MPESA_CONSUMER_SECRET` = `vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd`

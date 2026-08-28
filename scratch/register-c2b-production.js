@@ -1,6 +1,6 @@
 const key = "OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG";
 const secret = "vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd";
-const shortCode = "4980406";
+const shortCode = "4980404";
 const callbackUrl = "https://moonlight-games.onrender.com";
 
 async function main() {

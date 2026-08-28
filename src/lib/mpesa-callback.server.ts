@@ -277,12 +277,11 @@ export async function handleC2bConfirmation(
         ? billRefPhone!
         : phone ?? "";
     const paidAt = parseMpesaDate(sanitized.TransTime) ?? now;
-    const rawShortcode = sanitized.BusinessShortCode ?? process.env.MPESA_SHORTCODE ?? "4980406";
+    const rawShortcode = sanitized.BusinessShortCode ?? process.env.MPESA_SHORTCODE ?? "4980404";
     const rawTill = sanitized.BillRefNumber ?? process.env.MPESA_TILL_NUMBER ?? "232392";
 
-    // If BusinessShortCode is 232392, till is 232392 and shortcode is 4980406.
-    // If BusinessShortCode is 4980406, shortcode is 4980406 and till is 232392 (or BillRefNumber).
-    const businessShortcode = rawShortcode === "232392" ? "4980406" : rawShortcode;
+    // If BusinessShortCode is 232392, till is 232392 and shortcode is 4980404 (Child shortcode).
+    const businessShortcode = rawShortcode === "232392" ? (process.env.MPESA_SHORTCODE ?? "4980404") : rawShortcode;
     const tillNumber = rawShortcode === "232392" ? "232392" : (rawTill || "232392");
     const transactionDesc = sanitized.TransactionType ?? "CustomerBuyGoods";
 

@@ -70,7 +70,7 @@ async function main() {
   const token = authRes.body.access_token;
   console.log("✓ OAuth Token obtained!");
 
-  const shortcodes = ["4980406", "232392"];
+  const shortcodes = ["4980404", "4980406", "232392"];
   const endpoints = [
     `${BASE}/mpesa/c2b/v1/registerurl`,
     `${BASE}/mpesa/c2b/v2/registerurl`,
