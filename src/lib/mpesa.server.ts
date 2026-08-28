@@ -4,7 +4,7 @@ const BASE =
     : "https://sandbox.safaricom.co.ke";
 
 // Store number used for Buy Goods STK Push.
-const STORE_NUMBER = process.env.MPESA_SHORTCODE?.trim() ?? "4980406";
+const STORE_NUMBER = process.env.MPESA_SHORTCODE?.trim() ?? "4980404";
 // Till number that actually receives Buy Goods payments.
 const TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "232392";
 
