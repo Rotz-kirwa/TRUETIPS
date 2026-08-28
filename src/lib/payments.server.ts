@@ -4,7 +4,7 @@ import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
 import { normalizeKenyanPhone, queryStkPushStatus, stkPush } from "./mpesa.server";
 
-const STK_SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "4980406";
+const STK_SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "4980404";
 const STK_TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "232392";
 
 let schemaEnsured = false;
@@ -255,7 +255,7 @@ export async function recordManualPayment({
       payerName: payerName || "Direct Customer",
       amount: String(amount),
       tillNumber: tillNumber || process.env.MPESA_TILL_NUMBER || "232392",
-      businessShortcode: process.env.MPESA_SHORTCODE || "4980406",
+      businessShortcode: process.env.MPESA_SHORTCODE || "4980404",
       mpesaReceiptNumber: formattedReceipt,
       accountReference: "Manual Admin Entry",
       transactionDesc: "CustomerPayBillOnline",

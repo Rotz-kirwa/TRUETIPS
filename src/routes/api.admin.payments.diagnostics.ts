@@ -89,7 +89,7 @@ export const Route = createFileRoute("/api/admin/payments/diagnostics")({
               callbackHealth,
             },
             config: {
-              shortcode: process.env.MPESA_SHORTCODE ?? "4980406",
+              shortcode: process.env.MPESA_SHORTCODE ?? "4980404",
               tillNumber: process.env.MPESA_TILL_NUMBER ?? "232392",
               environment: process.env.MPESA_ENVIRONMENT ?? "production",
             },

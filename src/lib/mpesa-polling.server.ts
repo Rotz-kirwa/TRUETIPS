@@ -9,7 +9,7 @@ const BASE =
     ? "https://api.safaricom.co.ke"
     : "https://sandbox.safaricom.co.ke";
 
-const SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "4980406";
+const SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "4980404";
 const TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "232392";
 
 export interface PollResult {
