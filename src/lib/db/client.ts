@@ -14,6 +14,11 @@ function createDb() {
     url = "postgres://postgres@127.0.0.1:5432/paylix";
   }
 
+  // If running outside Render internal network (e.g. Vercel), convert internal dpg- host to public endpoint
+  if (url.includes("dpg-") && !url.includes(".render.com") && !url.includes("127.0.0.1") && !url.includes("localhost")) {
+    url = url.replace(/@(dpg-[^/:]+)/, "@$1.oregon-postgres.render.com");
+  }
+
   // Validate URL format before passing to postgres client
   try {
     new URL(url);
