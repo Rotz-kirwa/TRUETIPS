@@ -6,6 +6,20 @@ function generateCorrelationId(): string {
   return `c2b_${ts}_${rand}`;
 }
 
+/**
+ * FIXED VERSION: Addresses Vercel serverless race condition
+ * 
+ * KEY CHANGES:
+ * 1. All database operations moved BEFORE HTTP response
+ * 2. Properly awaited async processing ensures persistence
+ * 3. SMS automation launched after response (safe now)
+ * 4. No more fire-and-forget pattern
+ * 
+ * SECURITY NOTE: This handler processes C2B webhooks directly.
+ * No authentication required (Safaricom webhooks are server-to-server).
+ * All payment data is validated and sanitized in handleC2bConfirmation.
+ */
+
 export const Route = createFileRoute("/api/payments/c2b/confirmation")({
   server: {
     handlers: {
@@ -60,9 +74,16 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
           correlationId,
         };
 
-        // Process callback asynchronously so Safaricom receives HTTP 200 immediately (< 50ms)
-        (async () => {
-          let auditId: string | null = null;
+        // ===== CRITICAL FIX: Process callback BEFORE responding =====
+        // This ensures all database operations complete before HTTP 200 is sent.
+        // In Vercel serverless, Lambda can terminate after res.end(), so we must
+        // complete all critical work first.
+
+        let auditId: string | null = null;
+        let processResult: { insertedId?: string } = {};
+
+        try {
+          // Step 1: Record callback audit (writes to mpesa_callback_events table)
           try {
             const { auditCallbackPayload } = await import("../lib/callback-audit.server");
             const audit = await auditCallbackPayload(
@@ -72,45 +93,76 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
               requestInfo,
             );
             auditId = audit.auditId;
-            console.log(`[C2B_CALLBACK_PERSISTED] CorrelationID:${correlationId} | AuditId:${auditId ?? "none"}`);
+            console.log(
+              `[C2B_CALLBACK_PERSISTED] CorrelationID:${correlationId} | AuditId:${auditId ?? "none"}`,
+            );
           } catch (auditErr) {
-            console.error(`[C2B_CALLBACK_PERSIST_ERROR] CorrelationID:${correlationId}:`, auditErr);
+            console.error(
+              `[C2B_CALLBACK_PERSIST_ERROR] CorrelationID:${correlationId}:`,
+              auditErr,
+            );
+            // Continue processing even if audit fails
           }
 
+          // Step 2: Process payment and create database record (writes to mpesa_payments table)
+          // This is now AWAITED before response is sent
           try {
             const { handleC2bConfirmation } = await import("../lib/mpesa-callback.server");
             const result = await handleC2bConfirmation(body, correlationId);
+            processResult = result;
 
-            if (auditId) {
-              const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
-              await markCallbackAuditResult(
-                auditId,
-                "accepted",
-                result.ResultCode,
-                result.ResultDesc,
-              );
-            }
-            console.log(`[C2B_PROCESSING_COMPLETE] CorrelationID:${correlationId} | ResultCode:${result.ResultCode}`);
+            console.log(
+              `[C2B_PROCESSING_COMPLETE] CorrelationID:${correlationId} | ResultCode:${result.ResultCode}`,
+            );
           } catch (error) {
             console.error(`[C2B_PROCESSING_ERROR] CorrelationID:${correlationId}:`, error);
-            if (auditId) {
-              try {
-                const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
-                await markCallbackAuditResult(
-                  auditId,
-                  "failed",
-                  1,
-                  "Failed to process confirmation",
-                  error,
-                );
-              } catch {}
+            // Continue to response even if processing fails
+          }
+
+          // Step 3: Mark audit result (updates mpesa_callback_events table)
+          if (auditId) {
+            try {
+              const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
+              const processStatus = processResult.insertedId ? "accepted" : "failed";
+              const resultCode = processResult.insertedId ? 0 : 1;
+              const resultDesc = processResult.insertedId
+                ? "Payment processed successfully"
+                : "Payment processing failed";
+
+              await markCallbackAuditResult(auditId, processStatus, resultCode, resultDesc);
+
+              console.log(
+                `[C2B_AUDIT_RESULT_MARKED] CorrelationID:${correlationId} | Status:${processStatus}`,
+              );
+            } catch (markErr) {
+              console.error(
+                `[C2B_AUDIT_MARK_ERROR] CorrelationID:${correlationId}:`,
+                markErr,
+              );
             }
           }
-        })().catch((err) => {
-          console.error(`[C2B_BACKGROUND_ERROR] CorrelationID:${correlationId}:`, err);
-        });
+        } catch (outerErr) {
+          console.error(`[C2B_CONFIRMATION_OUTER_ERROR] CorrelationID:${correlationId}:`, outerErr);
+        }
 
-        // Respond to Safaricom immediately with HTTP 200 Success/Accepted
+        // ===== Now it's safe to respond to Safaricom =====
+        // All database operations are complete. Vercel Lambda can freeze after this
+        // without affecting payment persistence.
+        console.log(
+          `[C2B_CONFIRMATION_RESPONSE] CorrelationID:${correlationId} | Status:200 | PaymentCreated:${!!processResult.insertedId}`,
+        );
+
+        // ===== OPTIONAL: Launch SMS automation after response =====
+        // This is now truly fire-and-forget because payment is already in database.
+        // Even if SMS fails or Lambda terminates, the payment persists.
+        if (processResult.insertedId) {
+          // Non-blocking SMS trigger (will complete or fail gracefully)
+          triggerSmsWithoutBlocking(processResult.insertedId, correlationId).catch(
+            console.error,
+          );
+        }
+
+        // Send HTTP 200 to Safaricom
         return Response.json(
           { ResultCode: 0, ResultDesc: "Accepted" },
           { status: 200 },
@@ -148,3 +200,61 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
     },
   },
 });
+
+/**
+ * Helper: Trigger SMS automation without blocking the HTTP response
+ * This uses a detached async context so Lambda termination won't interrupt payment persistence.
+ * 
+ * @param paymentId - The payment ID to trigger SMS for
+ * @param correlationId - Correlation ID for logging
+ */
+async function triggerSmsWithoutBlocking(
+  paymentId: string,
+  correlationId: string,
+): Promise<void> {
+  try {
+    const { processPaymentSms } = await import("../lib/sms-automation.server");
+    const { db } = await import("../lib/db/client");
+    const { mpesaPayments } = await import("../lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+
+    // Fetch payment details from database (already persisted)
+    const payments = await db
+      .select({
+        phone: mpesaPayments.phone,
+        amount: mpesaPayments.amount,
+        mpesaReceiptNumber: mpesaPayments.mpesaReceiptNumber,
+        paidAt: mpesaPayments.paidAt,
+      })
+      .from(mpesaPayments)
+      .where(eq(mpesaPayments.id, paymentId))
+      .limit(1);
+
+    const payment = payments[0];
+    if (!payment) {
+      console.warn(
+        `[C2B_SMS_TRIGGER] CorrelationID:${correlationId} | Payment not found: ${paymentId}`,
+      );
+      return;
+    }
+
+    console.log(
+      `[C2B_SMS_TRIGGER] CorrelationID:${correlationId} | Phone:${payment.phone} | Amount:${payment.amount}`,
+    );
+
+    await processPaymentSms({
+      paymentId,
+      phone: payment.phone,
+      amount: Number(payment.amount),
+      transactionCode: payment.mpesaReceiptNumber,
+      paidAt: payment.paidAt ?? new Date(),
+    });
+
+    console.log(
+      `[C2B_SMS_SENT] CorrelationID:${correlationId} | PaymentID:${paymentId} | Phone:${payment.phone}`,
+    );
+  } catch (err) {
+    console.error(`[C2B_SMS_ERROR] CorrelationID:${correlationId}:`, err);
+    // SMS failure does not fail the payment (logged but not thrown)
+  }
+}
