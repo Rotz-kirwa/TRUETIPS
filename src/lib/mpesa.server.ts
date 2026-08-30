@@ -13,8 +13,9 @@ export async function getToken(): Promise<string> {
   const secret = process.env.MPESA_CONSUMER_SECRET;
   if (!key || !secret) throw new Error("MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET must be set");
 
+  const auth = Buffer.from(`${key}:${secret}`).toString("base64");
   const res = await fetch(`${BASE}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${btoa(`${key}:${secret}`)}` },
+    headers: { Authorization: `Basic ${auth}` },
   });
   if (!res.ok) throw new Error(`Daraja auth failed (${res.status}): ${await res.text()}`);
   const data = (await res.json()) as { access_token: string };
@@ -67,7 +68,7 @@ export async function stkPush(
     .toISOString()
     .replace(/[^0-9]/g, "")
     .slice(0, 14);
-  const password = btoa(`${STORE_NUMBER}${passkey}${timestamp}`);
+  const password = Buffer.from(`${STORE_NUMBER}${passkey}${timestamp}`).toString("base64");
 
   const normalizedPhone = normalizeKenyanPhone(phone);
 
@@ -120,7 +121,7 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
     .toISOString()
     .replace(/[^0-9]/g, "")
     .slice(0, 14);
-  const password = btoa(`${STORE_NUMBER}${passkey}${timestamp}`);
+  const password = Buffer.from(`${STORE_NUMBER}${passkey}${timestamp}`).toString("base64");
 
   const res = await fetch(`${BASE}/mpesa/stkpushquery/v1/query`, {
     method: "POST",
