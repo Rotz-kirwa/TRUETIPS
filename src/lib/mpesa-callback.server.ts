@@ -183,10 +183,17 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
       ...(status === "Success" ? { paidAt } : {}),
     })
     .where(eq(mpesaPayments.checkoutRequestId, checkoutRequestId))
+    .returning({
+      id: mpesaPayments.id,
+      status: mpesaPayments.status,
+      phone: mpesaPayments.phone,
+      amount: mpesaPayments.amount,
+    });
   let finalPayment = updated[0];
 
   if (!finalPayment && status === "Success") {
-    const amountVal = parseAmount(getItemValue("Amount")) ?? "0";
+    const rawAmount = parseAmount(getItemValue("Amount")) ?? 0;
+    const amountVal = formatAmount(rawAmount);
     const phoneVal = parseString(getItemValue("PhoneNumber")) ?? "254700000000";
 
     const [inserted] = await db
@@ -239,10 +246,15 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
   return accepted();
 }
 
+export type C2bCallbackResult = CallbackResult & {
+  insertedId?: string;
+  isDuplicate?: boolean;
+};
+
 export async function handleC2bConfirmation(
   body: unknown,
   correlationId = "c2b_unknown",
-): Promise<CallbackResult> {
+): Promise<C2bCallbackResult> {
   try {
     if (!isRecord(body)) {
       console.warn(`[C2B_RECEIVED] CorrelationID:${correlationId} | Non-record payload ignored:`, body);
@@ -286,6 +298,8 @@ export async function handleC2bConfirmation(
     const transactionDesc = sanitized.TransactionType ?? "CustomerBuyGoods";
 
     let insertedId: string | undefined;
+    let isDuplicate = false;
+
     try {
       const [inserted] = await db
         .insert(mpesaPayments)
@@ -317,12 +331,14 @@ export async function handleC2bConfirmation(
           `[C2B_PAYMENT_CREATED] CorrelationID:${correlationId} | PaymentID:${insertedId} | TransID:${mpesaReceiptNumber} | Amount:${amount} | Phone:${phone} | Till:${tillNumber}`,
         );
       } else {
+        isDuplicate = true;
         console.log(
           `[C2B_DUPLICATE_IGNORED] CorrelationID:${correlationId} | TransID:${mpesaReceiptNumber} | Payment already exists in DB`,
         );
       }
     } catch (dbError) {
       console.error(`[C2B_DB_SAVE_ERROR] CorrelationID:${correlationId}:`, dbError);
+      throw dbError;
     }
 
     // Trigger SMS automation — errors must never fail the payment or response
@@ -340,11 +356,16 @@ export async function handleC2bConfirmation(
         console.error(`[C2B_SMS_ERROR] CorrelationID:${correlationId}:`, err);
       }
     }
+
+    return {
+      ...accepted(),
+      insertedId,
+      isDuplicate,
+    };
   } catch (error) {
     console.error(`[C2B_CONFIRMATION_OUTER_ERROR] CorrelationID:${correlationId}:`, error);
+    throw error;
   }
-
-  return accepted();
 }
 
 export async function handleC2bValidation(

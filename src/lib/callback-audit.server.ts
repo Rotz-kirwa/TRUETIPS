@@ -207,7 +207,7 @@ export async function readAndAuditCallbackRequest(
 ): Promise<CallbackAuditResult> {
   const requestInfo = {
     method: request.method,
-    sourceIp: getSourceIp(request),
+    sourceIp: getSourceIp(request) ?? undefined,
     userAgent: getHeader(request, "user-agent") ?? undefined,
     contentType: getHeader(request, "content-type") ?? undefined,
   };

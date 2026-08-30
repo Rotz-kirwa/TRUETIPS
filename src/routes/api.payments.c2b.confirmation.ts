@@ -80,7 +80,8 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
         // complete all critical work first.
 
         let auditId: string | null = null;
-        let processResult: { insertedId?: string } = {};
+        let processResult: { insertedId?: string; isDuplicate?: boolean } = {};
+        let processingFailed = false;
 
         try {
           // Step 1: Record callback audit (writes to mpesa_callback_events table)
@@ -105,28 +106,32 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
           }
 
           // Step 2: Process payment and create database record (writes to mpesa_payments table)
-          // This is now AWAITED before response is sent
+          // This is AWAITED before response is sent
           try {
             const { handleC2bConfirmation } = await import("../lib/mpesa-callback.server");
             const result = await handleC2bConfirmation(body, correlationId);
             processResult = result;
 
             console.log(
-              `[C2B_PROCESSING_COMPLETE] CorrelationID:${correlationId} | ResultCode:${result.ResultCode}`,
+              `[C2B_PROCESSING_COMPLETE] CorrelationID:${correlationId} | ResultCode:${result.ResultCode} | InsertedID:${result.insertedId ?? "none"} | IsDuplicate:${!!result.isDuplicate}`,
             );
           } catch (error) {
+            processingFailed = true;
             console.error(`[C2B_PROCESSING_ERROR] CorrelationID:${correlationId}:`, error);
-            // Continue to response even if processing fails
           }
+
+          const isSuccess = !processingFailed && !!(processResult.insertedId || processResult.isDuplicate);
 
           // Step 3: Mark audit result (updates mpesa_callback_events table)
           if (auditId) {
             try {
               const { markCallbackAuditResult } = await import("../lib/callback-audit.server");
-              const processStatus = processResult.insertedId ? "accepted" : "failed";
-              const resultCode = processResult.insertedId ? 0 : 1;
-              const resultDesc = processResult.insertedId
-                ? "Payment processed successfully"
+              const processStatus = isSuccess ? "accepted" : "failed";
+              const resultCode = isSuccess ? 0 : 1;
+              const resultDesc = isSuccess
+                ? processResult.isDuplicate
+                  ? "Duplicate transaction ignored"
+                  : "Payment processed successfully"
                 : "Payment processing failed";
 
               await markCallbackAuditResult(auditId, processStatus, resultCode, resultDesc);
@@ -142,23 +147,20 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
             }
           }
         } catch (outerErr) {
+          processingFailed = true;
           console.error(`[C2B_CONFIRMATION_OUTER_ERROR] CorrelationID:${correlationId}:`, outerErr);
         }
 
-        // ===== Now it's safe to respond to Safaricom =====
-        // All database operations are complete. Vercel Lambda can freeze after this
-        // without affecting payment persistence.
+        const finalSuccess = !processingFailed && !!(processResult.insertedId || processResult.isDuplicate);
+
         console.log(
-          `[C2B_CONFIRMATION_RESPONSE] CorrelationID:${correlationId} | Status:200 | PaymentCreated:${!!processResult.insertedId}`,
+          `[C2B_CONFIRMATION_RESPONSE] CorrelationID:${correlationId} | Success:${finalSuccess} | Inserted:${!!processResult.insertedId} | Duplicate:${!!processResult.isDuplicate}`,
         );
 
-        // ===== OPTIONAL: Launch SMS automation after response =====
-        // This is now truly fire-and-forget because payment is already in database.
-        // Even if SMS fails or Lambda terminates, the payment persists.
-        if (processResult.insertedId) {
-          // Non-blocking SMS trigger (will complete or fail gracefully)
-          triggerSmsWithoutBlocking(processResult.insertedId, correlationId).catch(
-            console.error,
+        if (!finalSuccess) {
+          return Response.json(
+            { ResultCode: 1, ResultDesc: "Payment processing failed" },
+            { status: 500 },
           );
         }
 

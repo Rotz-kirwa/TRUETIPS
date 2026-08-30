@@ -1,7 +1,26 @@
 import http from "node:http";
+import { readFileSync, existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+if (existsSync(".env")) {
+  try {
+    const envConfig = readFileSync(".env", "utf-8");
+    for (const line of envConfig.split("\n")) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let value = (match[2] || "").trim();
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        if (!process.env[key]) process.env[key] = value;
+      }
+    }
+  } catch {
+    // Ignore .env read errors
+  }
+}
 import server from "../dist/server/server.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -72,6 +91,12 @@ const app = http.createServer(async (req, res) => {
     const userAgent = req.headers["user-agent"] ?? "-";
     const remoteAddr = req.socket?.remoteAddress ?? "-";
     const fwdIp = req.headers["x-forwarded-for"] ?? "-";
+
+    if (pathname === "/api/payments/c2b/confirmation" && req.method === "POST") {
+      console.log(
+        `[C2B_RENDER_INGRESS] [${timestamp}] received | POST /api/payments/c2b/confirmation | Host:${hostHeader} | ClientIP:${ip} | ContentType:${contentType}`,
+      );
+    }
 
     console.log(
       `[HTTP_INGRESS_CAPTURE] [${timestamp}] ${req.method} ${pathname} | Host:${hostHeader} | RemoteIP:${remoteAddr} | FwdIP:${fwdIp} | ClientIP:${ip} | ContentType:${contentType} | ContentLength:${contentLength} | UA:${userAgent}`,

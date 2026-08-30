@@ -39,6 +39,7 @@ import { Route as ApiPaymentsC2bConfirmationRouteImport } from './routes/api.pay
 import { Route as ApiAdminPaymentsPollRouteImport } from './routes/api.admin.payments.poll'
 import { Route as ApiAdminPaymentsDiagnosticsRouteImport } from './routes/api.admin.payments.diagnostics'
 import { Route as ApiAdminMpesaPollRouteImport } from './routes/api.admin.mpesa.poll'
+import { Route as ApiPaymentsC2bConfirmationFIXEDRouteImport } from './routes/api.payments.c2b.confirmation.FIXED'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -192,6 +193,12 @@ const ApiAdminMpesaPollRoute = ApiAdminMpesaPollRouteImport.update({
   path: '/api/admin/mpesa/poll',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaymentsC2bConfirmationFIXEDRoute =
+  ApiPaymentsC2bConfirmationFIXEDRouteImport.update({
+    id: '/FIXED',
+    path: '/FIXED',
+    getParentRoute: () => ApiPaymentsC2bConfirmationRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -220,9 +227,10 @@ export interface FileRoutesByFullPath {
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
-  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRouteWithChildren
   '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
+  '/api/payments/c2b/confirmation/FIXED': typeof ApiPaymentsC2bConfirmationFIXEDRoute
 }
 export interface FileRoutesByTo {
   '/callback': typeof CallbackRoute
@@ -251,9 +259,10 @@ export interface FileRoutesByTo {
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
-  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRouteWithChildren
   '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
+  '/api/payments/c2b/confirmation/FIXED': typeof ApiPaymentsC2bConfirmationFIXEDRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -284,9 +293,10 @@ export interface FileRoutesById {
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
-  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRouteWithChildren
   '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
+  '/api/payments/c2b/confirmation/FIXED': typeof ApiPaymentsC2bConfirmationFIXEDRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/api/payments/c2b/confirmation'
     | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
+    | '/api/payments/c2b/confirmation/FIXED'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/callback'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/api/payments/c2b/confirmation'
     | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
+    | '/api/payments/c2b/confirmation/FIXED'
   id:
     | '__root__'
     | '/_app'
@@ -383,6 +395,7 @@ export interface FileRouteTypes {
     | '/api/payments/c2b/confirmation'
     | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
+    | '/api/payments/c2b/confirmation/FIXED'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -406,7 +419,7 @@ export interface RootRouteChildren {
   ApiAdminMpesaPollRoute: typeof ApiAdminMpesaPollRoute
   ApiAdminPaymentsDiagnosticsRoute: typeof ApiAdminPaymentsDiagnosticsRoute
   ApiAdminPaymentsPollRoute: typeof ApiAdminPaymentsPollRoute
-  ApiPaymentsC2bConfirmationRoute: typeof ApiPaymentsC2bConfirmationRoute
+  ApiPaymentsC2bConfirmationRoute: typeof ApiPaymentsC2bConfirmationRouteWithChildren
   ApiPaymentsC2bStatusRoute: typeof ApiPaymentsC2bStatusRoute
   ApiPaymentsC2bValidationRoute: typeof ApiPaymentsC2bValidationRoute
 }
@@ -623,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminMpesaPollRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/payments/c2b/confirmation/FIXED': {
+      id: '/api/payments/c2b/confirmation/FIXED'
+      path: '/FIXED'
+      fullPath: '/api/payments/c2b/confirmation/FIXED'
+      preLoaderRoute: typeof ApiPaymentsC2bConfirmationFIXEDRouteImport
+      parentRoute: typeof ApiPaymentsC2bConfirmationRoute
+    }
   }
 }
 
@@ -648,6 +668,20 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ApiPaymentsC2bConfirmationRouteChildren {
+  ApiPaymentsC2bConfirmationFIXEDRoute: typeof ApiPaymentsC2bConfirmationFIXEDRoute
+}
+
+const ApiPaymentsC2bConfirmationRouteChildren: ApiPaymentsC2bConfirmationRouteChildren =
+  {
+    ApiPaymentsC2bConfirmationFIXEDRoute: ApiPaymentsC2bConfirmationFIXEDRoute,
+  }
+
+const ApiPaymentsC2bConfirmationRouteWithChildren =
+  ApiPaymentsC2bConfirmationRoute._addFileChildren(
+    ApiPaymentsC2bConfirmationRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   CallbackRoute: CallbackRoute,
@@ -669,7 +703,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminMpesaPollRoute: ApiAdminMpesaPollRoute,
   ApiAdminPaymentsDiagnosticsRoute: ApiAdminPaymentsDiagnosticsRoute,
   ApiAdminPaymentsPollRoute: ApiAdminPaymentsPollRoute,
-  ApiPaymentsC2bConfirmationRoute: ApiPaymentsC2bConfirmationRoute,
+  ApiPaymentsC2bConfirmationRoute: ApiPaymentsC2bConfirmationRouteWithChildren,
   ApiPaymentsC2bStatusRoute: ApiPaymentsC2bStatusRoute,
   ApiPaymentsC2bValidationRoute: ApiPaymentsC2bValidationRoute,
 }

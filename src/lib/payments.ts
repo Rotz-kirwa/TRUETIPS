@@ -4,7 +4,7 @@ import { z } from "zod";
 // Explicit type — avoids importing Drizzle schema (which pulls pg-core into client bundle)
 export type MpesaPayment = {
   id: string;
-  source: "stk_push" | "c2b_till";
+  source: "stk_push" | "c2b_till" | "recovered_via_poll";
   status: "Pending" | "Success" | "Failed" | "Cancelled";
   phone: string;
   payerName: string | null;
