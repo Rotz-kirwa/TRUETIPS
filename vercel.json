@@ -9,6 +9,14 @@
     }
   },
   "rewrites": [
+    {
+      "source": "/api/payments/c2b/confirmation",
+      "destination": "https://moonlight-games.onrender.com/api/payments/c2b/confirmation"
+    },
+    {
+      "source": "/api/payments/c2b/validation",
+      "destination": "https://moonlight-games.onrender.com/api/payments/c2b/validation"
+    },
     { "source": "/(.*)", "destination": "/api/server" }
   ]
 }
