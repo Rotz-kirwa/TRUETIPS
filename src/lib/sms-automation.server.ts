@@ -399,7 +399,7 @@ export async function processPaymentSms(params: {
     return;
   }
   // 2. Phone validation — Skip if phone is shortcode/till number like "232392"
-  if (!phone || phone === "232392" || phone === "4980406" || phone.length < 10) {
+  if (!phone || phone === "232392" || phone === "4980404" || phone === "4980406" || phone.length < 10) {
     console.log(`[sms-automation] Invalid recipient phone number (${phone}) — skipping SMS dispatch.`);
     return;
   }
