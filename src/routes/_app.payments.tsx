@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar } from "lucide-react";
 import { useLivePayments } from "@/hooks/use-live-payments";
 import { cn } from "@/lib/utils";
-import { fetchPaymentsFn, recheckPaymentStatusFn, type MpesaPayment } from "@/lib/payments";
+import { fetchPaymentsFn, recheckPaymentStatusFn, recordManualPaymentFn, type MpesaPayment } from "@/lib/payments";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/payments")({
@@ -134,6 +134,14 @@ function PaymentsPage() {
   const [sortDesc, setSortDesc] = useState(true);
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [page, setPage] = useState(1);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    phone: "",
+    amount: "",
+    mpesaReceiptNumber: "",
+    payerName: "",
+  });
 
   const stats = useMemo(() => {
     const success = payments.filter((p) => p.status === "Success");
@@ -249,6 +257,12 @@ function PaymentsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            + Record Payment
+          </button>
           <button
             onClick={exportCsv}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-secondary"
@@ -402,6 +416,121 @@ function PaymentsPage() {
           </div>
         </div>
       </div>
+
+      {/* Record Payment Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Record M-Pesa Payment</h3>
+                <p className="text-xs text-muted-foreground">Manually log a till transaction & send SMS receipt</p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!formData.phone || !formData.amount || !formData.mpesaReceiptNumber) {
+                  toast.error("Please fill in Phone, Amount, and Receipt Number");
+                  return;
+                }
+                setSubmitting(true);
+                try {
+                  await recordManualPaymentFn({
+                    data: {
+                      phone: formData.phone,
+                      amount: Number(formData.amount),
+                      mpesaReceiptNumber: formData.mpesaReceiptNumber,
+                      payerName: formData.payerName || "Direct Customer",
+                    },
+                  });
+                  toast.success(`Payment ${formData.mpesaReceiptNumber.toUpperCase()} recorded & SMS dispatched!`);
+                  setShowAddModal(false);
+                  setFormData({ phone: "", amount: "", mpesaReceiptNumber: "", payerName: "" });
+                  refresh();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to record payment");
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+              className="space-y-4 text-sm"
+            >
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Phone Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="0712345678 or 254712345678"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Amount (KES) *</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  placeholder="10"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">M-Pesa Receipt Code *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="R3LBB61EAQ"
+                  value={formData.mpesaReceiptNumber}
+                  onChange={(e) => setFormData({ ...formData, mpesaReceiptNumber: e.target.value.toUpperCase() })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Customer Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Samuel Udiga"
+                  value={formData.payerName}
+                  onChange={(e) => setFormData({ ...formData, payerName: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-border pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                >
+                  {submitting ? "Saving & Sending SMS…" : "Save & Send SMS"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
