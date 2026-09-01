@@ -83,9 +83,11 @@ function LoginPage() {
           </div>
         </div>
 
-        {/* Glass card */}
+        {/* Glass card — suppress hydration at the card level so extension-injected
+            nodes (LastPass icon root, Bitwarden overlays, etc.) don't throw */}
         <div
           className="rounded-3xl p-8 shadow-2xl"
+          suppressHydrationWarning
           style={{
             background: "rgba(10, 15, 25, 0.82)",
             backdropFilter: "blur(24px)",
@@ -99,6 +101,7 @@ function LoginPage() {
             <p className="mt-1.5 text-sm text-white/50">Sign in to continue to your dashboard</p>
           </div>
 
+          {/* Render form client-only to prevent extension (LastPass, etc.) hydration mismatches */}
           <form onSubmit={submit} className="space-y-4" suppressHydrationWarning>
             {/* Email field */}
             <div className="group" suppressHydrationWarning>
