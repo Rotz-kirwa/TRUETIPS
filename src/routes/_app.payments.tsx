@@ -129,7 +129,7 @@ function StatusBadge({ payment, onRefresh }: { payment: MpesaPayment; onRefresh:
 
 function PaymentsPage() {
   const loaderData = Route.useLoaderData();
-  const { payments, refresh, isRefreshing, lastUpdated } = useLivePayments(loaderData);
+  const { payments, refresh, isRefreshing, lastUpdated } = useLivePayments(loaderData, 5000);
   const [query, setQuery] = useState("");
   const [sortDesc, setSortDesc] = useState(true);
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");

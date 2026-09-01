@@ -152,7 +152,7 @@ const STATUS_COLORS = {
 
 function DashboardPage() {
   const initialPayments = Route.useLoaderData();
-  const { payments, lastUpdated } = useLivePayments(initialPayments);
+  const { payments, lastUpdated } = useLivePayments(initialPayments, 5000);
   const [chartsReady, setChartsReady] = useState(false);
   const [chartRange, setChartRange] = useState<ChartRange>("7d");
 

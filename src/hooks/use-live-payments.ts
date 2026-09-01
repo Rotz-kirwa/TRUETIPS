@@ -1,7 +1,7 @@
 import { startTransition, useEffect, useRef, useState } from "react";
 import { fetchPaymentsFn, type MpesaPayment } from "@/lib/payments";
 
-export function useLivePayments(initialPayments: MpesaPayment[], intervalMs = 10000) {
+export function useLivePayments(initialPayments: MpesaPayment[], intervalMs = 5000) {
   const [payments, setPayments] = useState(initialPayments);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
