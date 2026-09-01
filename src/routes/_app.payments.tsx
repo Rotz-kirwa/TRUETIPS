@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar } from "lucide-react";
 import { useLivePayments } from "@/hooks/use-live-payments";
 import { cn } from "@/lib/utils";
-import { fetchPaymentsFn, recheckPaymentStatusFn, recordManualPaymentFn, type MpesaPayment } from "@/lib/payments";
+import { fetchPaymentsFn, initiateStkPushFn, recheckPaymentStatusFn, recordManualPaymentFn, type MpesaPayment } from "@/lib/payments";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/payments")({
@@ -143,6 +143,15 @@ function PaymentsPage() {
     payerName: "",
   });
 
+  const [showStkModal, setShowStkModal] = useState(false);
+  const [stkSubmitting, setStkSubmitting] = useState(false);
+  const [stkFormData, setStkFormData] = useState({
+    phone: "",
+    amount: "10",
+    reference: "Sure10",
+    description: "Subscription",
+  });
+
   const stats = useMemo(() => {
     const success = payments.filter((p) => p.status === "Success");
     const sum = (list: MpesaPayment[]) =>
@@ -257,6 +266,12 @@ function PaymentsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowStkModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            ⚡ Trigger STK Push
+          </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -525,6 +540,108 @@ function PaymentsPage() {
                   className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   {submitting ? "Saving & Sending SMS…" : "Save & Send SMS"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Trigger STK Push Modal */}
+      {showStkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">⚡ Trigger M-Pesa STK Push</h3>
+                <p className="text-xs text-muted-foreground">Send a direct PIN prompt to customer's phone</p>
+              </div>
+              <button
+                onClick={() => setShowStkModal(false)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!stkFormData.phone || !stkFormData.amount) {
+                  toast.error("Please fill in Phone Number and Amount");
+                  return;
+                }
+                setStkSubmitting(true);
+                try {
+                  const result = await initiateStkPushFn({
+                    data: {
+                      phone: stkFormData.phone,
+                      amount: Number(stkFormData.amount),
+                      reference: stkFormData.reference || "Sure10",
+                      description: stkFormData.description || "Payment",
+                    },
+                  });
+                  toast.success(`STK Push prompt dispatched to ${stkFormData.phone}!`);
+                  setShowStkModal(false);
+                  setStkFormData({ phone: "", amount: "10", reference: "Sure10", description: "Payment" });
+                  refresh();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to trigger STK Push");
+                } finally {
+                  setStkSubmitting(false);
+                }
+              }}
+              className="space-y-4 text-sm"
+            >
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Phone Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="0712345678 or 254712345678"
+                  value={stkFormData.phone}
+                  onChange={(e) => setStkFormData({ ...stkFormData, phone: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Amount (KES) *</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  placeholder="10"
+                  value={stkFormData.amount}
+                  onChange={(e) => setStkFormData({ ...stkFormData, amount: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Account Reference</label>
+                <input
+                  type="text"
+                  placeholder="Sure10"
+                  value={stkFormData.reference}
+                  onChange={(e) => setStkFormData({ ...stkFormData, reference: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary font-mono"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-border pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowStkModal(false)}
+                  className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={stkSubmitting}
+                  className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-500 hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {stkSubmitting ? "Dispatching to Phone…" : "⚡ Send STK Push Prompt"}
                 </button>
               </div>
             </form>
