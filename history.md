@@ -1,131 +1,120 @@
-# FORENSIC AUDIT & PIPELINE HISTORY — SURE-10 M-PESA INTEGRATION
-
-**Audit Timestamp**: August 29, 2026 — 19:28:34 EAT (16:28:34 UTC)  
-**Production Domain**: `https://www.sure-10.com`  
-**Backend Runtime**: Render (`api/render-server.js` executing TanStack Start SSR)  
-**M-Pesa Store / Child Shortcode**: `4980404`  
-**M-Pesa Buy Goods Till**: `232392`  
-
----
-
-## 1. Executive Summary & Objective
-
-**Primary Objective**:  
-Investigate and resolve why live M-Pesa payments made to Till `232392` were not consistently displaying on the admin dashboard at `https://www.sure-10.com`.
-
-**Key Forensic Findings**:
-1. **`ORIGINS` Environment Variable (DISPROVED)**  
-   - `ORIGINS` is completely absent from the codebase (0 references in all source files).
-   - Safaricom webhooks are direct server-to-server HTTP POST requests, which do not check CORS or origin headers. Adding `ORIGINS` on Render has zero impact on payment ingestion.
-2. **Backend Server Endpoint Health (VERIFIED 100% FUNCTIONAL)**  
-   - Direct HTTP POST test calls to `https://www.sure-10.com/api/payments/c2b/confirmation` returned `HTTP 200 OK {"ResultCode":0,"ResultDesc":"Accepted"}` within < 10ms.
-   - Database schema (`mpesa_payments`), duplicate protection (`.onConflictDoNothing()`), and SMS automation triggers are fully operational.
-3. **Daraja Portal URL Registration (VERIFIED)**  
-   - Developer Portal screenshot confirms C2B URLs registered under Child Shortcode `4980404`:
-     - **Confirmation URL**: `https://www.sure-10.com/api/payments/c2b/confirmation`
-     - **Validation URL**: `https://www.sure-10.com/api/payments/c2b/validation`
-     - **Status**: `Completed` / `Active`
-4. **Root Cause Isolated (SAFARICOM TILL IPN FORWARDING)**  
-   - Diagnostic checks returned `webhookReceivedCount24h: 0` and `lastCallbackReceived: 2026-08-28 14:53:33 UTC`.
-   - Safaricom's core switch has not toggled internal C2B Webhook / IPN Forwarding for Till `232392` to route payments to Child Shortcode `4980404`.
+# M-Pesa Ingestion Pipeline & Architecture History Log
+**Date:** September 2, 2026  
+**Project:** Payvora / Moonlight Games  
+**Backend Host:** Render (`moonlight-games.onrender.com`)  
+**Frontend Host:** Vercel (`www.sure-10.com`)  
+**Shortcode:** `4980404` (Head Office: `4980406`) | **Till Number:** `232392`  
 
 ---
 
-## 2. Environment Variable Audit Matrix
+## Executive Summary & Current System Status (As of Sep 2, 2026)
 
-| Environment Variable | Found in Codebase? | Exact File & Line Reference | Purpose | Production Render Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `ORIGINS` | **NO** | N/A | None (CORS not used for webhooks) | Not required / Ignored |
-| `DATABASE_URL` | **YES** | `api/render-server.js:155`, `src/lib/db/client.ts:6` | PostgreSQL DB Connection | Required & Active |
-| `JWT_SECRET` | **YES** | `api/render-server.js:155`, `src/lib/auth.server.ts:20` | Admin Auth Cookie Signing | Required & Active |
-| `MPESA_CONSUMER_KEY` | **YES** | `api/render-server.js:155`, `src/lib/mpesa.server.ts:12` | Daraja OAuth API Key | Required & Active |
-| `MPESA_CONSUMER_SECRET` | **YES** | `api/render-server.js:155`, `src/lib/mpesa.server.ts:13` | Daraja OAuth API Secret | Required & Active |
-| `MPESA_PASSKEY` | **YES** | `api/render-server.js:156`, `src/lib/mpesa.server.ts:60` | STK Push Passkey | Required & Active |
-| `MPESA_SHORTCODE` | **YES** | `api/render-server.js:156`, `src/lib/mpesa.server.ts:7` | Child Shortcode (`4980404`) | Required & Active |
-| `MPESA_TILL_NUMBER` | **YES** | `src/lib/payments.server.ts:8`, `src/lib/mpesa.server.ts:9` | Buy Goods Till (`232392`) | Required & Active |
-| `MPESA_CALLBACK_URL` | **YES** | `api/render-server.js:156`, `src/lib/mpesa.server.ts:61` | Webhook Base URL | `https://www.sure-10.com` |
-| `MPESA_ENVIRONMENT` | **YES** | `api/render-server.js:156`, `src/lib/mpesa.server.ts:2` | Daraja Mode | `"production"` |
-| `SMS_PROVIDER` | **YES** | `api/render-server.js:157`, `src/lib/sms-automation.server.ts:14` | SMS Provider Selection | `"onfon"` |
-| `ONFON_API_KEY` | **YES** | `api/render-server.js:157`, `src/lib/sms.server.ts:11` | Onfon SMS Key | Required & Active |
-| `ONFON_CLIENT_ID` | **YES** | `api/render-server.js:157`, `src/lib/sms.server.ts:12` | Onfon Client ID | Required & Active |
-| `ONFON_SENDER_ID` | **YES** | `api/render-server.js:157`, `src/lib/sms.server.ts:13` | Onfon Sender ID | Required & Active |
+| Milestone / Metric | Status | Details |
+| :--- | :--- | :--- |
+| **Daraja API URL Registration** | 🟢 **ACTIVE (`00000000`)** | Registered directly on Master Shortcode `4980406` to `moonlight-games.onrender.com` |
+| **Direct Backend Reachability** | 🟢 **HTTP 200 OK** | Zero redirects (`301`/`308`), Cloudflare/Render edge returning clean JSON responses |
+| **PostgreSQL Persistence** | 🟢 **OPERATIONAL** | Payments & raw callback events logged in real time into `mpesa_payments` & `mpesa_callback_events` |
+| **Admin Dashboard Sync** | 🟢 **OPERATIONAL** | 5-second polling loop active at `https://www.sure-10.com/payments` |
+| **Safaricom G2 Core IPN Forwarding** | 🔴 **PENDING SAFARICOM** | Till `232392` requires Safaricom Support to toggle IPN Auto-Forwarding in G2 Merchant System |
+| **STK Push (Lipa Na M-Pesa Online)** | 🟠 **AWAITING ACTIVATION** | ResultCode `4999` ("Merchant does not exist") returned due to inactive core STK mapping on Safaricom G2 |
 
 ---
 
-## 3. Detailed Pipeline Architecture & Data Flow
+## Comprehensive Architecture & Troubleshooting Timeline
 
-```text
-[ Customer M-Pesa Payment to Till 232392 ]
-                     │
-                     ▼
-[ Safaricom M-Pesa Core Switch ]
-                     │
-                     ├── (Awaiting: Safaricom Support Enable IPN Forwarding for Till 232392 → Shortcode 4980404)
-                     ▼
-[ Direct HTTP POST Webhook ]
-URL: https://www.sure-10.com/api/payments/c2b/confirmation
-                     │
-                     ▼
-[ Render Web Server: api/render-server.js ]
-   ├── Log: [HTTP_INGRESS_CAPTURE]
-   └── Forward to TanStack Start Engine: server.fetch(request)
-                     │
-                     ▼
-[ Confirmation Route: src/routes/api.payments.c2b.confirmation.ts ]
-   ├── Log: [C2B_CONFIRMATION_ENTRY] (Correlation ID generated)
-   ├── Audit: Audit log written to `mpesa_callback_events`
-   └── Response: HTTP 200 { "ResultCode": 0, "ResultDesc": "Accepted" } (Immediate < 10ms)
-                     │
-                     ▼ (Background Async Task)
-[ Processing Handler: src/lib/mpesa-callback.server.ts ]
-   ├── Function: handleC2bConfirmation()
-   ├── Sanitization: sanitizeC2bBody() (TransID, TransAmount, MSISDN, Shortcode)
-   ├── Database: db.insert(mpesaPayments).onConflictDoNothing({ target: mpesaReceiptNumber })
-   └── SMS Automation: processPaymentSms() (Onfon Gateway Dispatch)
-                     │
-                     ▼
-[ Production Dashboard: https://www.sure-10.com/payments ]
-   ├── Loader: fetchPaymentsFn() -> fetchPayments() in src/lib/payments.server.ts
-   └── React Hook: useLivePayments() polling every 10 seconds
+```mermaid
+timeline
+    title M-Pesa Integration Progression (Aug 28 - Sep 2, 2026)
+    section Discovery & Deployment
+        Aug 28 : Initial C2B setup under Shortcode 4980404
+               : Identified database schema & webhook handlers
+        Aug 30 : Migration to persistent Render infrastructure
+               : Fixed SMS credit automation for shortcode 4980404
+    section Forensic Audit
+        Sep 01 : Discovered HTTP 308 permanent redirects on Vercel apex domain
+               : Added Admin Payment Diagnostics endpoint (/api/admin/payments/diagnostics)
+               : Built STK Push Trigger Modal UI on Payments Dashboard
+    section Direct Routing & Parity
+        Sep 02 : Bypassed Vercel proxies by registering direct Render endpoints on Daraja
+               : Re-registered C2B endpoints under Master Shortcode 4980406 (ResponseCode 00000000)
+               : Verified zero-redirect HTTP 200 OK responses via curl
+               : Sent formal update request to Safaricom Technical Support for G2 IPN activation
 ```
 
 ---
 
-## 4. Live Diagnostic Evidence
+## Detailed Log of Work & Fixes Completed
 
-### Diagnostic Endpoint Audit (`GET /api/admin/payments/diagnostics`)
-```json
-{
-  "ok": true,
-  "timestamp": "2026-08-29T16:20:29.476Z",
-  "diagnostics": {
-    "lastCallbackReceived": "2026-08-28 14:53:33.008513+00",
-    "lastPollRun": "2026-08-29T16:18:33.676Z",
-    "recoveredViaPollCount24h": 0,
-    "webhookReceivedCount24h": 0,
-    "totalPayments24h": 0,
-    "callbackHealth": "NO_ACTIVITY"
-  },
-  "config": {
-    "shortcode": "4980404",
-    "tillNumber": "232392",
-    "environment": "production"
+### 1. Webhook Infrastructure & Endpoint Alignment
+- **Problem:** Safaricom’s proxy (`fs-c2b-v2`) failed with `RF-ServerError` when hitting `https://sure-10.com` due to Vercel apex domain `308 Permanent Redirects` pointing to `www.sure-10.com`.
+- **Solution:** Re-routed all Daraja webhooks directly to the Render backend server (`https://moonlight-games.onrender.com/api/payments/c2b/confirmation`).
+- **Verification:** Ran `curl -IL https://moonlight-games.onrender.com/api/payments/c2b/confirmation` and confirmed immediate `HTTP/2 200 OK` with 0 redirects.
+
+### 2. Daraja Portal & API URL Registration
+- **Action:** Automated registration via Safaricom OAuth API on Master Shortcode `4980406`.
+- **API Response:**
+  ```json
+  {
+    "OriginatorCoversationID": "a2c8-451a-b5ea-99ed765c8b871429020",
+    "ResponseCode": "00000000",
+    "ResponseDescription": "Success"
   }
-}
-```
+  ```
+- **Portal Verification:** Verified visually on the Daraja Developer Portal UI that the direct Render URLs are active under **URL Management**.
 
-### Ingress Live Test (`POST /api/payments/c2b/confirmation`)
-- **Status**: `200 OK`
-- **Output**: `{"ResultCode":0,"ResultDesc":"Accepted"}`
+### 3. Database Logging & Administrative Controls
+- **Audit Table:** Verified `mpesa_callback_events` records raw JSON payloads, source IPs (`196.201.214.*`), and processing timestamps.
+- **Manual Entry & Diagnostics:** Built `/api/admin/payments/diagnostics` and added `+ Record Payment` and `⚡ Trigger STK Push` modal dialogs to `_app.payments.tsx`.
+- **Live Ingestion Test:** Ingested synthetic test POST payload `SLIVE_482811` directly into `moonlight-games.onrender.com`; database persisted payment instantly with `status: Success`.
 
 ---
 
-## 5. Next Steps While Awaiting Safaricom Response
+## Active Shortcomings & External Blockers
 
-1. **Safaricom Merchant Support Request**:
-   - **Target Email**: `apisupport@safaricom.co.ke` / Account Manager
-   - **Request**: *"Enable C2B Webhook / IPN Forwarding for Buy Goods Till 232392 linked to Head Office Shortcode 4980404."*
-2. **Post-Activation Verification**:
-   - Make a test payment of KES 10 to Till `232392`.
-   - Run diagnostics check: `GET https://www.sure-10.com/api/admin/payments/diagnostics?secret=paylix-debug-2026`
-   - Confirm `webhookReceivedCount24h` increments and payments display on `https://www.sure-10.com/payments`.
+### 1. Safaricom G2 Core C2B IPN Forwarding (Till 232392)
+- **Symptom:** Customers pay Till `232392` from mobile phones and receive official M-Pesa SMS confirmation receipts, but Safaricom dispatches 0 callbacks to the registered URL.
+- **Root Cause:** Safaricom’s internal G2 core engine has not toggled "C2B IPN Webhook Auto-Forwarding" for Till `232392`.
+- **Resolution Path:** Submitted ticket update to Safaricom Technical Support requesting IPN toggle in G2 Merchant Portal.
+
+### 2. STK Push ResultCode 4999 ("Merchant does not exist")
+- **Symptom:** Triggering STK Push returns `ResultCode 4999`.
+- **Root Cause:** Online STK Push (Lipa Na M-Pesa Online) is not mapped to Shortcode `4980404` / Till `232392` on Safaricom's core.
+- **Resolution Path:** Requested Safaricom Technical Support to authorize Lipa Na M-Pesa Online for Shortcode `4980404`.
+
+---
+
+## Active Environment Variable Configuration (Render `moonlight-games`)
+
+```env
+BUSINESS_NAME=PredictionLab
+DATABASE_URL=postgresql://sure_10_user:K7zAvCJ7eoxJ5OeOgtpnbqrBX95VZGXZ@dpg-da6vlf61egvs73esj6r0-a.oregon-postgres.render.com/sure_10
+JWT_SECRET=paylix-super-secret-jwt-key-2026-secure
+
+MPESA_C2B_CONFIRMATION_URL=https://moonlight-games.onrender.com/api/payments/c2b/confirmation
+MPESA_C2B_VALIDATION_URL=https://moonlight-games.onrender.com/api/payments/c2b/validation
+MPESA_C2B_SHORTCODE=4980404
+MPESA_CALLBACK_URL=https://moonlight-games.onrender.com
+
+MPESA_CONSUMER_KEY=OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG
+MPESA_CONSUMER_SECRET=vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd
+MPESA_ENVIRONMENT=production
+MPESA_PASSKEY=cb69fb59b02bbb0ab518f7de1c1b91645ce7408201096b6ddc169057d56d824b
+MPESA_SHORTCODE=4980404
+MPESA_TILL_NUMBER=232392
+
+ONFON_API_KEY=2rYG3PR90oQzwMH4abIm18pTKUvxJkcfZiA67FuBShqgsE5X
+ONFON_CLIENT_ID=nebula
+ONFON_SENDER_ID=NEBULA
+SMS_PROVIDER=onfon
+
+ORIGINS=https://www.sure-10.com,https://sure-10.com,https://moonlight-games.onrender.com
+VITE_API_URL=https://www.sure-10.com
+```
+
+---
+
+## Next Steps Upon Safaricom Support Confirmation
+
+1. **Verify Ingestion:** Monitor `GET /api/admin/payments/diagnostics` to confirm live callbacks from Safaricom (`source_ip: 196.201.214.*`).
+2. **Dashboard Validation:** Confirm live till payments automatically credit user accounts and display on `https://www.sure-10.com/payments`.
+3. **STK Push Re-Testing:** Test `⚡ Trigger STK Push` modal to verify mobile prompts.
