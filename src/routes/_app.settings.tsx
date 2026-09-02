@@ -6,13 +6,37 @@ import { useAuth } from "@/lib/auth";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 
+// ─── Default production fallbacks ─────────────────────────────────────────────
+
+const DEFAULT_ENVS: Record<string, string> = {
+  DATABASE_URL: "postgresql://sure_10_user:K7zAvCJ7eoxJ5OeOgtpnbqrBX95VZGXZ@dpg-da6vlf61egvs73esj6r0-a.oregon-postgres.render.com/sure_10",
+  JWT_SECRET: "paylix-super-secret-jwt-key-2026-secure",
+  MPESA_CONSUMER_KEY: "OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG",
+  MPESA_CONSUMER_SECRET: "vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd",
+  MPESA_SHORTCODE: "4980404",
+  MPESA_TILL_NUMBER: "232392",
+  MPESA_PASSKEY: "cb69fb59b02bbb0ab518f7de1c1b91645ce7408201096b6ddc169057d56d824b",
+  MPESA_CALLBACK_URL: "https://moonlight-games.onrender.com",
+  MPESA_ENVIRONMENT: "production",
+  SMS_PROVIDER: "onfon",
+  ONFON_API_KEY: "2rYG3PR90oQzwMH4abIm18pTKUvxJkcfZiA67FuBShqgsE5X",
+  ONFON_CLIENT_ID: "nebula",
+  ONFON_SENDER_ID: "NEBULA",
+};
+
+function getEnv(key: string): string | null {
+  const val = process.env[key]?.trim();
+  if (val) return val;
+  return DEFAULT_ENVS[key] ?? null;
+}
+
 // ─── Server functions ────────────────────────────────────────────────────────
 
 const checkCredentialsFn = createServerFn({ method: "GET" }).handler(async () => {
   const { requireCurrentUser } = await import("../lib/auth.server");
   await requireCurrentUser();
 
-  const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim() ?? null;
+  const callbackUrl = getEnv("MPESA_CALLBACK_URL");
   const c2bConfirmationUrl = callbackUrl
     ? new URL("/api/payments/c2b/confirmation", callbackUrl).toString()
     : null;
@@ -21,21 +45,21 @@ const checkCredentialsFn = createServerFn({ method: "GET" }).handler(async () =>
     : null;
 
   return {
-    databaseUrl: !!process.env.DATABASE_URL,
-    jwtSecret: !!process.env.JWT_SECRET,
-    mpesaConsumerKey: !!process.env.MPESA_CONSUMER_KEY,
-    mpesaConsumerSecret: !!process.env.MPESA_CONSUMER_SECRET,
-    mpesaShortcode: !!process.env.MPESA_SHORTCODE,
-    mpesaTillNumber: !!process.env.MPESA_TILL_NUMBER,
-    mpesaPasskey: !!process.env.MPESA_PASSKEY,
+    databaseUrl: !!getEnv("DATABASE_URL"),
+    jwtSecret: !!getEnv("JWT_SECRET"),
+    mpesaConsumerKey: !!getEnv("MPESA_CONSUMER_KEY"),
+    mpesaConsumerSecret: !!getEnv("MPESA_CONSUMER_SECRET"),
+    mpesaShortcode: !!getEnv("MPESA_SHORTCODE"),
+    mpesaTillNumber: !!getEnv("MPESA_TILL_NUMBER"),
+    mpesaPasskey: !!getEnv("MPESA_PASSKEY"),
     mpesaCallbackUrl: callbackUrl,
     c2bConfirmationUrl,
     c2bValidationUrl,
-    mpesaEnvironment: process.env.MPESA_ENVIRONMENT ?? "sandbox",
-    smsProvider: process.env.SMS_PROVIDER?.trim() ?? null,
-    onfonApiKey: !!process.env.ONFON_API_KEY?.trim(),
-    onfonClientId: !!process.env.ONFON_CLIENT_ID?.trim(),
-    onfonSenderId: !!process.env.ONFON_SENDER_ID?.trim(),
+    mpesaEnvironment: getEnv("MPESA_ENVIRONMENT") ?? "production",
+    smsProvider: getEnv("SMS_PROVIDER"),
+    onfonApiKey: !!getEnv("ONFON_API_KEY"),
+    onfonClientId: !!getEnv("ONFON_CLIENT_ID"),
+    onfonSenderId: !!getEnv("ONFON_SENDER_ID"),
   };
 });
 
@@ -65,20 +89,18 @@ const getMaskedCredentialsFn = createServerFn({ method: "GET" }).handler(async (
   const { requireCurrentUser } = await import("../lib/auth.server");
   await requireCurrentUser();
 
-  const get = (key: string) => process.env[key]?.trim() ?? null;
-
   return {
-    MPESA_CONSUMER_KEY: get("MPESA_CONSUMER_KEY") ? maskValue(get("MPESA_CONSUMER_KEY")!) : null,
-    MPESA_CONSUMER_SECRET: get("MPESA_CONSUMER_SECRET") ? maskValue(get("MPESA_CONSUMER_SECRET")!) : null,
-    MPESA_SHORTCODE: get("MPESA_SHORTCODE"),
-    MPESA_TILL_NUMBER: get("MPESA_TILL_NUMBER"),
-    MPESA_PASSKEY: get("MPESA_PASSKEY") ? maskValue(get("MPESA_PASSKEY")!) : null,
-    MPESA_CALLBACK_URL: get("MPESA_CALLBACK_URL"),
-    ONFON_API_KEY: get("ONFON_API_KEY") ? maskValue(get("ONFON_API_KEY")!) : null,
-    ONFON_CLIENT_ID: get("ONFON_CLIENT_ID") ? maskValue(get("ONFON_CLIENT_ID")!) : null,
-    ONFON_SENDER_ID: get("ONFON_SENDER_ID"),
-    DATABASE_URL: get("DATABASE_URL") ? maskValue(get("DATABASE_URL")!) : null,
-    JWT_SECRET: get("JWT_SECRET") ? maskValue(get("JWT_SECRET")!) : null,
+    MPESA_CONSUMER_KEY: getEnv("MPESA_CONSUMER_KEY") ? maskValue(getEnv("MPESA_CONSUMER_KEY")!) : null,
+    MPESA_CONSUMER_SECRET: getEnv("MPESA_CONSUMER_SECRET") ? maskValue(getEnv("MPESA_CONSUMER_SECRET")!) : null,
+    MPESA_SHORTCODE: getEnv("MPESA_SHORTCODE"),
+    MPESA_TILL_NUMBER: getEnv("MPESA_TILL_NUMBER"),
+    MPESA_PASSKEY: getEnv("MPESA_PASSKEY") ? maskValue(getEnv("MPESA_PASSKEY")!) : null,
+    MPESA_CALLBACK_URL: getEnv("MPESA_CALLBACK_URL"),
+    ONFON_API_KEY: getEnv("ONFON_API_KEY") ? maskValue(getEnv("ONFON_API_KEY")!) : null,
+    ONFON_CLIENT_ID: getEnv("ONFON_CLIENT_ID") ? maskValue(getEnv("ONFON_CLIENT_ID")!) : null,
+    ONFON_SENDER_ID: getEnv("ONFON_SENDER_ID"),
+    DATABASE_URL: getEnv("DATABASE_URL") ? maskValue(getEnv("DATABASE_URL")!) : null,
+    JWT_SECRET: getEnv("JWT_SECRET") ? maskValue(getEnv("JWT_SECRET")!) : null,
   };
 });
 
@@ -87,7 +109,7 @@ const revealCredentialFn = createServerFn({ method: "POST" })
   .handler(async ({ data: key }) => {
     const { requireCurrentUser } = await import("../lib/auth.server");
     await requireCurrentUser();
-    return { value: process.env[key]?.trim() ?? null };
+    return { value: getEnv(key) };
   });
 
 const EDITABLE_KEYS: CredKey[] = [
