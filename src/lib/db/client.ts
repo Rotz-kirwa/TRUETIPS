@@ -3,15 +3,13 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 function createDb() {
+  const DEFAULT_REMOTE_DB =
+    "postgresql://sure_10_user:K7zAvCJ7eoxJ5OeOgtpnbqrBX95VZGXZ@dpg-da6vlf61egvs73esj6r0-a.oregon-postgres.render.com/sure_10";
+
   let url = process.env.DATABASE_URL?.trim();
 
   if (!url || !url.startsWith("postgres")) {
-    if (url && !url.includes("://")) {
-      console.warn(
-        `[db] DATABASE_URL '${url}' is missing 'postgres://' protocol scheme. Defaulting to local postgres fallback.`,
-      );
-    }
-    url = "postgres://postgres@127.0.0.1:5432/paylix";
+    url = DEFAULT_REMOTE_DB;
   }
 
   // If running outside Render internal network (e.g. Vercel), convert internal dpg- host to public endpoint
@@ -23,8 +21,8 @@ function createDb() {
   try {
     new URL(url);
   } catch {
-    console.error(`[db] Invalid DATABASE_URL format: '${url}'. Fallback to local postgres.`);
-    url = "postgres://postgres@127.0.0.1:5432/paylix";
+    console.error(`[db] Invalid DATABASE_URL format: '${url}'. Fallback to remote production postgres.`);
+    url = DEFAULT_REMOTE_DB;
   }
 
   const isLocal = url.includes("127.0.0.1") || url.includes("localhost");
