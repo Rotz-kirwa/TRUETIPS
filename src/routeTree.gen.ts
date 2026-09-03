@@ -24,6 +24,8 @@ import { Route as AppPaymentsRouteImport } from './routes/_app.payments'
 import { Route as AppDebugRouteImport } from './routes/_app.debug'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as ApiMpesaValidationRouteImport } from './routes/api.mpesa.validation'
+import { Route as ApiMpesaConfirmationRouteImport } from './routes/api.mpesa.confirmation'
 import { Route as ApiMpesaCallbackRouteImport } from './routes/api.mpesa.callback'
 import { Route as ApiDebugTestPaymentRouteImport } from './routes/api.debug.test-payment'
 import { Route as ApiDebugSimulateC2bRouteImport } from './routes/api.debug.simulate-c2b'
@@ -113,6 +115,16 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => AppRoute,
+} as any)
+const ApiMpesaValidationRoute = ApiMpesaValidationRouteImport.update({
+  id: '/api/mpesa/validation',
+  path: '/api/mpesa/validation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMpesaConfirmationRoute = ApiMpesaConfirmationRouteImport.update({
+  id: '/api/mpesa/confirmation',
+  path: '/api/mpesa/confirmation',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMpesaCallbackRoute = ApiMpesaCallbackRouteImport.update({
   id: '/api/mpesa/callback',
@@ -217,6 +229,8 @@ export interface FileRoutesByFullPath {
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
+  '/api/mpesa/confirmation': typeof ApiMpesaConfirmationRoute
+  '/api/mpesa/validation': typeof ApiMpesaValidationRoute
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
@@ -248,6 +262,8 @@ export interface FileRoutesByTo {
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
+  '/api/mpesa/confirmation': typeof ApiMpesaConfirmationRoute
+  '/api/mpesa/validation': typeof ApiMpesaValidationRoute
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
@@ -281,6 +297,8 @@ export interface FileRoutesById {
   '/api/debug/simulate-c2b': typeof ApiDebugSimulateC2bRoute
   '/api/debug/test-payment': typeof ApiDebugTestPaymentRoute
   '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
+  '/api/mpesa/confirmation': typeof ApiMpesaConfirmationRoute
+  '/api/mpesa/validation': typeof ApiMpesaValidationRoute
   '/api/admin/mpesa/poll': typeof ApiAdminMpesaPollRoute
   '/api/admin/payments/diagnostics': typeof ApiAdminPaymentsDiagnosticsRoute
   '/api/admin/payments/poll': typeof ApiAdminPaymentsPollRoute
@@ -314,6 +332,8 @@ export interface FileRouteTypes {
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
+    | '/api/mpesa/confirmation'
+    | '/api/mpesa/validation'
     | '/api/admin/mpesa/poll'
     | '/api/admin/payments/diagnostics'
     | '/api/admin/payments/poll'
@@ -345,6 +365,8 @@ export interface FileRouteTypes {
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
+    | '/api/mpesa/confirmation'
+    | '/api/mpesa/validation'
     | '/api/admin/mpesa/poll'
     | '/api/admin/payments/diagnostics'
     | '/api/admin/payments/poll'
@@ -377,6 +399,8 @@ export interface FileRouteTypes {
     | '/api/debug/simulate-c2b'
     | '/api/debug/test-payment'
     | '/api/mpesa/callback'
+    | '/api/mpesa/confirmation'
+    | '/api/mpesa/validation'
     | '/api/admin/mpesa/poll'
     | '/api/admin/payments/diagnostics'
     | '/api/admin/payments/poll'
@@ -403,6 +427,8 @@ export interface RootRouteChildren {
   ApiDebugSimulateC2bRoute: typeof ApiDebugSimulateC2bRoute
   ApiDebugTestPaymentRoute: typeof ApiDebugTestPaymentRoute
   ApiMpesaCallbackRoute: typeof ApiMpesaCallbackRoute
+  ApiMpesaConfirmationRoute: typeof ApiMpesaConfirmationRoute
+  ApiMpesaValidationRoute: typeof ApiMpesaValidationRoute
   ApiAdminMpesaPollRoute: typeof ApiAdminMpesaPollRoute
   ApiAdminPaymentsDiagnosticsRoute: typeof ApiAdminPaymentsDiagnosticsRoute
   ApiAdminPaymentsPollRoute: typeof ApiAdminPaymentsPollRoute
@@ -517,6 +543,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/analytics'
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/mpesa/validation': {
+      id: '/api/mpesa/validation'
+      path: '/api/mpesa/validation'
+      fullPath: '/api/mpesa/validation'
+      preLoaderRoute: typeof ApiMpesaValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mpesa/confirmation': {
+      id: '/api/mpesa/confirmation'
+      path: '/api/mpesa/confirmation'
+      fullPath: '/api/mpesa/confirmation'
+      preLoaderRoute: typeof ApiMpesaConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/mpesa/callback': {
       id: '/api/mpesa/callback'
@@ -666,6 +706,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDebugSimulateC2bRoute: ApiDebugSimulateC2bRoute,
   ApiDebugTestPaymentRoute: ApiDebugTestPaymentRoute,
   ApiMpesaCallbackRoute: ApiMpesaCallbackRoute,
+  ApiMpesaConfirmationRoute: ApiMpesaConfirmationRoute,
+  ApiMpesaValidationRoute: ApiMpesaValidationRoute,
   ApiAdminMpesaPollRoute: ApiAdminMpesaPollRoute,
   ApiAdminPaymentsDiagnosticsRoute: ApiAdminPaymentsDiagnosticsRoute,
   ApiAdminPaymentsPollRoute: ApiAdminPaymentsPollRoute,
