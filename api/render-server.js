@@ -76,6 +76,19 @@ const app = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, "http://localhost");
   const isApi = pathname.startsWith("/api/");
 
+  // CORS Preflight & Headers for Vercel -> Render cross-origin communication
+  const origin = req.headers.origin ?? "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   const ip =
     req.headers["cf-connecting-ip"] ??
     req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ??
@@ -173,7 +186,7 @@ const app = http.createServer(async (req, res) => {
 });
 
 app.listen(port, host, () => {
-  console.log(`Sure-10 Predict listening on http://${host}:${port}`);
+  console.log(`TrueTips listening on http://${host}:${port}`);
   console.log(`Serving static files from: ${CLIENT_DIR}`);
 
   const required = [
