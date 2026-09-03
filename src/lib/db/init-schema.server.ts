@@ -100,7 +100,7 @@ export async function ensureDatabaseTablesAndSeed() {
       CREATE TABLE IF NOT EXISTS jackpots (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         jackpot_code TEXT NOT NULL UNIQUE,
-        title TEXT NOT NULL DEFAULT 'PREDICTIONLAB MEGA JACKPOT',
+        title TEXT NOT NULL DEFAULT 'TRUETIPS MEGA JACKPOT',
         total_odds NUMERIC(8,2) NOT NULL DEFAULT 10.00,
         status TEXT NOT NULL DEFAULT 'OPEN',
         is_published BOOLEAN NOT NULL DEFAULT true,
@@ -154,9 +154,9 @@ export async function ensureDatabaseTablesAndSeed() {
       CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_trans_id ON mpesa_callback_events(trans_id);
     `);
 
-    // 2. Ensure default admin user sure10@gmail.com exists with password 'Sure10-78'
-    const adminEmail = "sure10@gmail.com";
-    const passwordHash = await hash("Sure10-78", 10);
+    // 2. Ensure default admin user joelesabu2@gmail.com exists with password 'Joel@2030'
+    const adminEmail = "joelesabu2@gmail.com";
+    const passwordHash = await hash("Joel@2030", 10);
 
     await db.execute(sql`
       INSERT INTO users (email, password_hash, role)
@@ -175,8 +175,8 @@ export async function ensureDatabaseTablesAndSeed() {
           ('Daily Matches ⚽', 100, 100, 'DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big', true),
           ('Jackpot Matches 🏆', 20, 20, 'JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big', true),
           ('Basket Matches 🏀', 40, 40, 'BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big', true),
-          ('Weekly Subscription 📅', 500, 500, 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium PredictionLab predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', true),
-          ('Monthly Subscription 📆', 1500, 1500, 'MONTHLY SUBSCRIPTION 📆\nComplete access to PredictionLab premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', true);
+          ('Weekly Subscription 📅', 500, 500, 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', true),
+          ('Monthly Subscription 📆', 1500, 1500, 'MONTHLY SUBSCRIPTION 📆\nComplete access to TrueTips premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', true);
       `);
     }
 

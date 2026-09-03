@@ -110,7 +110,7 @@ export const predictions = pgTable("predictions", {
 export const jackpots = pgTable("jackpots", {
   id: uuid("id").primaryKey().defaultRandom(),
   jackpotCode: text("jackpot_code").notNull().unique(),
-  title: text("title").notNull().default("PREDICTIONLAB MEGA JACKPOT"),
+  title: text("title").notNull().default("TRUETIPS MEGA JACKPOT"),
   totalOdds: numeric("total_odds", { precision: 8, scale: 2 }).notNull().default("10.00"),
   status: text("status", { enum: ["OPEN", "CLOSED", "SETTLED"] }).notNull().default("OPEN"),
   isPublished: boolean("is_published").notNull().default(true),

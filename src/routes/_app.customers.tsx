@@ -7,7 +7,7 @@ import { fetchPaymentsFn, type MpesaPayment } from "@/lib/payments";
 export const Route = createFileRoute("/_app/customers")({
   loader: () => fetchPaymentsFn(),
   component: CustomersPage,
-  head: () => ({ meta: [{ title: "Customers — Sure-10 Predict Admin" }] }),
+  head: () => ({ meta: [{ title: "Customers — TrueTips Admin" }] }),
 });
 
 const KES = (n: number) =>

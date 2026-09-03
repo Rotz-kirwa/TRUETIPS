@@ -4,7 +4,7 @@ import * as schema from "./schema";
 
 function createDb() {
   const DEFAULT_REMOTE_DB =
-    "postgresql://sure_10_user:K7zAvCJ7eoxJ5OeOgtpnbqrBX95VZGXZ@dpg-da6vlf61egvs73esj6r0-a.oregon-postgres.render.com/sure_10";
+    "postgresql://truetips_db_user:xNiZ9q0LdMkE2seXw5BKwkIg4Gv9NV6R@dpg-dacie4uq1p3s738a02ng-a.oregon-postgres.render.com/truetips_db";
 
   let url = process.env.DATABASE_URL?.trim();
 

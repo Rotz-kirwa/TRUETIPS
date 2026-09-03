@@ -122,7 +122,7 @@ export function DashboardLayout() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">Sure-10 Predict</span>
+            <span className="text-lg font-bold tracking-tight text-white">TrueTips</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}

@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/")({
   component: DashboardPage,
   head: () => ({
     meta: [
-      { title: "Dashboard — Sure-10 Predict Admin" },
+      { title: "Dashboard — TrueTips Admin" },
       { name: "description", content: "Track M-Pesa till payments in real time." },
     ],
   }),
@@ -265,7 +265,7 @@ function DashboardPage() {
           </div>
           <div className="h-64" style={{ minHeight: "16rem" }}>
             {chartsReady ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={chartData} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
                     <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -338,7 +338,7 @@ function DashboardPage() {
           <div className="relative h-52" style={{ minHeight: "13rem" }}>
             {chartsReady ? (
               <>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <PieChart>
                     <Pie
                       data={statusCounts}

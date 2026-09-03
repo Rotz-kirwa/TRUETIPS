@@ -175,7 +175,7 @@ export const Route = createFileRoute("/api/payments/c2b/confirmation")({
         return Response.json(
           {
             ok: true,
-            service: "Payvora M-Pesa C2B Confirmation Service",
+            service: "TrueTips M-Pesa C2B Confirmation Service",
             route: "/api/payments/c2b/confirmation",
             method: "GET",
             status: "active",

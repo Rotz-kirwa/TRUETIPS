@@ -70,7 +70,7 @@ export async function ensurePredictionTables() {
       CREATE TABLE IF NOT EXISTS jackpots (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         jackpot_code TEXT NOT NULL UNIQUE,
-        title TEXT NOT NULL DEFAULT 'PREDICTIONLAB MEGA JACKPOT',
+        title TEXT NOT NULL DEFAULT 'TRUETIPS MEGA JACKPOT',
         total_odds NUMERIC(8,2) NOT NULL DEFAULT 10.00,
         status TEXT NOT NULL DEFAULT 'OPEN',
         is_published BOOLEAN NOT NULL DEFAULT true,
@@ -243,7 +243,7 @@ export async function seedDefaultPredictions() {
           .insert(jackpots)
           .values({
             jackpotCode: "JA-001",
-            title: "PREDICTIONLAB 5-GAME MEGA JACKPOT",
+            title: "TRUETIPS 5-GAME MEGA JACKPOT",
             totalOdds: "14.85",
             status: "OPEN",
             isPublished: true,
@@ -388,7 +388,7 @@ export async function createJackpot(
     .insert(jackpots)
     .values({
       jackpotCode,
-      title: title || "PREDICTIONLAB MEGA JACKPOT",
+      title: title || "TRUETIPS MEGA JACKPOT",
       totalOdds: String(totalOdds),
       status: "OPEN",
       isPublished: true,
@@ -451,11 +451,11 @@ export async function formatPredictionsForCustomerSms(tierName?: string): Promis
   }
 
   if (filtered.length === 0) {
-    return "⚽ TODAY'S PREDICTIONLAB PICKS:\n1. Arsenal vs Everton -> 1\n2. Chelsea vs West Ham -> OVER 2.5";
+    return "⚽ TODAY'S TRUETIPS PICKS:\n1. Arsenal vs Everton -> 1\n2. Chelsea vs West Ham -> OVER 2.5";
   }
 
   const lines = filtered.map(
     (p, i) => `${i + 1}. ${p.team1} vs ${p.team2} → ${p.prediction.toUpperCase()} (Odds: ${p.odds})`,
   );
-  return `⚽ PREDICTIONLAB ${tierName ? tierName.toUpperCase() : "DAILY"} PICKS:\n${lines.join("\n")}`;
+  return `⚽ TRUETIPS ${tierName ? tierName.toUpperCase() : "DAILY"} PICKS:\n${lines.join("\n")}`;
 }

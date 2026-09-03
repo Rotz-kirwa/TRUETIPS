@@ -6,7 +6,7 @@ import { predictionLabLogo } from "@/assets/logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Sign in — Sure-10 Predict" }] }),
+  head: () => ({ meta: [{ title: "Sign in — TrueTips" }] }),
 });
 
 function LoginPage() {
@@ -75,10 +75,10 @@ function LoginPage() {
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
-            <img src={predictionLabLogo} alt="Sure-10 Predict" className="h-full w-full object-cover" />
+            <img src={predictionLabLogo} alt="TrueTips" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Sure-10 Predict</h2>
+            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">TrueTips</h2>
             <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
           </div>
         </div>
@@ -117,7 +117,7 @@ function LoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder="joelesabu2@gmail.com"
                   className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
                   suppressHydrationWarning
@@ -212,7 +212,7 @@ function LoginPage() {
         {/* Bottom brand text */}
         <div className="mt-8 text-center">
           <p className="text-xs tracking-widest text-white/50 uppercase font-semibold">
-            Sure-10 Predict Admin Portal
+            TrueTips Admin Portal
           </p>
         </div>
       </div>

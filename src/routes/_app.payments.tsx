@@ -9,7 +9,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_app/payments")({
   loader: () => fetchPaymentsFn(),
   component: PaymentsPage,
-  head: () => ({ meta: [{ title: "Payments — Sure-10 Predict Admin" }] }),
+  head: () => ({ meta: [{ title: "Payments — TrueTips Admin" }] }),
 });
 
 type MpesaStatus = MpesaPayment["status"];
@@ -148,7 +148,7 @@ function PaymentsPage() {
   const [stkFormData, setStkFormData] = useState({
     phone: "",
     amount: "10",
-    reference: "Sure10",
+    reference: "TrueTips",
     description: "Subscription",
   });
 
@@ -576,13 +576,13 @@ function PaymentsPage() {
                     data: {
                       phone: stkFormData.phone,
                       amount: Number(stkFormData.amount),
-                      reference: stkFormData.reference || "Sure10",
+                      reference: stkFormData.reference || "TrueTips",
                       description: stkFormData.description || "Payment",
                     },
                   });
                   toast.success(`STK Push prompt dispatched to ${stkFormData.phone}!`);
                   setShowStkModal(false);
-                  setStkFormData({ phone: "", amount: "10", reference: "Sure10", description: "Payment" });
+                  setStkFormData({ phone: "", amount: "10", reference: "TrueTips", description: "Payment" });
                   refresh();
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Failed to trigger STK Push");
@@ -621,7 +621,7 @@ function PaymentsPage() {
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase">Account Reference</label>
                 <input
                   type="text"
-                  placeholder="Sure10"
+                  placeholder="TrueTips"
                   value={stkFormData.reference}
                   onChange={(e) => setStkFormData({ ...stkFormData, reference: e.target.value })}
                   className="h-10 w-full rounded-xl border border-border bg-background px-3 outline-none focus:border-primary font-mono"

@@ -9,19 +9,19 @@ import { cn } from "@/lib/utils";
 // ─── Default production fallbacks ─────────────────────────────────────────────
 
 const DEFAULT_ENVS: Record<string, string> = {
-  DATABASE_URL: "postgresql://sure_10_user:K7zAvCJ7eoxJ5OeOgtpnbqrBX95VZGXZ@dpg-da6vlf61egvs73esj6r0-a.oregon-postgres.render.com/sure_10",
+  DATABASE_URL: "postgresql://truetips_db_user:xNiZ9q0LdMkE2seXw5BKwkIg4Gv9NV6R@dpg-dacie4uq1p3s738a02ng-a.oregon-postgres.render.com/truetips_db",
   JWT_SECRET: "paylix-super-secret-jwt-key-2026-secure",
-  MPESA_CONSUMER_KEY: "OWzibbuoj9it15pJLqY3RLuriXxthJVYUU4MmVgnohMg6nRG",
-  MPESA_CONSUMER_SECRET: "vULjb5gAFfAsxEmtMnFVMpl5H6wj66yVj6cXFh02SAv4MNCApqvUDYNGa3cXrRQd",
-  MPESA_SHORTCODE: "4980404",
-  MPESA_TILL_NUMBER: "232392",
-  MPESA_PASSKEY: "cb69fb59b02bbb0ab518f7de1c1b91645ce7408201096b6ddc169057d56d824b",
+  MPESA_CONSUMER_KEY: "",
+  MPESA_CONSUMER_SECRET: "",
+  MPESA_SHORTCODE: "",
+  MPESA_TILL_NUMBER: "",
+  MPESA_PASSKEY: "",
   MPESA_CALLBACK_URL: "https://moonlight-games.onrender.com",
-  MPESA_ENVIRONMENT: "production",
+  MPESA_ENVIRONMENT: "sandbox",
   SMS_PROVIDER: "onfon",
-  ONFON_API_KEY: "2rYG3PR90oQzwMH4abIm18pTKUvxJkcfZiA67FuBShqgsE5X",
-  ONFON_CLIENT_ID: "nebula",
-  ONFON_SENDER_ID: "NEBULA",
+  ONFON_API_KEY: "",
+  ONFON_CLIENT_ID: "",
+  ONFON_SENDER_ID: "",
 };
 
 function getEnv(key: string): string | null {
@@ -174,7 +174,7 @@ export const Route = createFileRoute("/_app/settings")({
       masked,
     })),
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — Sure-10 Predict Admin" }] }),
+  head: () => ({ meta: [{ title: "Settings — TrueTips Admin" }] }),
 });
 
 // ─── Credential row component ────────────────────────────────────────────────
@@ -423,7 +423,7 @@ function SettingsPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Email" value={email ?? ""} />
           <Field label="Role" value="Administrator" />
-          <Field label="Workspace" value="PREDICTIONLAB HQ" />
+          <Field label="Workspace" value="TRUETIPS HQ" />
           <Field label="Currency" value="KES (Kenyan Shilling)" />
         </div>
       </section>
