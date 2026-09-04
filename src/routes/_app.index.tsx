@@ -25,6 +25,19 @@ import { useLivePayments } from "@/hooks/use-live-payments";
 import { fetchPaymentsFn, type MpesaPayment } from "@/lib/payments";
 import { cn } from "@/lib/utils";
 
+function formatPhone(phone: string): string {
+  if (!phone) return "M-Pesa Customer";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("254") && digits.length === 12) {
+    return `+254 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
+  }
+  if (/[a-fA-F]/.test(phone) || digits.length > 15) {
+    const shortId = phone.slice(-8).toUpperCase();
+    return `Till Customer ···${shortId}`;
+  }
+  return phone;
+}
+
 export const Route = createFileRoute("/_app/")({
   loader: () => fetchPaymentsFn(),
   component: DashboardPage,
@@ -429,13 +442,13 @@ function DashboardPage() {
               return (
                 <div key={p.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-secondary/30 transition-colors">
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
                     style={{ background: "var(--gradient-primary)" }}
                   >
-                    {p.phone.slice(-2)}
+                    {p.phone.slice(-2).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{p.phone}</p>
+                    <p className="truncate text-sm font-semibold">{formatPhone(p.phone)}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {p.accountReference ?? "—"}
                       {p.mpesaReceiptNumber ? ` · ${p.mpesaReceiptNumber}` : ""}
