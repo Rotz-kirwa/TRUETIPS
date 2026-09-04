@@ -33,6 +33,25 @@ export type ValidationError = { type: "validation"; message: string };
 
 // ─── Placeholder engine ───────────────────────────────────────────────────────
 
+export function formatPredictionsTable(
+  matches?: Array<{ team1: string; team2: string; prediction: string }>,
+): string {
+  if (!matches || matches.length === 0) {
+    return [
+      "CHELSEA VS ARSENAL: 1X",
+      "REAL MADRID VS SEVILLA: OVER 2.5",
+      "BARCELONA VS VALENCIA: 1",
+    ].join("\n");
+  }
+
+  return matches
+    .map(
+      (m) =>
+        `${m.team1.trim().toUpperCase()} VS ${m.team2.trim().toUpperCase()}: ${m.prediction.trim().toUpperCase()}`,
+    )
+    .join("\n");
+}
+
 export function resolvePlaceholders(
   template: string,
   data: {
@@ -60,8 +79,8 @@ export function resolvePlaceholders(
   });
 
   const customerName = `0${data.phone.slice(-9)}`;
-  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "TrueTips";
-  const defaultPredictions = data.predictionsText ?? "⚽ Chelsea vs Arsenal → 1X (1.45)\n⚽ Real Madrid vs Sevilla → OVER 2.5 (1.70)";
+  const businessName = (data.businessName ?? process.env.BUSINESS_NAME ?? "TRUETIPS").toUpperCase();
+  const predictions = (data.predictionsText ?? formatPredictionsTable([])).toUpperCase();
 
   return template
     .replace(/\{customer_name\}/gi, customerName)
@@ -70,7 +89,7 @@ export function resolvePlaceholders(
     .replace(/\{transaction_code\}/gi, data.transactionCode ?? "N/A")
     .replace(/\{date\}/gi, formattedDate)
     .replace(/\{business_name\}/gi, businessName)
-    .replace(/\{predictions\}/gi, defaultPredictions);
+    .replace(/\{predictions\}/gi, predictions);
 }
 
 // ─── Global enabled flag ──────────────────────────────────────────────────────
@@ -260,35 +279,35 @@ export async function resetDefaultTiers(): Promise<RuleRow[]> {
       name: "Daily Matches ⚽",
       minAmount: "50",
       maxAmount: "50",
-      messageTemplate: `DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big`,
+      messageTemplate: `TRUETIPS DAILY MATCHES ⚽\n\n{predictions}`,
       isActive: true,
     },
     {
       name: "Jackpot Matches 🏆",
       minAmount: "100",
       maxAmount: "100",
-      messageTemplate: `JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big`,
+      messageTemplate: `TRUETIPS MEGA JACKPOT MATCHES 🏆\n\n{predictions}`,
       isActive: true,
     },
     {
       name: "Basket Matches 🏀",
       minAmount: "50",
       maxAmount: "50",
-      messageTemplate: `BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big`,
+      messageTemplate: `TRUETIPS BASKETBALL MATCHES 🏀\n\n{predictions}`,
       isActive: true,
     },
     {
       name: "Weekly Subscription 📅",
       minAmount: "500",
       maxAmount: "500",
-      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `TRUETIPS WEEKLY VIP MATCHES 📅\n\n{predictions}`,
       isActive: true,
     },
     {
       name: "Monthly Subscription 📆",
       minAmount: "1500",
       maxAmount: "1500",
-      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to TrueTips premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+      messageTemplate: `TRUETIPS MONTHLY VIP MATCHES 📆\n\n{predictions}`,
       isActive: true,
     },
   ];
@@ -438,21 +457,53 @@ export async function processPaymentSms(params: {
 
   console.log(`[sms-automation] Matched rule "${matchedRule.name}" (${matchedRule.minAmount}–${matchedRule.maxAmount}) for amount ${amount}`);
 
-  // 4. Build message
+  // Fetch published predictions from DB for auto SMS table
+  let predictionsText = "";
+  try {
+    const { predictions: predictionsTable } = await import("./db/schema");
+    const activePredictions = await db
+      .select({
+        team1: predictionsTable.team1,
+        team2: predictionsTable.team2,
+        prediction: predictionsTable.prediction,
+      })
+      .from(predictionsTable)
+      .where(and(eq(predictionsTable.isPublished, true), eq(predictionsTable.status, "pending")))
+      .limit(10);
+
+    predictionsText = formatPredictionsTable(activePredictions);
+  } catch (err) {
+    console.error("[sms-automation] Error fetching published predictions:", err);
+    predictionsText = formatPredictionsTable([]);
+  }
+
+  // 4. Build message (Contains Package Header Title & Uppercase Matches Table)
   const message = resolvePlaceholders(matchedRule.messageTemplate, {
     phone,
     amount,
     transactionCode,
     date: paidAt,
+    predictionsText,
   });
 
   console.log(`[sms-automation] Message: "${message.slice(0, 80)}${message.length > 80 ? "…" : ""}"`);
+
+  let validPaymentId: string | null = null;
+  if (paymentId && /^[0-9a-f-]{36}$/i.test(paymentId)) {
+    try {
+      const { mpesaPayments } = await import("./db/schema");
+      const [p] = await db.select({ id: mpesaPayments.id }).from(mpesaPayments).where(eq(mpesaPayments.id, paymentId)).limit(1);
+      if (p) validPaymentId = p.id;
+    } catch {
+      validPaymentId = null;
+    }
+  }
 
   // 5. Insert pending log first (so we always have a record even if send crashes)
   const [logRow] = await db
     .insert(smsLogs)
     .values({
-      paymentId,
+      paymentId: validPaymentId,
       ruleId: matchedRule.id,
       phone,
       amount: String(amount),
@@ -491,11 +542,31 @@ export async function sendTestSms(ruleId: string, phone: string): Promise<SmsSen
   if (!rule) throw new Error("Rule not found");
 
   const sampleAmount = (Number(rule.minAmount) + Number(rule.maxAmount)) / 2;
+
+  let predictionsText = "";
+  try {
+    const { predictions: predictionsTable } = await import("./db/schema");
+    const activePredictions = await db
+      .select({
+        team1: predictionsTable.team1,
+        team2: predictionsTable.team2,
+        prediction: predictionsTable.prediction,
+      })
+      .from(predictionsTable)
+      .where(and(eq(predictionsTable.isPublished, true), eq(predictionsTable.status, "pending")))
+      .limit(10);
+
+    predictionsText = formatPredictionsTable(activePredictions);
+  } catch {
+    predictionsText = formatPredictionsTable([]);
+  }
+
   const message = resolvePlaceholders(rule.messageTemplate, {
     phone,
     amount: sampleAmount,
     transactionCode: "TEST123456",
     date: new Date(),
+    predictionsText,
   });
 
   const result = await sendSms(phone, message);
