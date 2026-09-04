@@ -119,10 +119,10 @@ export function DashboardLayout() {
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-5 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500">
-              <CreditCard className="h-5 w-5 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-600 text-slate-950 font-black">
+              <Trophy className="h-5 w-5 text-slate-950" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">TrueTips</span>
+            <span className="text-xl font-extrabold tracking-tight text-sky-400">TrueTips</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -134,8 +134,8 @@ export function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 space-y-1.5 px-3 py-4">
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
-            Menu
+          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400/60">
+            Navigation Menu
           </p>
           {NAV.map(({ to, label, icon: Icon, color, bgColor, activeBg, ringColor, dotColor }) => {
             const active = location.pathname === to;
@@ -144,9 +144,9 @@ export function DashboardLayout() {
                 key={to}
                 to={to}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150",
+                  "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-150",
                   active
-                    ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10 font-semibold"
+                    ? "bg-emerald-500/20 text-white shadow-sm ring-1 ring-emerald-500/40 font-bold"
                     : "text-white/70 hover:bg-white/10 hover:text-white",
                 )}
               >
@@ -162,7 +162,7 @@ export function DashboardLayout() {
                 </div>
                 <span>{label}</span>
                 {active && (
-                  <span className={cn("ml-auto h-1.5 w-1.5 rounded-full shadow-sm", dotColor)} />
+                  <span className="ml-auto h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
                 )}
               </Link>
             );
@@ -173,8 +173,7 @@ export function DashboardLayout() {
         <div className="shrink-0 border-t px-3 py-4" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
           <div className="flex items-center gap-3 rounded-xl px-2 py-2">
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow"
-              style={{ background: "var(--gradient-coral)" }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-slate-950 shadow-md bg-amber-400"
             >
               {initials}
             </div>
@@ -210,13 +209,12 @@ export function DashboardLayout() {
           {/* Page title breadcrumb area — left spacer on desktop */}
           <div className="flex-1" />
           <div className="flex items-center gap-2">
-            <button className="relative rounded-xl p-2 text-muted-foreground hover:bg-secondary transition-colors">
+            <button className="relative rounded-xl p-2 text-sky-400 hover:bg-secondary transition-colors">
               <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
             </button>
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
-              style={{ background: "var(--gradient-primary)" }}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-slate-950 shadow-sm bg-amber-400"
             >
               {initials}
             </div>

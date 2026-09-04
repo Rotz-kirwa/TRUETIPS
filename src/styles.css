@@ -55,136 +55,132 @@
 :root {
   --radius: 0.75rem;
 
-  /* Backgrounds */
-  --background: oklch(0.96 0.006 265);
-  --foreground: oklch(0.16 0.03 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.03 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.03 265);
+  /* Dominant Emerald Green Backgrounds */
+  --background: oklch(0.12 0.04 165);
+  --foreground: oklch(0.96 0.01 165);
+  --card: oklch(0.16 0.04 165);
+  --card-foreground: oklch(0.96 0.01 165);
+  --popover: oklch(0.16 0.04 165);
+  --popover-foreground: oklch(0.96 0.01 165);
 
-  /* Brand purple */
-  --primary: oklch(0.50 0.27 288);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.65 0.24 295);
+  /* Primary Buttons — Electric Yellow & Amber */
+  --primary: oklch(0.85 0.19 85); /* #FACC15 Electric Yellow */
+  --primary-foreground: oklch(0.12 0.04 165); /* Dark Emerald Contrast Text */
+  --primary-glow: oklch(0.90 0.22 88); /* #FDE047 Bright Yellow Glow */
 
-  /* Neutrals */
-  --secondary: oklch(0.955 0.008 268);
-  --secondary-foreground: oklch(0.25 0.04 265);
-  --muted: oklch(0.955 0.008 268);
-  --muted-foreground: oklch(0.52 0.025 260);
-  --accent: oklch(0.93 0.04 290);
-  --accent-foreground: oklch(0.20 0.04 265);
+  /* Titles & Headings — Electric Sky Blue */
+  --title: #38BDF8;
 
-  /* Semantic */
-  --success: oklch(0.63 0.17 155);
-  --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.76 0.16 68);
-  --warning-foreground: oklch(0.2 0.04 265);
-  --destructive: oklch(0.60 0.22 25);
+  /* Surfaces & Neutrals */
+  --secondary: oklch(0.20 0.04 165);
+  --secondary-foreground: oklch(0.96 0.01 165);
+  --muted: oklch(0.20 0.04 165);
+  --muted-foreground: oklch(0.70 0.03 165);
+  --accent: oklch(0.24 0.05 165);
+  --accent-foreground: oklch(0.98 0.01 165);
+
+  /* Multi-Color Semantic Palette: Green, Red, Orange, Yellow */
+  --success: oklch(0.70 0.19 145); /* Vivid Emerald Lime */
+  --success-foreground: oklch(0.10 0.04 165);
+  --warning: oklch(0.72 0.20 50); /* Vivid Tangerine Orange */
+  --warning-foreground: oklch(0.10 0.04 165);
+  --destructive: oklch(0.62 0.22 25); /* Vivid Coral Red */
   --destructive-foreground: oklch(0.99 0 0);
 
-  /* Borders & inputs */
-  --border: oklch(0.91 0.012 265);
-  --input: oklch(0.91 0.012 265);
-  --ring: oklch(0.50 0.27 288);
+  /* Borders & Inputs */
+  --border: oklch(0.30 0.06 165 / 0.4);
+  --input: oklch(0.30 0.06 165 / 0.5);
+  --ring: oklch(0.85 0.19 85);
 
-  /* Gradients — Zorvex-style solid-ish cards */
-  --gradient-primary: linear-gradient(135deg, oklch(0.50 0.11 183), oklch(0.58 0.14 183)); /* teal */
-  --gradient-blue: linear-gradient(135deg, oklch(0.46 0.19 263), oklch(0.54 0.21 263));    /* blue */
-  --gradient-coral: linear-gradient(135deg, oklch(0.58 0.19 38),  oklch(0.66 0.21 38));    /* orange */
-  --gradient-green: linear-gradient(135deg, oklch(0.50 0.16 152), oklch(0.58 0.18 152));   /* green */
-  --gradient-orange: linear-gradient(135deg, oklch(0.28 0.10 264), oklch(0.36 0.13 264)); /* dark navy */
-  --gradient-subtle: linear-gradient(180deg, oklch(0.96 0.006 265), oklch(0.94 0.010 265));
-  --gradient-sidebar: oklch(0.10 0.02 248);
+  /* Vibrant Gradients */
+  --gradient-primary: linear-gradient(135deg, #FACC15 0%, #EAB308 100%); /* Electric Yellow Buttons */
+  --gradient-blue: linear-gradient(135deg, #38BDF8 0%, #2563EB 100%);    /* Sapphire Blue Titles */
+  --gradient-coral: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);   /* Coral Red Actions */
+  --gradient-green: linear-gradient(135deg, #10B981 0%, #059669 100%);   /* Emerald Green */
+  --gradient-orange: linear-gradient(135deg, #F97316 0%, #EA580C 100%); /* Electric Orange */
+  --gradient-purple: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%); /* Amethyst Violet */
+  --gradient-subtle: linear-gradient(180deg, oklch(0.11 0.04 165) 0%, oklch(0.14 0.04 165) 100%);
+  --gradient-sidebar: oklch(0.09 0.04 165);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px 0 oklch(0.16 0.03 265 / 0.06);
-  --shadow-md: 0 4px 16px -2px oklch(0.16 0.03 265 / 0.10), 0 2px 4px -2px oklch(0.16 0.03 265 / 0.05);
-  --shadow-lg: 0 16px 40px -12px oklch(0.16 0.03 265 / 0.18);
-  --shadow-glow: 0 0 40px oklch(0.65 0.24 295 / 0.30);
-  --shadow-card: 0 4px 20px -4px oklch(0.50 0.27 288 / 0.18);
+  /* Modern Glass & Glow Shadows */
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.40);
+  --shadow-md: 0 4px 16px -2px oklch(0 0 0 / 0.50);
+  --shadow-lg: 0 16px 40px -12px oklch(0 0 0 / 0.60);
+  --shadow-glow: 0 0 30px rgba(250, 204, 21, 0.35); /* Yellow Button Glow */
+  --shadow-card: 0 4px 20px -4px rgba(16, 185, 129, 0.20); /* Emerald Card Glow */
 
   /* Charts */
-  --chart-1: oklch(0.50 0.27 288);
-  --chart-2: oklch(0.62 0.20 250);
-  --chart-3: oklch(0.60 0.23 20);
-  --chart-4: oklch(0.76 0.17 68);
-  --chart-5: oklch(0.63 0.17 155);
+  --chart-1: #FACC15; /* Yellow */
+  --chart-2: #38BDF8; /* Blue */
+  --chart-3: #10B981; /* Green */
+  --chart-4: #F97316; /* Orange */
+  --chart-5: #EF4444; /* Red */
 
-  /* Sidebar tokens (for components that use them) */
-  --sidebar: oklch(0.22 0.22 290);
-  --sidebar-foreground: oklch(0.97 0.01 270);
-  --sidebar-primary: oklch(0.65 0.24 295);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(1 0 0 / 12%);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.65 0.24 295);
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.09 0.04 165);
+  --sidebar-foreground: oklch(0.96 0.01 165);
+  --sidebar-primary: #FACC15;
+  --sidebar-primary-foreground: oklch(0.12 0.04 165);
+  --sidebar-accent: oklch(0.20 0.04 165);
+  --sidebar-accent-foreground: oklch(0.96 0.01 165);
+  --sidebar-border: oklch(0.28 0.05 165 / 0.4);
+  --sidebar-ring: #FACC15;
 }
 
 .dark {
-  /* Deep dark blue-black backgrounds */
-  --background: oklch(0.09 0.015 248);
-  --foreground: oklch(0.95 0.005 250);
-  --card: oklch(0.14 0.022 250);
-  --card-foreground: oklch(0.95 0.005 250);
-  --popover: oklch(0.14 0.022 250);
-  --popover-foreground: oklch(0.95 0.005 250);
+  /* Ensure dark mode matches the dominant emerald green palette */
+  --background: oklch(0.11 0.04 165);
+  --foreground: oklch(0.96 0.01 165);
+  --card: oklch(0.15 0.04 165);
+  --card-foreground: oklch(0.96 0.01 165);
+  --popover: oklch(0.15 0.04 165);
+  --popover-foreground: oklch(0.96 0.01 165);
 
-  /* Brand — teal to match card palette */
-  --primary: oklch(0.62 0.13 183);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.58 0.11 183);
+  --primary: oklch(0.85 0.19 85);
+  --primary-foreground: oklch(0.11 0.04 165);
+  --primary-glow: oklch(0.90 0.22 88);
 
-  /* Surfaces */
-  --secondary: oklch(0.20 0.025 252);
-  --secondary-foreground: oklch(0.95 0.005 250);
-  --muted: oklch(0.20 0.025 252);
-  --muted-foreground: oklch(0.60 0.02 255);
-  --accent: oklch(0.22 0.03 255);
-  --accent-foreground: oklch(0.95 0.005 250);
+  --secondary: oklch(0.20 0.04 165);
+  --secondary-foreground: oklch(0.96 0.01 165);
+  --muted: oklch(0.20 0.04 165);
+  --muted-foreground: oklch(0.70 0.03 165);
+  --accent: oklch(0.24 0.05 165);
+  --accent-foreground: oklch(0.98 0.01 165);
 
-  /* Semantic */
-  --success: oklch(0.63 0.17 155);
-  --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.76 0.16 68);
-  --warning-foreground: oklch(0.15 0.02 250);
-  --destructive: oklch(0.65 0.20 22);
+  --success: oklch(0.70 0.19 145);
+  --success-foreground: oklch(0.10 0.04 165);
+  --warning: oklch(0.72 0.20 50);
+  --warning-foreground: oklch(0.10 0.04 165);
+  --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  /* Borders */
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.62 0.13 183);
+  --border: oklch(0.30 0.06 165 / 0.4);
+  --input: oklch(0.30 0.06 165 / 0.5);
+  --ring: oklch(0.85 0.19 85);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.30);
-  --shadow-md: 0 4px 16px -2px oklch(0 0 0 / 0.40), 0 2px 4px -2px oklch(0 0 0 / 0.20);
-  --shadow-lg: 0 16px 40px -12px oklch(0 0 0 / 0.50);
-  --shadow-glow: 0 0 40px oklch(0.62 0.13 183 / 0.25);
-  --shadow-card: 0 4px 20px -4px oklch(0 0 0 / 0.35);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.40);
+  --shadow-md: 0 4px 16px -2px oklch(0 0 0 / 0.50);
+  --shadow-lg: 0 16px 40px -12px oklch(0 0 0 / 0.60);
+  --shadow-glow: 0 0 30px rgba(250, 204, 21, 0.35);
+  --shadow-card: 0 4px 20px -4px rgba(16, 185, 129, 0.20);
 
-  /* Charts */
-  --chart-1: oklch(0.62 0.13 183);
-  --chart-2: oklch(0.63 0.17 155);
-  --chart-3: oklch(0.70 0.18 68);
-  --chart-4: oklch(0.55 0.20 263);
-  --chart-5: oklch(0.65 0.20 22);
+  --chart-1: #FACC15;
+  --chart-2: #38BDF8;
+  --chart-3: #10B981;
+  --chart-4: #F97316;
+  --chart-5: #EF4444;
 
-  /* Sidebar — flat very dark */
-  --sidebar: oklch(0.10 0.018 248);
-  --sidebar-foreground: oklch(0.95 0.005 250);
-  --sidebar-primary: oklch(0.62 0.13 183);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(1 0 0 / 8%);
-  --sidebar-accent-foreground: oklch(0.95 0.005 250);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.62 0.13 183);
+  --sidebar: oklch(0.09 0.04 165);
+  --sidebar-foreground: oklch(0.96 0.01 165);
+  --sidebar-primary: #FACC15;
+  --sidebar-primary-foreground: oklch(0.11 0.04 165);
+  --sidebar-accent: oklch(0.20 0.04 165);
+  --sidebar-accent-foreground: oklch(0.96 0.01 165);
+  --sidebar-border: oklch(0.28 0.05 165 / 0.4);
+  --sidebar-ring: #FACC15;
 
-  /* Gradients override — keep card gradients but subtle backgrounds go dark */
-  --gradient-subtle: linear-gradient(180deg, oklch(0.09 0.015 248), oklch(0.11 0.020 250));
-  --gradient-sidebar: oklch(0.10 0.018 248);
+  --gradient-subtle: linear-gradient(180deg, oklch(0.11 0.04 165), oklch(0.14 0.04 165));
+  --gradient-sidebar: oklch(0.09 0.04 165);
 }
 
 @layer base {
@@ -194,5 +190,26 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Titles & Headings — Electric Sky Blue */
+  h1, h2, h3, h4, h5, h6 {
+    color: #38BDF8;
+    font-weight: 700;
+  }
+
+  /* Primary Action Buttons — Electric Yellow */
+  .btn-primary, button[style*="var(--gradient-primary)"] {
+    background: linear-gradient(135deg, #FACC15 0%, #EAB308 100%) !important;
+    color: #051F18 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(250, 204, 21, 0.3) !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+
+  .btn-primary:hover, button[style*="var(--gradient-primary)"]:hover {
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.5) !important;
+    transform: translateY(-1px);
   }
 }

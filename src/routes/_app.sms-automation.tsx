@@ -1572,17 +1572,17 @@ function SmsAutomationPage() {
       )}
 
       {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-emerald-500/20 pb-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">TrueTips Tips Packages</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage sports predictions, jackpot tips, basketball picks, and custom packages.
+          <h1 className="text-3xl font-extrabold tracking-tight text-sky-400">TrueTips Tips Packages</h1>
+          <p className="mt-1 text-sm text-emerald-300/70 font-medium">
+            Manage sports predictions, jackpot tips, basketball picks, and custom subscription packages.
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Always Active Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-xl border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-bold text-success shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-lime-500/40 bg-lime-500/15 px-3 py-1.5 text-xs font-bold text-lime-300 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-lime-400 animate-pulse shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
             SMS Active
           </span>
 
@@ -1590,7 +1590,7 @@ function SmsAutomationPage() {
           <button
             onClick={() => setShowClearModal(true)}
             title="Clear all package rules from system"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition-all"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/15 px-3 py-1.5 text-xs font-bold text-rose-400 hover:bg-rose-500/25 transition-all shadow-sm"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Clear All Packages
@@ -1601,7 +1601,7 @@ function SmsAutomationPage() {
             onClick={handleResetDefaultTiers}
             disabled={resettingTiers}
             title="Reset rules to TrueTips 5 Standard Packages"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-1.5 text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 px-3 py-1.5 text-xs font-bold text-orange-300 hover:bg-orange-500/25 transition-colors disabled:opacity-60 shadow-sm"
           >
             {resettingTiers ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Seed Standard 5
@@ -1609,10 +1609,10 @@ function SmsAutomationPage() {
 
           <button
             onClick={() => setModal({ mode: "add" })}
-            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-white shadow-sm"
-            style={{ background: "var(--gradient-primary)" }}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-slate-950 shadow-md transition-all hover:scale-105"
+            style={{ background: "linear-gradient(135deg, #FACC15 0%, #EAB308 100%)", boxShadow: "0 0 15px rgba(250, 204, 21, 0.4)" }}
           >
-            <Plus className="h-3.5 w-3.5" /> + Create Package
+            <Plus className="h-4 w-4" /> + Create Package
           </button>
         </div>
       </header>
@@ -1620,35 +1620,37 @@ function SmsAutomationPage() {
       {/* Package Dashboard Layout: Active Custom Packages Grid */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
             <span>TrueTips Active Packages</span>
           </h2>
-          <span className="text-[11px] text-muted-foreground font-mono">{rules.length} Packages Configured</span>
+          <span className="text-[11px] text-amber-300 font-mono font-bold bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+            {rules.length} Packages Configured
+          </span>
         </div>
 
         {rules.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
-              <Layers className="h-6 w-6 text-muted-foreground" />
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-8 text-center space-y-3 shadow-inner">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-400">
+              <Layers className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-foreground">No Packages Created Yet</h3>
-              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+              <h3 className="font-extrabold text-base text-sky-400">No Packages Created Yet</h3>
+              <p className="text-xs text-emerald-200/70 mt-1 max-w-sm mx-auto">
                 Create custom packages with your own names, amounts, header titles, and pasted matches!
               </p>
             </div>
             <div className="flex items-center justify-center gap-2 pt-2">
               <button
                 onClick={() => setModal({ mode: "add" })}
-                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-sm"
-                style={{ background: "var(--gradient-primary)" }}
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-slate-950 shadow-md"
+                style={{ background: "linear-gradient(135deg, #FACC15 0%, #EAB308 100%)", boxShadow: "0 0 15px rgba(250, 204, 21, 0.4)" }}
               >
                 <Plus className="h-4 w-4" /> Create Custom Package
               </button>
               <button
                 onClick={handleResetDefaultTiers}
                 disabled={resettingTiers}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold hover:bg-secondary/80"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 px-4 py-2 text-xs font-bold text-orange-300 hover:bg-orange-500/25"
               >
                 <RefreshCw className="h-3.5 w-3.5" /> Seed Standard 5
               </button>
@@ -1664,38 +1666,38 @@ function SmsAutomationPage() {
               return (
                 <div
                   key={rule.id}
-                  className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all min-w-0 group"
+                  className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-card p-4 shadow-[0_4px_20px_rgba(16,185,129,0.15)] flex flex-col justify-between hover:border-amber-400/60 transition-all min-w-0 group"
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xl shrink-0">⚽</span>
-                      <span className="rounded-full px-2.5 py-0.5 text-xs font-bold border border-primary/30 bg-primary/10 text-primary font-mono shrink-0 whitespace-nowrap">
+                      <span className="rounded-full px-2.5 py-0.5 text-xs font-extrabold border border-amber-400/40 bg-amber-400/15 text-amber-300 font-mono shrink-0 whitespace-nowrap shadow-sm">
                         {cardPrice}
                       </span>
                     </div>
 
                     <div className="min-w-0">
-                      <h3 className="font-bold text-sm text-foreground truncate" title={rule.name}>
+                      <h3 className="font-bold text-sm text-sky-400 truncate" title={rule.name}>
                         {rule.name}
                       </h3>
-                      <p className="text-[11px] font-mono text-muted-foreground leading-snug mt-1 line-clamp-2 min-h-[32px] bg-secondary/30 p-1.5 rounded-lg border border-border/50">
+                      <p className="text-[11px] font-mono text-emerald-200/80 leading-snug mt-1 line-clamp-2 min-h-[32px] bg-emerald-950/40 p-2 rounded-xl border border-emerald-500/20">
                         {rule.messageTemplate.split("\n")[0] || "Custom Tips Package"}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-3.5 flex items-center justify-between gap-1.5 pt-2.5 border-t border-border/40">
+                  <div className="mt-3.5 flex items-center justify-between gap-1.5 pt-2.5 border-t border-emerald-500/20">
                     <button
                       type="button"
                       onClick={() => setPreviewRule(rule)}
-                      className="flex-1 min-w-0 rounded-lg border border-border bg-secondary/50 py-1.5 px-1 text-xs font-semibold hover:bg-secondary text-foreground transition-colors text-center truncate inline-flex items-center justify-center gap-1"
+                      className="flex-1 min-w-0 rounded-xl border border-sky-500/30 bg-sky-500/10 py-1.5 px-1 text-xs font-bold text-sky-300 hover:bg-sky-500/20 transition-colors text-center truncate inline-flex items-center justify-center gap-1"
                     >
-                      <Eye className="h-3 w-3 text-primary" /> Preview
+                      <Eye className="h-3 w-3 text-sky-400" /> Preview
                     </button>
                     <button
                       type="button"
                       onClick={() => setModal({ mode: "edit", rule })}
-                      className="flex-1 min-w-0 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1.5 px-1 text-xs font-semibold hover:bg-primary/20 transition-colors text-center truncate inline-flex items-center justify-center gap-1"
+                      className="flex-1 min-w-0 rounded-xl bg-amber-400/15 text-amber-300 border border-amber-400/40 py-1.5 px-1 text-xs font-extrabold hover:bg-amber-400/25 transition-colors text-center truncate inline-flex items-center justify-center gap-1"
                     >
                       <Pencil className="h-3 w-3" /> Edit
                     </button>
@@ -1703,7 +1705,7 @@ function SmsAutomationPage() {
                       type="button"
                       onClick={() => setDeleteTarget(rule)}
                       title="Delete package"
-                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors border border-border"
+                      className="rounded-xl p-1.5 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors border border-rose-500/30 bg-rose-500/10"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
