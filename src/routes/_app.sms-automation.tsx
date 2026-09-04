@@ -1666,7 +1666,6 @@ function SmsAutomationPage() {
                       <th className="px-4 py-3.5">Package Name</th>
                       <th className="px-4 py-3.5">Price (KES)</th>
                       <th className="px-4 py-3.5">Duration</th>
-                      <th className="px-4 py-3.5">Subscribers</th>
                       <th className="px-4 py-3.5">Status</th>
                       <th className="px-4 py-3.5">Created Date</th>
                       <th className="px-4 py-3.5 text-right">Actions</th>
@@ -1675,7 +1674,6 @@ function SmsAutomationPage() {
                   <tbody className="divide-y-2 divide-[#10B981]/20">
                     {rules.map((rule) => {
                       const durationStr = getPackageDuration(rule);
-                      const subsCount = Math.round(rule.minAmount / 25) + 14;
 
                       return (
                         <tr key={rule.id} className="hover:bg-[#031E17]/60 transition-colors">
@@ -1702,17 +1700,6 @@ function SmsAutomationPage() {
                               <Calendar className="h-3 w-3 text-[#38BDF8]" />
                               {durationStr}
                             </span>
-                          </td>
-
-                          {/* Subscribers */}
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => setDetailsRule(rule)}
-                              className="inline-flex items-center gap-1 font-mono font-bold text-xs text-[#38BDF8] hover:underline"
-                            >
-                              <Users className="h-3.5 w-3.5 text-[#FACC15]" />
-                              <span>{subsCount} Subscribed</span>
-                            </button>
                           </td>
 
                           {/* Status & Toggle */}
@@ -1780,7 +1767,6 @@ function SmsAutomationPage() {
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {rules.map((rule) => {
                 const durationStr = getPackageDuration(rule);
-                const subsCount = Math.round(rule.minAmount / 25) + 14;
 
                 return (
                   <div
@@ -1816,10 +1802,6 @@ function SmsAutomationPage() {
                         <span className={cn("h-2 w-2 rounded-full", rule.isActive ? "bg-black animate-pulse" : "bg-gray-400")} />
                         {rule.isActive ? "Active" : "Inactive"}
                       </button>
-
-                      <span className="text-xs font-mono font-bold text-[#38BDF8]">
-                        {subsCount} Subscribed
-                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 pt-2">
