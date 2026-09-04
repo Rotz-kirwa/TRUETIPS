@@ -1415,14 +1415,6 @@ function SmsAutomationPage() {
   // Overview metrics
   const totalPackages = rules.length;
   const activePackages = useMemo(() => rules.filter((r) => r.isActive).length, [rules]);
-  
-  const totalSubscribers = useMemo(() => {
-    return rules.reduce((acc, r) => acc + (Math.round(r.minAmount / 25) + 14), 0) + (stats.totalSent * 2);
-  }, [rules, stats.totalSent]);
-
-  const totalRevenue = useMemo(() => {
-    return rules.reduce((acc, r) => acc + (r.minAmount * 42), 148500);
-  }, [rules]);
 
   const handleRuleSaved = useCallback((saved: RuleRow) => {
     setRules((prev) => {
@@ -1598,7 +1590,7 @@ function SmsAutomationPage() {
       </header>
 
       {/* 2. PACKAGE OVERVIEW CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Total Packages */}
         <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
           <div>
@@ -1620,30 +1612,6 @@ function SmsAutomationPage() {
           </div>
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10B981] text-black border-2 border-[#059669] shadow-md">
             <CheckCircle2 className="h-6 w-6" />
-          </div>
-        </div>
-
-        {/* Total Subscribers */}
-        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
-          <div>
-            <span className="text-xs font-black uppercase text-[#38BDF8]">Total Subscribers</span>
-            <p className="text-2xl font-black text-[#38BDF8] font-mono mt-1">{totalSubscribers}</p>
-            <span className="text-[10px] text-[#A7F3D0] font-bold">Active package users</span>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0284C7] text-white border-2 border-[#0369A1] shadow-md">
-            <Users className="h-6 w-6" />
-          </div>
-        </div>
-
-        {/* Total Revenue Generated */}
-        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
-          <div>
-            <span className="text-xs font-black uppercase text-[#38BDF8]">Total Revenue</span>
-            <p className="text-xl font-black text-[#FACC15] font-mono mt-1">{KES(totalRevenue)}</p>
-            <span className="text-[10px] text-[#A7F3D0] font-bold">Generated from packages</span>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FACC15] text-black border-2 border-[#CA8A04] shadow-md">
-            <Zap className="h-6 w-6" />
           </div>
         </div>
       </div>
