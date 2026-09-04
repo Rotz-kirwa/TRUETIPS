@@ -19,7 +19,7 @@ const DEFAULT_ENVS: Record<string, string> = {
   MPESA_CALLBACK_URL: "https://moonlight-games.onrender.com",
   MPESA_ENVIRONMENT: "sandbox",
   SMS_PROVIDER: "onfon",
-  ONFON_API_KEY: "",
+  ONFON_API_KEY: "2rYG3PR90oQzwMH4abIm18pTKUvxJkcfZiA67FuBShqgsE5X",
   ONFON_CLIENT_ID: "nebula",
   ONFON_SENDER_ID: "NEBULA",
 };
