@@ -308,6 +308,10 @@ export async function deleteRule(id: string): Promise<void> {
   await db.delete(smsAutomationRules).where(eq(smsAutomationRules.id, id));
 }
 
+export async function clearAllRules(): Promise<void> {
+  await db.delete(smsAutomationRules);
+}
+
 export async function resetDefaultTiers(): Promise<RuleRow[]> {
   await db.delete(smsAutomationRules);
 

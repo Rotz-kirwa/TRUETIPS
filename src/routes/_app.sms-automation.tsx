@@ -33,6 +33,14 @@ const resetDefaultTiersFn = createServerFn({ method: "POST" }).handler(async () 
   return resetDefaultTiers();
 });
 
+const clearAllRulesFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { requireCurrentUser } = await import("../lib/auth.server");
+  await requireCurrentUser();
+  const { clearAllRules } = await import("../lib/sms-automation.server");
+  await clearAllRules();
+  return { success: true };
+});
+
 const setGlobalAutomationFn = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => z.boolean().parse(v))
   .handler(async ({ data: enabled }) => {
@@ -299,6 +307,10 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
       const parts = rest.split(/->|→/);
       rest = parts[0].trim();
       pick = parts.slice(1).join("->").trim();
+    } else if (rest.includes(":")) {
+      const parts = rest.split(":");
+      rest = parts[0].trim();
+      pick = parts.slice(1).join(":").trim();
     } else if (rest.includes(" - ")) {
       const parts = rest.split(" - ");
       rest = parts[0].trim();
@@ -390,7 +402,7 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→") || trimmed.includes("\t");
+    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→") || trimmed.includes(":") || trimmed.includes("\t");
 
     if (isMatchLine) {
       phase = "matches";
@@ -422,22 +434,22 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
   };
 }
 
-function buildTemplateFromStructure(header: string, matches: MatchRow[], footer: string): string {
+function buildTemplateFromStructure(header: string, matches: MatchRow[], footer?: string): string {
   const matchLines = matches
     .filter((m) => m.team1.trim() || m.team2.trim())
     .map((m) => {
-      const t1 = m.team1.trim();
-      const t2 = m.team2.trim();
-      const p = m.pick.trim();
-      return `${t1}${t2 ? ` vs ${t2}` : ""}${p ? ` -> ${p}` : ""}`;
+      const t1 = m.team1.trim().toUpperCase();
+      const t2 = m.team2.trim().toUpperCase();
+      const p = m.pick.trim().toUpperCase();
+      return `${t1}${t2 ? ` VS ${t2}` : ""}${p ? `: ${p}` : ""}`;
     });
 
   const parts = [];
-  if (header.trim()) parts.push(header.trim());
+  if (header && header.trim()) parts.push(header.trim().toUpperCase());
   if (matchLines.length > 0) parts.push(matchLines.join("\n"));
-  if (footer.trim()) parts.push(footer.trim());
+  if (footer && footer.trim()) parts.push(footer.trim());
 
-  return parts.join("\n");
+  return parts.join("\n\n");
 }
 
 function RuleModal({
@@ -512,7 +524,8 @@ function RuleModal({
       }
     }
 
-    const updated = matchRows.map((r) => (r.id === id ? { ...r, [field]: value } : r));
+    const upperValue = value.toUpperCase();
+    const updated = matchRows.map((r) => (r.id === id ? { ...r, [field]: upperValue } : r));
     setMatchRows(updated);
     updateTemplateFromTable(headerText, updated, footerText);
   }
@@ -1458,6 +1471,8 @@ function SmsAutomationPage() {
   }
 
   const [resettingTiers, setResettingTiers] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   async function handleResetDefaultTiers() {
     if (!confirm("Reset rules to 5 TrueTips Packages (Daily, Jackpot, Basket, Weekly, Monthly)?")) return;
@@ -1470,6 +1485,20 @@ function SmsAutomationPage() {
       toast.error("Failed to reset tier rules");
     } finally {
       setResettingTiers(false);
+    }
+  }
+
+  async function handleClearAllPackages() {
+    setClearingAll(true);
+    try {
+      await clearAllRulesFn();
+      setRules([]);
+      setShowClearModal(false);
+      toast.success("All package rules cleared! You can now create custom packages from scratch.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to clear packages");
+    } finally {
+      setClearingAll(false);
     }
   }
 
@@ -1491,6 +1520,44 @@ function SmsAutomationPage() {
         />
       )}
 
+      {/* Clear All Confirmation Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-lg space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-foreground">Clear All Packages</h3>
+                <p className="text-xs text-muted-foreground">Wipe all package rules and start fresh</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to delete all package rules? This will clear the entire list so you can create your custom packages from scratch.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold hover:bg-secondary/80"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllPackages}
+                disabled={clearingAll}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-destructive px-4 py-2 text-xs font-bold text-destructive-foreground shadow hover:bg-destructive/90 disabled:opacity-60"
+              >
+                {clearingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Yes, Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Preview Modal */}
       {previewRule && (
         <PackagePreviewModal
@@ -1509,135 +1576,143 @@ function SmsAutomationPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">TrueTips Tips Packages</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage daily sports predictions, jackpot fixtures, basketball picks, and subscription packages.
+            Manage sports predictions, jackpot tips, basketball picks, and custom packages.
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Always Active Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-xl border border-success/30 bg-success/10 px-3.5 py-2 text-xs font-bold text-success shadow-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-bold text-success shadow-sm">
             <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-            SMS Automation Active
+            SMS Active
           </span>
+
+          {/* Clear All Packages */}
+          <button
+            onClick={() => setShowClearModal(true)}
+            title="Clear all package rules from system"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition-all"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear All Packages
+          </button>
 
           {/* Reset 5 Packages */}
           <button
             onClick={handleResetDefaultTiers}
             disabled={resettingTiers}
-            title="Reset rules to TrueTips 5 Packages (Daily, Jackpot, Basket, Weekly, Monthly)"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60 text-xs"
+            title="Reset rules to TrueTips 5 Standard Packages"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-1.5 text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60"
           >
-            {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Reset 5 Packages
+            {resettingTiers ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Seed Standard 5
           </button>
 
           <button
             onClick={() => setModal({ mode: "add" })}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-white shadow-sm"
             style={{ background: "var(--gradient-primary)" }}
           >
-            <Plus className="h-4 w-4" /> Add Package Rule
+            <Plus className="h-3.5 w-3.5" /> + Create Package
           </button>
         </div>
       </header>
 
-      {/* Package Dashboard Layout: 5 Large Category Cards */}
+      {/* Package Dashboard Layout: Active Custom Packages Grid */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <span>TrueTips Categories Overview</span>
+            <span>TrueTips Active Packages</span>
           </h2>
-          <span className="text-[11px] text-muted-foreground font-mono">5 Active Packages</span>
+          <span className="text-[11px] text-muted-foreground font-mono">{rules.length} Packages Configured</span>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-          {TIER_PRESETS.map((preset) => {
-            const matchedRule = rules.find((r) => {
-              const key = preset.name.toLowerCase().split(" ")[0];
-              return r.name.toLowerCase().includes(key) || preset.name.toLowerCase().includes(r.name.toLowerCase().split(" ")[0]);
-            });
-            const isRuleActive = matchedRule ? matchedRule.isActive : true;
-            const cardPrice = matchedRule
-              ? matchedRule.minAmount === matchedRule.maxAmount
-                ? KES(Number(matchedRule.minAmount))
-                : `${KES(Number(matchedRule.minAmount))}–${KES(Number(matchedRule.maxAmount))}`
-              : KES(Number(preset.amount));
 
-            return (
-              <div
-                key={preset.name}
-                className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all min-w-0 group"
+        {rules.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
+              <Layers className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-foreground">No Packages Created Yet</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Create custom packages with your own names, amounts, header titles, and pasted matches!
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => setModal({ mode: "add" })}
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-sm"
+                style={{ background: "var(--gradient-primary)" }}
               >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-2xl shrink-0">{preset.icon}</span>
-                    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold border font-mono shrink-0 whitespace-nowrap", preset.badgeBg)}>
-                      {cardPrice}
-                    </span>
+                <Plus className="h-4 w-4" /> Create Custom Package
+              </button>
+              <button
+                onClick={handleResetDefaultTiers}
+                disabled={resettingTiers}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold hover:bg-secondary/80"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Seed Standard 5
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+            {rules.map((rule) => {
+              const cardPrice = rule.minAmount === rule.maxAmount
+                ? KES(Number(rule.minAmount))
+                : `${KES(Number(rule.minAmount))}–${KES(Number(rule.maxAmount))}`;
+
+              return (
+                <div
+                  key={rule.id}
+                  className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all min-w-0 group"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xl shrink-0">⚽</span>
+                      <span className="rounded-full px-2.5 py-0.5 text-xs font-bold border border-primary/30 bg-primary/10 text-primary font-mono shrink-0 whitespace-nowrap">
+                        {cardPrice}
+                      </span>
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-foreground truncate" title={rule.name}>
+                        {rule.name}
+                      </h3>
+                      <p className="text-[11px] font-mono text-muted-foreground leading-snug mt-1 line-clamp-2 min-h-[32px] bg-secondary/30 p-1.5 rounded-lg border border-border/50">
+                        {rule.messageTemplate.split("\n")[0] || "Custom Tips Package"}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-foreground truncate" title={preset.name}>
-                      {preset.name}
-                    </h3>
-                    <p className="text-[11px] text-muted-foreground leading-snug mt-1 line-clamp-2 min-h-[32px]">
-                      {preset.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-2 border-t border-border/50">
-                    <span className="font-medium text-foreground truncate">{preset.matches}</span>
-                    <span className="shrink-0">{preset.validity}</span>
+                  <div className="mt-3.5 flex items-center justify-between gap-1.5 pt-2.5 border-t border-border/40">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewRule(rule)}
+                      className="flex-1 min-w-0 rounded-lg border border-border bg-secondary/50 py-1.5 px-1 text-xs font-semibold hover:bg-secondary text-foreground transition-colors text-center truncate inline-flex items-center justify-center gap-1"
+                    >
+                      <Eye className="h-3 w-3 text-primary" /> Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModal({ mode: "edit", rule })}
+                      className="flex-1 min-w-0 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1.5 px-1 text-xs font-semibold hover:bg-primary/20 transition-colors text-center truncate inline-flex items-center justify-center gap-1"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(rule)}
+                      title="Delete package"
+                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors border border-border"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-3.5 flex items-center justify-between gap-1.5 pt-2.5 border-t border-border/40">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (matchedRule) {
-                        setPreviewRule(matchedRule);
-                      } else {
-                        toast.info(`Preview: ${preset.name}`);
-                      }
-                    }}
-                    className="flex-1 min-w-0 rounded-lg border border-border bg-secondary/50 py-1.5 px-1 text-xs font-semibold hover:bg-secondary text-foreground transition-colors text-center truncate"
-                  >
-                    Preview
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (matchedRule) {
-                        setModal({ mode: "edit", rule: matchedRule });
-                      } else {
-                        setModal({ mode: "add", initialPreset: preset });
-                      }
-                    }}
-                    className="flex-1 min-w-0 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1.5 px-1 text-xs font-semibold hover:bg-primary/20 transition-colors text-center truncate"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (matchedRule) {
-                        handleToggle(matchedRule);
-                      }
-                    }}
-                    title={isRuleActive ? "Deactivate package" : "Activate package"}
-                    className={cn(
-                      "flex-1 min-w-0 rounded-lg py-1.5 px-1 text-xs font-semibold transition-colors border text-center truncate",
-                      isRuleActive
-                        ? "bg-success/10 text-success border-success/30 hover:bg-success/20"
-                        : "bg-muted text-muted-foreground border-border hover:bg-secondary",
-                    )}
-                  >
-                    {isRuleActive ? "Active" : "Activate"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
