@@ -1,7 +1,40 @@
+import crypto from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
 import { processPaymentSms, isValidKenyanPhone } from "./sms-automation.server";
+
+async function resolvePhoneFromHash(hash: string): Promise<string | null> {
+  if (!hash || !/^[0-9a-f]{64}$/i.test(hash)) return null;
+  const targetHash = hash.toLowerCase();
+
+  try {
+    const records = await db
+      .select({ phone: mpesaPayments.phone })
+      .from(mpesaPayments)
+      .limit(500);
+
+    for (const r of records) {
+      if (r.phone && !/^[0-9a-f]{64}$/i.test(r.phone)) {
+        const digits = r.phone.replace(/\D/g, "");
+        const normPhone = digits.startsWith("254")
+          ? digits
+          : digits.startsWith("0")
+            ? `254${digits.slice(1)}`
+            : `254${digits}`;
+        const computedHash = crypto.createHash("sha256").update(normPhone).digest("hex");
+        if (computedHash.toLowerCase() === targetHash) {
+          console.log(`[resolvePhoneFromHash] Resolved hash ${hash.slice(0, 10)}... to ${normPhone}`);
+          return normPhone;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[resolvePhoneFromHash] Error resolving phone hash:", err);
+  }
+
+  return null;
+}
 
 let payerNameColumnEnsured = false;
 async function ensurePayerNameColumn() {
@@ -272,7 +305,16 @@ export async function handleC2bConfirmation(
     );
 
     const mpesaReceiptNumber = sanitized.TransID || `C2B_${Date.now()}`;
-    const phone = sanitized.MSISDN || sanitized.BillRefNumber || sanitized.InvoiceNumber || "254700000000";
+    let phone = sanitized.MSISDN || sanitized.BillRefNumber || sanitized.InvoiceNumber || "254700000000";
+
+    // If phone is a 64-character SHA-256 hash, attempt automatic reverse lookup match
+    if (/^[0-9a-f]{64}$/i.test(phone)) {
+      const resolved = await resolvePhoneFromHash(phone);
+      if (resolved) {
+        console.log(`[C2B_HASH_RESOLVED] Replaced 64-char hash with real phone: ${resolved}`);
+        phone = resolved;
+      }
+    }
     const amount = sanitized.TransAmount ?? 0;
     const payerName = [sanitized.FirstName, sanitized.MiddleName, sanitized.LastName]
       .filter(Boolean)
