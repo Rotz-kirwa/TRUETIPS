@@ -1664,10 +1664,8 @@ function SmsAutomationPage() {
                   <thead className="bg-[#031E17] text-[#38BDF8] font-black uppercase text-[11px] tracking-wider border-b-2 border-[#10B981]">
                     <tr>
                       <th className="px-4 py-3.5">Package Name</th>
-                      <th className="px-4 py-3.5">Description</th>
                       <th className="px-4 py-3.5">Price (KES)</th>
                       <th className="px-4 py-3.5">Duration</th>
-                      <th className="px-4 py-3.5">Features Included</th>
                       <th className="px-4 py-3.5">Subscribers</th>
                       <th className="px-4 py-3.5">Status</th>
                       <th className="px-4 py-3.5">Created Date</th>
@@ -1677,7 +1675,6 @@ function SmsAutomationPage() {
                   <tbody className="divide-y-2 divide-[#10B981]/20">
                     {rules.map((rule) => {
                       const durationStr = getPackageDuration(rule);
-                      const featuresArr = getPackageFeatures(rule);
                       const subsCount = Math.round(rule.minAmount / 25) + 14;
 
                       return (
@@ -1686,17 +1683,10 @@ function SmsAutomationPage() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               <span className="text-xl">⚽</span>
-                              <span className="font-black text-sm text-white truncate max-w-[140px]" title={rule.name}>
+                              <span className="font-black text-sm text-white truncate max-w-[160px]" title={rule.name}>
                                 {displayPackageName(rule.name)}
                               </span>
                             </div>
-                          </td>
-
-                          {/* Description */}
-                          <td className="px-4 py-4 max-w-[180px]">
-                            <p className="text-[11px] text-[#A7F3D0] font-semibold line-clamp-2 leading-tight">
-                              {rule.messageTemplate.split("\n")[0] || "Custom prediction package"}
-                            </p>
                           </td>
 
                           {/* Price */}
@@ -1712,25 +1702,6 @@ function SmsAutomationPage() {
                               <Calendar className="h-3 w-3 text-[#38BDF8]" />
                               {durationStr}
                             </span>
-                          </td>
-
-                          {/* Features */}
-                          <td className="px-4 py-4 max-w-[200px]">
-                            <div className="flex flex-wrap gap-1">
-                              {featuresArr.slice(0, 2).map((feat, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center gap-1 rounded-md bg-[#031E17] px-2 py-0.5 text-[10px] font-bold text-[#A7F3D0] border border-[#10B981]/30 truncate"
-                                >
-                                  <Check className="h-2.5 w-2.5 text-[#FACC15]" /> {feat}
-                                </span>
-                              ))}
-                              {featuresArr.length > 2 && (
-                                <span className="text-[10px] font-bold text-[#38BDF8] self-center">
-                                  +{featuresArr.length - 2} more
-                                </span>
-                              )}
-                            </div>
                           </td>
 
                           {/* Subscribers */}
@@ -1809,7 +1780,6 @@ function SmsAutomationPage() {
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {rules.map((rule) => {
                 const durationStr = getPackageDuration(rule);
-                const featuresArr = getPackageFeatures(rule);
                 const subsCount = Math.round(rule.minAmount / 25) + 14;
 
                 return (
@@ -1830,21 +1800,6 @@ function SmsAutomationPage() {
                       <span className="rounded-full px-3 py-1 text-xs font-black border-2 border-[#CA8A04] bg-[#FACC15] text-black font-mono shadow-sm">
                         {KES(rule.minAmount)}
                       </span>
-                    </div>
-
-                    <p className="text-xs text-[#A7F3D0] font-medium bg-[#031E17] p-2.5 rounded-xl border border-[#10B981]/30">
-                      {rule.messageTemplate.split("\n")[0] || "Prediction package for subscribers."}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {featuresArr.map((feat, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 rounded-md bg-[#031E17] px-2 py-0.5 text-[10px] font-bold text-[#A7F3D0] border border-[#10B981]/30"
-                        >
-                          <Check className="h-3 w-3 text-[#FACC15]" /> {feat}
-                        </span>
-                      ))}
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t-2 border-[#10B981]/40">
