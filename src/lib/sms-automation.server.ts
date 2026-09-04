@@ -230,10 +230,6 @@ export async function fetchAllRules(): Promise<RuleRow[]> {
     .from(smsAutomationRules)
     .orderBy(smsAutomationRules.minAmount);
 
-  if (rows.length === 0) {
-    return resetDefaultTiers();
-  }
-
   return rows.map(toRuleRow);
 }
 
