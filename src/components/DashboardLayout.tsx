@@ -39,7 +39,7 @@ const NAV = [
   },
   {
     to: "/sms-automation",
-    label: "Prediction Console",
+    label: "Tips Packages",
     icon: Bot,
     color: "text-violet-400",
     bgColor: "bg-violet-500/15",
