@@ -76,9 +76,11 @@ const app = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, "http://localhost");
   const isApi = pathname.startsWith("/api/");
 
-  // CORS Preflight & Headers for Vercel -> Render cross-origin communication
+  // CORS Preflight & Headers for Vercel / Custom Domain -> Render cross-origin communication
   const allowedOrigins = [
     process.env.FRONTEND_URL,
+    "https://truetips.co.ke",
+    "https://www.truetips.co.ke",
     "https://truetips.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
@@ -86,8 +88,11 @@ const app = http.createServer(async (req, res) => {
   ].filter(Boolean);
 
   const requestOrigin = req.headers.origin;
-  const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin) || (requestOrigin && requestOrigin.endsWith(".vercel.app"));
-  const originToSet = requestOrigin && isAllowed ? requestOrigin : (process.env.FRONTEND_URL || "https://truetips.vercel.app");
+  const isAllowed =
+    !requestOrigin ||
+    allowedOrigins.includes(requestOrigin) ||
+    (requestOrigin && (requestOrigin.endsWith(".vercel.app") || requestOrigin.endsWith("truetips.co.ke")));
+  const originToSet = requestOrigin && isAllowed ? requestOrigin : (process.env.FRONTEND_URL || "https://truetips.co.ke");
 
   res.setHeader("Access-Control-Allow-Origin", originToSet);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
