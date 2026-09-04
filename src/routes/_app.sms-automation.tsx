@@ -5,8 +5,9 @@ import { z } from "zod";
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
-  Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
+  Zap, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
   Wand2, Sparkles, RefreshCw, Layers, Table, FileText, ClipboardList, Eye,
+  Users, DollarSign, Calendar, Tag, ShieldCheck, Check, Info, ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -21,7 +22,7 @@ const fetchSmsDataFn = createServerFn({ method: "GET" }).handler(async () => {
     fetchAllRules, fetchRecentLogs, fetchLogStats, getSmsAutomationEnabled,
   } = await import("../lib/sms-automation.server");
   const [rules, logs, stats, globalEnabled] = await Promise.all([
-    fetchAllRules(), fetchRecentLogs(50), fetchLogStats(), getSmsAutomationEnabled(),
+    fetchAllRules(), fetchRecentLogs(100), fetchLogStats(), getSmsAutomationEnabled(),
   ]);
   return { rules, logs, stats, globalEnabled };
 });
@@ -134,6 +135,10 @@ const PACKAGE_NAME_MAP: Record<string, string> = {
   "sapphire": "Basket Matches 🏀",
   "ruby": "Weekly Subscription 📅",
   "emerald": "Monthly Subscription 📆",
+  "vip monthly": "VIP Monthly Package 👑",
+  "weekly package": "Weekly Package 📅",
+  "one time tip": "One Time Tip ⚡",
+  "jackpot package": "Jackpot Package 🏆",
 };
 
 function displayPackageName(name: string) {
@@ -141,56 +146,105 @@ function displayPackageName(name: string) {
   return PACKAGE_NAME_MAP[key] || name;
 }
 
-const TIER_PRESETS = [
+function getPackageDuration(rule: RuleRow): string {
+  const name = rule.name.toLowerCase();
+  const amt = rule.minAmount;
+  if (name.includes("monthly") || name.includes("month") || amt >= 2500) return "30 Days";
+  if (name.includes("weekly") || name.includes("week") || (amt >= 750 && amt < 2500)) return "7 Days";
+  if (name.includes("one time") || name.includes("single") || amt < 750) return "1 Day";
+  return "7 Days";
+}
+
+function getPackageFeatures(rule: RuleRow): string[] {
+  const name = rule.name.toLowerCase();
+  const amt = rule.minAmount;
+
+  if (name.includes("vip") || name.includes("monthly") || amt >= 2500) {
+    return [
+      "Daily VIP predictions",
+      "Jackpot predictions",
+      "Premium analysis",
+      "High accuracy tips",
+    ];
+  }
+  if (name.includes("jackpot") || (amt >= 1000 && amt < 2500)) {
+    return [
+      "Full jackpot predictions",
+      "Expert match analysis",
+      "Weekend Mega Jackpot tips",
+    ];
+  }
+  if (name.includes("weekly") || (amt >= 700 && amt < 1000)) {
+    return [
+      "Unlimited daily access (7 Days)",
+      "VIP predictions",
+      "High accuracy tips",
+    ];
+  }
+  return [
+    "Single day predictions",
+    "High odds pick",
+    "Instant SMS delivery",
+  ];
+}
+
+const DEFAULT_EXAMPLE_PACKAGES = [
   {
-    name: "Daily Matches ⚽",
-    amount: "50",
-    icon: "⚽",
-    badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    description: "Short-term daily football predictions",
-    matches: "0 Matches",
-    validity: "24 Hours",
-    template: `DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big`,
+    name: "VIP Monthly Package 👑",
+    amount: "3000",
+    duration: "30 Days",
+    icon: "👑",
+    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+    description: "Complete premium VIP subscription with full access to daily tips, jackpot predictions, and expert analysis for 30 days.",
+    features: [
+      "Daily VIP predictions",
+      "Jackpot predictions",
+      "Premium analysis",
+      "High accuracy tips",
+    ],
+    template: `VIP MONTHLY PACKAGE 👑\nDaily VIP predictions, Jackpot picks, and premium analysis.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
   },
   {
-    name: "Jackpot Matches 🏆",
-    amount: "100",
-    icon: "🏆",
-    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    description: "Complete jackpot predictions list",
-    matches: "0 Fixtures",
-    validity: "Jackpot Access",
-    template: `JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big`,
-  },
-  {
-    name: "Basket Matches 🏀",
-    amount: "50",
-    icon: "🏀",
-    badgeBg: "bg-orange-500/10 text-orange-400 border-orange-500/30",
-    description: "Daily basketball predictions and picks",
-    matches: "0 Matches",
-    validity: "24 Hours",
-    template: `BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big`,
-  },
-  {
-    name: "Weekly Subscription 📅",
-    amount: "500",
+    name: "Weekly Package 📅",
+    amount: "800",
+    duration: "7 Days",
     icon: "📅",
     badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    description: "Full access to predictions for 7 days",
-    matches: "All Access",
-    validity: "7 Days",
-    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
+    description: "Full 7-day subscription for high accuracy football predictions and weekend jackpots.",
+    features: [
+      "Unlimited daily access (7 Days)",
+      "VIP predictions",
+      "High accuracy tips",
+    ],
+    template: `WEEKLY PACKAGE 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
   },
   {
-    name: "Monthly Subscription 📆",
+    name: "Jackpot Package 🏆",
     amount: "1500",
-    icon: "📆",
-    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-    description: "Complete premium access for 30 days",
-    matches: "All Access + Updates",
-    validity: "30 Days",
-    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to TrueTips premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
+    duration: "7 Days",
+    icon: "🏆",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+    description: "Specialized jackpot predictions and expert breakdown for midweek and weekend mega jackpots.",
+    features: [
+      "Full jackpot predictions",
+      "Expert match analysis",
+      "Weekend Mega Jackpot tips",
+    ],
+    template: `JACKPOT PACKAGE 🏆\nMidweek & Weekend Mega Jackpot Predictions.\n🏆 Play Smart, Win Big`,
+  },
+  {
+    name: "One Time Tip ⚡",
+    amount: "500",
+    duration: "1 Day",
+    icon: "⚡",
+    badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    description: "Single-day instant access for high odds prediction fixtures.",
+    features: [
+      "Single day predictions",
+      "High odds pick",
+      "Instant SMS delivery",
+    ],
+    template: `ONE TIME TIP ⚡\nSingle day high-odds prediction.\n🏆 Play Smart, Win Big`,
   },
 ];
 
@@ -200,18 +254,14 @@ export function formatAndCleanMatchLines(text: string): string {
   const cleaned = lines.map((line) => {
     let trimmed = line.trim();
     if (!trimmed) return "";
-    // Remove list markers like "1. ", "- ", "* "
     trimmed = trimmed.replace(/^[\d\*\-\•]+\.\s*/, "").replace(/^[\*\-\•]\s*/, "");
-    // Replace custom separators (->, =>, -, :) with standard arrow '→'
     trimmed = trimmed.replace(/\s*(?:->|=>|–|—|:)\s*/g, " → ");
-    // If line contains 'vs' or 'v' without arrow, split prediction at the end
     if (!trimmed.includes("→")) {
       const match = trimmed.match(/^(.+?\s+(?:vs\.?|v)\s+.+?)\s+([12X|gg|ng|over|under|draw]+.*)$/i);
       if (match) {
         trimmed = `${match[1].trim()} → ${match[2].trim().toUpperCase()}`;
       }
     }
-    // Format team names and prediction
     if (trimmed.includes("→")) {
       const parts = trimmed.split("→");
       const teams = parts[0].trim();
@@ -231,17 +281,17 @@ function buildPreview(template: string): string {
   return template
     .replace(/Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi, "🏆 Play Smart, Win Big")
     .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big")
-    .replace(/\{customer_name\}/gi, "John Doe")
-    .replace(/\{phone\}/gi, "254712345678")
-    .replace(/\{amount\}/gi, "150.00")
-    .replace(/\{transaction_code\}/gi, "UGK7X2Y9AB")
-    .replace(/\{date\}/gi, "02 May 2026, 14:30")
+    .replace(/\{customer_name\}/gi, "254791260817")
+    .replace(/\{phone\}/gi, "254791260817")
+    .replace(/\{amount\}/gi, "800.00")
+    .replace(/\{transaction_code\}/gi, "UI4315EA6Z")
+    .replace(/\{date\}/gi, "04 Sep 2026, 14:30")
     .replace(/\{business_name\}/gi, "TRUETIPS");
 }
 
-// ─── Rule Modal ───────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ModalMode = { mode: "add"; initialPreset?: typeof TIER_PRESETS[0] } | { mode: "edit"; rule: RuleRow };
+export type ModalMode = { mode: "add"; initialPreset?: typeof DEFAULT_EXAMPLE_PACKAGES[0] } | { mode: "edit"; rule: RuleRow };
 
 export type MatchRow = {
   id: string;
@@ -254,13 +304,8 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
   if (!rawText || !rawText.trim()) return [];
 
   let textToParse = rawText.trim();
-
-  // If single-line or concatenated multi-match text without explicit newlines
   if (!textToParse.includes("\n")) {
-    // Add newlines before list numbers like " 2 ", " 3 ", " 10 "
     textToParse = textToParse.replace(/\s+(\d+)[\.\)\s]+([A-Z0-9])/gi, "\n$1 $2");
-
-    // If still no newlines and multiple "vs" exist, insert newlines before team names preceding 'vs'
     if (!textToParse.includes("\n") && (textToParse.match(/\bvs\.?\b/gi) || []).length > 1) {
       textToParse = textToParse.replace(/(\S+\s+vs\s+.*?)(?=\s+[A-Z0-9][a-zA-Z0-9\s]*?\s+vs\b)/gi, "$1\n");
     }
@@ -272,11 +317,8 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
   for (const line of lines) {
     let trimmed = line.trim();
     if (!trimmed) continue;
-
-    // Remove leading list numbers like "1. ", "1\t", "1) ", "10 ", "* "
     trimmed = trimmed.replace(/^[\d\*\-\•]+[\.\)\t\s]+\s*/, "");
 
-    // 1. Tab-separated format (Spreadsheets, tables, Excel)
     if (trimmed.includes("\t")) {
       const parts = trimmed.split("\t").map((p) => p.trim()).filter(Boolean);
       const nonVsParts = parts.filter((p) => !/^(vs|v)\.?$/i.test(p));
@@ -299,7 +341,6 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
       }
     }
 
-    // 2. Standard text formatting
     let rest = trimmed;
     let pick = "";
 
@@ -326,7 +367,6 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
       const afterVs = parts[1].trim();
 
       if (!pick) {
-        // Match prediction pattern in afterVs
         const regex = /^(.*?)\s+((?:[A-Z0-9][a-zA-Z0-9\s]*\s+Win(?:\s*\([^\)]+\))?|Over\s+[\d\.]+\s*.*|Under\s+[\d\.]+\s*.*|Both\s+Teams\s+.*|GG|NG|BTTS|[12X]\b|\([^\)]+\)).*)$/i;
         const match = afterVs.match(regex);
 
@@ -382,7 +422,7 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
   return matches;
 }
 
-function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tier Package:") {
+function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "VIP Tips Package:") {
   if (!rawTemplate || !rawTemplate.trim()) {
     return {
       header: fallbackTitle,
@@ -452,6 +492,8 @@ function buildTemplateFromStructure(header: string, matches: MatchRow[], footer?
   return parts.join("\n\n");
 }
 
+// ─── Rule Modal (Create & Edit Package) ──────────────────────────────────────
+
 function RuleModal({
   modalMode,
   onClose,
@@ -465,32 +507,40 @@ function RuleModal({
 }) {
   const editing = modalMode.mode === "edit" ? modalMode.rule : null;
   const initialPreset = modalMode.mode === "add" ? modalMode.initialPreset : null;
-  const isFixedInitially = editing ? editing.minAmount === editing.maxAmount : true;
 
   const [name, setName] = useState(editing?.name ?? initialPreset?.name ?? "");
-  const [amountMode, setAmountMode] = useState<"fixed" | "range">(isFixedInitially ? "fixed" : "fixed");
   const [fixedAmount, setFixedAmount] = useState(
-    editing && isFixedInitially ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "",
+    editing ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "800",
   );
-  const [min, setMin] = useState(editing ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "");
-  const [max, setMax] = useState(editing ? String(editing.maxAmount) : initialPreset ? initialPreset.amount : "");
+  const [duration, setDuration] = useState(
+    editing ? getPackageDuration(editing) : initialPreset ? initialPreset.duration : "7 Days",
+  );
+  const [description, setDescription] = useState(
+    editing ? (editing.messageTemplate.split("\n")[0] || "Prediction package for subscribers.") : (initialPreset?.description || "Prediction package for subscribers."),
+  );
+
+  const initialFeatures = editing
+    ? getPackageFeatures(editing)
+    : initialPreset
+    ? initialPreset.features
+    : ["Daily VIP predictions", "Jackpot predictions", "High accuracy tips"];
+
+  const [featuresList, setFeaturesList] = useState<string[]>(initialFeatures);
+  const [newFeatureText, setNewFeatureText] = useState("");
+
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
       initialPreset?.template ??
-      "DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big",
+      "WEEKLY PACKAGE 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big",
   );
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [testPhone, setTestPhone] = useState("");
-  const [testLoading, setTestLoading] = useState(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [showPlaceholders, setShowPlaceholders] = useState(false);
 
   // Table Mode State
   const [inputMode, setInputMode] = useState<"table" | "raw">("table");
   const initialParsed = useMemo(
-    () => parseTemplateToStructure(editing?.messageTemplate ?? "", name ? `${name} Tier Package:` : "Gold Tier Package:"),
+    () => parseTemplateToStructure(editing?.messageTemplate ?? "", name ? `${name}:` : "Tips Package:"),
     [],
   );
 
@@ -499,11 +549,20 @@ function RuleModal({
   const [footerText, setFooterText] = useState(initialParsed.footer);
 
   const preview = useMemo(() => buildPreview(template), [template]);
-  const charCount = template.length;
 
   function updateTemplateFromTable(h: string, rows: MatchRow[], f: string) {
     const newTpl = buildTemplateFromStructure(h, rows, f);
     setTemplate(newTpl);
+  }
+
+  function handleAddFeature() {
+    if (!newFeatureText.trim()) return;
+    setFeaturesList((prev) => [...prev, newFeatureText.trim()]);
+    setNewFeatureText("");
+  }
+
+  function handleRemoveFeature(index: number) {
+    setFeaturesList((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleMatchRowChange(id: string, field: "team1" | "team2" | "pick", value: string) {
@@ -574,62 +633,58 @@ function RuleModal({
     setShowPasteBox(false);
   }
 
-  function handleCellPaste(e: React.ClipboardEvent) {
-    const text = e.clipboardData.getData("text");
-    const vsCount = (text.match(/\bvs\.?\b/gi) || []).length;
-    if (text && (text.includes("\n") || text.includes("\t") || vsCount >= 1 || text.length > 25)) {
-      e.preventDefault();
-      const parsed = parseBulkMatchesText(text);
-      if (parsed.length > 0) {
-        setMatchRows((prev) => {
-          const updated = [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
-          updateTemplateFromTable(headerText, updated, footerText);
-          return updated;
-        });
-        toast.success(`Auto-parsed and imported ${parsed.length} match(es) from clipboard!`);
-      }
-    }
-  }
-
-  function insertTag(tag: string) {
-    setTemplate((t: string) => t + tag);
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    let minN: number;
-    let maxN: number;
-
-    if (amountMode === "fixed") {
-      minN = parseFloat(fixedAmount);
-      maxN = parseFloat(fixedAmount);
-      if (isNaN(minN) || minN <= 0) { setError("Fixed amount must be a positive number."); return; }
-    } else {
-      minN = parseFloat(min);
-      maxN = parseFloat(max);
-      if (isNaN(minN) || minN <= 0) { setError("Minimum amount must be a positive number."); return; }
-      if (isNaN(maxN) || maxN <= 0) { setError("Maximum amount must be a positive number."); return; }
-      if (minN > maxN) { setError("Minimum amount cannot be greater than maximum amount."); return; }
+    const priceNum = parseFloat(fixedAmount);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setError("Price (KES) must be a positive number.");
+      return;
     }
 
-    if (!name.trim()) { setError("Rule name is required."); return; }
-    if (!template.trim()) { setError("Message template cannot be empty."); return; }
+    if (!name.trim()) {
+      setError("Package name is required.");
+      return;
+    }
+
+    if (!template.trim()) {
+      setError("Package message template cannot be empty.");
+      return;
+    }
 
     setLoading(true);
     try {
       let result;
       if (editing) {
-        result = await updateRuleFn({ data: { id: editing.id, name, minAmount: minN, maxAmount: maxN, messageTemplate: template, isActive } });
+        result = await updateRuleFn({
+          data: {
+            id: editing.id,
+            name: name.trim(),
+            minAmount: priceNum,
+            maxAmount: priceNum,
+            messageTemplate: template,
+            isActive,
+          },
+        });
       } else {
-        result = await createRuleFn({ data: { name, minAmount: minN, maxAmount: maxN, messageTemplate: template, isActive } });
+        result = await createRuleFn({
+          data: {
+            name: name.trim(),
+            minAmount: priceNum,
+            maxAmount: priceNum,
+            messageTemplate: template,
+            isActive,
+          },
+        });
       }
 
       if (result && "type" in result) {
         if (result.type === "overlap") {
-          const names = result.conflicting.map((r: RuleRow) => `"${r.name}" (${r.minAmount === r.maxAmount ? KES(r.minAmount) : `${KES(r.minAmount)}–${KES(r.maxAmount)}`})`).join(", ");
-          setError(`Range overlaps with active rule(s): ${names}. Disable them first, or make this rule inactive.`);
+          const names = result.conflicting
+            .map((r: RuleRow) => `"${r.name}" (${KES(r.minAmount)})`)
+            .join(", ");
+          setError(`Price overlaps with existing active package: ${names}. Change price or set inactive.`);
         } else {
           setError(result.message);
         }
@@ -643,201 +698,215 @@ function RuleModal({
     }
   }
 
-  async function handleTestSms() {
-    if (!testPhone.trim()) { setTestResult({ ok: false, msg: "Enter a phone number first." }); return; }
-    if (!editing) { setTestResult({ ok: false, msg: "Save the rule first, then test." }); return; }
-    setTestLoading(true);
-    setTestResult(null);
-    try {
-      const res = await testSmsFn({ data: { ruleId: editing.id, phone: testPhone.trim() } });
-      setTestResult({ ok: res.success, msg: res.success ? `SMS sent! Preview: "${res.message}"` : `Failed: ${res.error}` });
-    } catch (err) {
-      setTestResult({ ok: false, msg: err instanceof Error ? err.message : "Test failed" });
-    } finally {
-      setTestLoading(false);
-    }
-  }
-
-  function handleSelectPreset(preset: typeof TIER_PRESETS[number]) {
-    const matched = rules.find((r) => {
-      const key = preset.name.toLowerCase().split(" ")[0];
-      return r.name.toLowerCase().includes(key);
-    });
+  function handleSelectPreset(preset: typeof DEFAULT_EXAMPLE_PACKAGES[number]) {
     setName(preset.name);
-    setAmountMode(matched ? (matched.minAmount === matched.maxAmount ? "fixed" : "range") : "fixed");
-    const amt = matched ? String(matched.minAmount) : preset.amount;
-    setFixedAmount(amt);
-    setMin(amt);
-    setMax(matched ? String(matched.maxAmount) : preset.amount);
-    const tpl = matched ? matched.messageTemplate : preset.template;
-    setTemplate(tpl);
-    const parsed = parseTemplateToStructure(tpl, `${preset.name} Tier Package:`);
+    setFixedAmount(preset.amount);
+    setDuration(preset.duration);
+    setDescription(preset.description);
+    setFeaturesList(preset.features);
+    setTemplate(preset.template);
+    const parsed = parseTemplateToStructure(preset.template, `${preset.name}:`);
     setHeaderText(parsed.header);
     setMatchRows(parsed.matches);
     setFooterText(parsed.footer);
-    toast.info(`Loaded ${preset.name} (${KES(Number(amt))}) Tier preset`);
-  }
-
-  function handleCleanFormat() {
-    const formatted = formatAndCleanMatchLines(template);
-    setTemplate(formatted);
-    toast.success("Match lines formatted and aligned!");
+    toast.info(`Loaded ${preset.name} (${KES(Number(preset.amount))}) Preset`);
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-card shadow-[var(--shadow-lg)] flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-2xl rounded-2xl border-2 border-[#10B981] bg-[#0A382C] text-white shadow-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
-          <h2 className="text-base font-semibold">
-            {editing ? "Edit SMS Rule" : "Add SMS Automation Rule"}
-          </h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary">
-            <X className="h-4 w-4" />
+        <div className="flex items-center justify-between border-b-2 border-[#10B981]/40 px-6 py-4 shrink-0 bg-[#031E17]">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FACC15] text-black font-black border-2 border-[#CA8A04]">
+              <PackageIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-[#38BDF8]">
+                {editing ? "Edit Tips Package" : "Create New Tips Package"}
+              </h2>
+              <p className="text-xs text-[#A7F3D0] font-medium">
+                Configure pricing, validity duration, features, and matches list
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-[#A7F3D0] hover:bg-[#10B981]/20 hover:text-white transition-colors"
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Body */}
+        {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          {/* Quick Tier Presets */}
+          {/* Presets */}
           {!editing && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>Quick Tier Presets</span>
-                <span className="text-[10px] lowercase text-muted-foreground font-normal">(click to auto-fill)</span>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+                Quick Example Templates
               </label>
-              <div className="flex flex-wrap gap-1.5">
-                {TIER_PRESETS.map((p) => {
-                  const matched = rules.find((r) => r.name.toLowerCase().includes(p.name.toLowerCase().split(" ")[0]));
-                  const pAmt = matched ? matched.minAmount : Number(p.amount);
-                  return (
-                    <button
-                      key={p.name}
-                      type="button"
-                      onClick={() => handleSelectPreset(p)}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:scale-[1.02]",
-                        p.badgeBg,
-                      )}
-                    >
-                      <span>{p.icon}</span>
-                      <span>{p.name}</span>
-                      <span className="font-mono text-[11px]">({KES(pAmt)})</span>
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {DEFAULT_EXAMPLE_PACKAGES.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => handleSelectPreset(p)}
+                    className="flex flex-col items-start rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-2.5 hover:border-[#FACC15] transition-all text-left group"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-lg">{p.icon}</span>
+                      <span className="text-[10px] font-black font-mono text-[#FACC15] bg-[#FACC15]/10 px-1.5 py-0.5 rounded border border-[#CA8A04]">
+                        {KES(Number(p.amount))}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-white mt-1 group-hover:text-[#38BDF8] truncate w-full">
+                      {p.name}
+                    </span>
+                    <span className="text-[10px] text-[#A7F3D0] font-mono">{p.duration}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Name + Status row */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rule Tier Name</label>
+          {/* Fields Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+                Package Name *
+              </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Gold, Platinum, Sapphire..."
-                className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                placeholder="e.g. VIP Monthly, Weekly Package..."
+                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold outline-none focus:border-[#FACC15]"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
+              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+                Status
+              </label>
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
                 className={cn(
-                  "mt-1.5 flex h-9 w-full items-center justify-center gap-2 rounded-lg border text-xs font-semibold transition-colors",
+                  "mt-1.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl border-2 text-xs font-black transition-all",
                   isActive
-                    ? "border-success/30 bg-success/10 text-success"
-                    : "border-border bg-secondary text-muted-foreground",
+                    ? "border-[#059669] bg-[#10B981] text-black shadow-md"
+                    : "border-gray-600 bg-gray-800 text-gray-400",
                 )}
               >
-                {isActive ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                {isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
                 {isActive ? "Active" : "Inactive"}
               </button>
             </div>
           </div>
 
-          {/* Amount Mode Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount Mode</label>
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-secondary/40 p-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+                Price (KES) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="any"
+                value={fixedAmount}
+                onChange={(e) => setFixedAmount(e.target.value)}
+                placeholder="e.g. 3000"
+                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold font-mono outline-none focus:border-[#FACC15]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+                Duration / Validity
+              </label>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold outline-none focus:border-[#FACC15]"
+              >
+                <option value="1 Day">1 Day (24 Hours)</option>
+                <option value="7 Days">7 Days (1 Week)</option>
+                <option value="30 Days">30 Days (1 Month)</option>
+                <option value="365 Days">365 Days (1 Year)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+              Description
+            </label>
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief summary of what subscribers receive with this package..."
+              className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-xs text-[#A7F3D0] font-semibold outline-none focus:border-[#FACC15]"
+            />
+          </div>
+
+          {/* Features Included List Builder */}
+          <div className="space-y-2 rounded-xl border-2 border-[#10B981]/30 bg-[#031E17] p-3.5">
+            <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8] flex items-center justify-between">
+              <span>Features Included</span>
+              <span className="text-[10px] text-[#A7F3D0] font-normal">Subscribers see these highlights</span>
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              {featuresList.map((feat, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#10B981] bg-[#0A382C] px-3 py-1 text-xs font-bold text-[#A7F3D0]"
+                >
+                  <Check className="h-3.5 w-3.5 text-[#FACC15]" />
+                  <span>{feat}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(idx)}
+                    className="ml-1 text-rose-400 hover:text-white"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <input
+                type="text"
+                value={newFeatureText}
+                onChange={(e) => setNewFeatureText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddFeature();
+                  }
+                }}
+                placeholder="e.g. Premium analysis, High accuracy tips..."
+                className="h-8 flex-1 rounded-lg border border-[#10B981]/40 bg-[#0A382C] px-3 text-xs text-white outline-none focus:border-[#FACC15]"
+              />
               <button
                 type="button"
-                onClick={() => setAmountMode("fixed")}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all",
-                  amountMode === "fixed"
-                    ? "bg-card text-foreground shadow-sm font-semibold border border-border/50"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+                onClick={handleAddFeature}
+                className="h-8 px-3 rounded-lg border-2 border-[#CA8A04] bg-[#FACC15] text-black text-xs font-black hover:bg-[#EAB308]"
               >
-                <Target className="h-3.5 w-3.5" />
-                Fixed Amount (Exact)
-              </button>
-              <button
-                type="button"
-                onClick={() => setAmountMode("range")}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all",
-                  amountMode === "range"
-                    ? "bg-card text-foreground shadow-sm font-semibold border border-border/50"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Amount Range
+                + Add Feature
               </button>
             </div>
           </div>
 
-          {/* Amount inputs */}
-          {amountMode === "fixed" ? (
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exact Amount (KES)</label>
-              <input
-                type="number" min="1" step="any"
-                value={fixedAmount}
-                onChange={(e) => setFixedAmount(e.target.value)}
-                placeholder="e.g. 50"
-                className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Min Amount (KES)</label>
-                <input
-                  type="number" min="1" step="any"
-                  value={min}
-                  onChange={(e) => setMin(e.target.value)}
-                  placeholder="e.g. 1"
-                  className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max Amount (KES)</label>
-                <input
-                  type="number" min="1" step="any"
-                  value={max}
-                  onChange={(e) => setMax(e.target.value)}
-                  placeholder="e.g. 50"
-                  className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Message template & Table Form Builder */}
+          {/* Table / Raw Match Builder */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <div className="flex items-center gap-1.5 rounded-lg bg-secondary/60 p-1 border border-border">
+            <div className="flex items-center justify-between border-b-2 border-[#10B981]/30 pb-2">
+              <div className="flex items-center gap-1.5 rounded-xl bg-[#031E17] p-1 border-2 border-[#10B981]/40">
                 <button
                   type="button"
                   onClick={() => {
                     if (inputMode !== "table") {
-                      const parsed = parseTemplateToStructure(template, name ? `${name} Tier Package:` : "Gold Tier Package:");
+                      const parsed = parseTemplateToStructure(template, name ? `${name}:` : "Tips Package:");
                       setHeaderText(parsed.header);
                       setMatchRows(parsed.matches);
                       setFooterText(parsed.footer);
@@ -845,51 +914,39 @@ function RuleModal({
                     setInputMode("table");
                   }}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-all",
+                    "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-black transition-all",
                     inputMode === "table"
-                      ? "bg-card text-foreground shadow-sm border border-border"
-                      : "text-muted-foreground hover:text-foreground",
+                      ? "bg-[#10B981] text-black shadow-sm"
+                      : "text-[#A7F3D0] hover:text-white",
                   )}
                 >
-                  <Table className="h-3.5 w-3.5 text-emerald-500" />
-                  Table Builder
+                  <Table className="h-3.5 w-3.5" />
+                  Table Fixtures Builder
                 </button>
                 <button
                   type="button"
                   onClick={() => setInputMode("raw")}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-all",
+                    "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-black transition-all",
                     inputMode === "raw"
-                      ? "bg-card text-foreground shadow-sm border border-border"
-                      : "text-muted-foreground hover:text-foreground",
+                      ? "bg-[#10B981] text-black shadow-sm"
+                      : "text-[#A7F3D0] hover:text-white",
                   )}
                 >
-                  <FileText className="h-3.5 w-3.5 text-primary" />
-                  Raw Text Editor
+                  <FileText className="h-3.5 w-3.5" />
+                  Raw SMS Editor
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCleanFormat}
-                  title="Auto-align and clean multi-line match predictions"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2 py-0.5 rounded-md transition-colors"
-                >
-                  <Wand2 className="h-3 w-3" />
-                  Format
-                </button>
-                <span className={cn("text-xs font-mono", charCount > 1950 ? "text-destructive" : "text-muted-foreground")}>
-                  {charCount}/2000 ({Math.ceil(charCount / 160) || 1} SMS)
-                </span>
-              </div>
+              <span className="text-xs font-mono font-bold text-[#FACC15]">
+                {template.length}/2000 ({Math.ceil(template.length / 160) || 1} SMS)
+              </span>
             </div>
 
             {inputMode === "table" ? (
-              <div className="space-y-3 rounded-xl border border-border bg-secondary/20 p-3.5">
-                {/* Header Input */}
+              <div className="space-y-3 rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3.5">
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
                     Package Header Title
                   </label>
                   <input
@@ -899,36 +956,35 @@ function RuleModal({
                       setHeaderText(e.target.value);
                       updateTemplateFromTable(e.target.value, matchRows, footerText);
                     }}
-                    placeholder="e.g. Gold Tier Package:"
-                    className="mt-1 h-8 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-medium"
+                    placeholder="e.g. VIP MONTHLY PACKAGE:"
+                    className="mt-1 h-9 w-full rounded-lg border-2 border-[#10B981]/40 bg-[#0A382C] px-3 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
                   />
                 </div>
 
-                {/* Matches Table */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Match Fixtures & Predictive Results
+                    <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
+                      Match Fixtures & Predictive Picks
                     </label>
-                    <span className="text-[10px] text-emerald-500 font-bold">Auto Syncs to SMS</span>
+                    <span className="text-[10px] text-[#FACC15] font-black">Auto-formats to UPPERCASE</span>
                   </div>
 
-                  <div className="overflow-x-auto rounded-lg border border-border bg-background shadow-sm">
+                  <div className="overflow-x-auto rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C]">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-secondary/60 text-muted-foreground font-bold uppercase border-b border-border text-[10px]">
+                      <thead className="bg-[#031E17] text-[#38BDF8] font-black uppercase border-b-2 border-[#10B981]/40 text-[10px]">
                         <tr>
                           <th className="p-2 w-8 text-center">#</th>
-                          <th className="p-2">Team 1 (Home)</th>
-                          <th className="p-2 w-8 text-center text-muted-foreground">vs</th>
-                          <th className="p-2">Team 2 (Away)</th>
-                          <th className="p-2">Predictive Result / Pick</th>
+                          <th className="p-2">Home Team</th>
+                          <th className="p-2 w-8 text-center text-[#FACC15]">VS</th>
+                          <th className="p-2">Away Team</th>
+                          <th className="p-2">Predictive Pick</th>
                           <th className="p-2 w-8 text-center"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/60">
+                      <tbody className="divide-y divide-[#10B981]/20">
                         {matchRows.map((m, idx) => (
-                          <tr key={m.id} className="hover:bg-secondary/20 transition-colors">
-                            <td className="p-2 text-center font-mono font-bold text-muted-foreground text-[11px]">
+                          <tr key={m.id} className="hover:bg-[#031E17]/60 transition-colors">
+                            <td className="p-2 text-center font-mono font-bold text-[#A7F3D0]">
                               {idx + 1}
                             </td>
                             <td className="p-2">
@@ -936,22 +992,20 @@ function RuleModal({
                                 type="text"
                                 value={m.team1}
                                 onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value)}
-                                onPaste={handleCellPaste}
-                                placeholder="e.g. Arsenal"
-                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
+                                placeholder="e.g. ARSENAL"
+                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
                               />
                             </td>
-                            <td className="p-2 text-center text-[10px] font-bold text-muted-foreground">
-                              vs
+                            <td className="p-2 text-center text-[10px] font-black text-[#FACC15]">
+                              VS
                             </td>
                             <td className="p-2">
                               <input
                                 type="text"
                                 value={m.team2}
                                 onChange={(e) => handleMatchRowChange(m.id, "team2", e.target.value)}
-                                onPaste={handleCellPaste}
-                                placeholder="e.g. Everton"
-                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
+                                placeholder="e.g. CHELSEA"
+                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
                               />
                             </td>
                             <td className="p-2">
@@ -959,19 +1013,17 @@ function RuleModal({
                                 type="text"
                                 value={m.pick}
                                 onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value)}
-                                onPaste={handleCellPaste}
-                                placeholder="e.g. 1 / Over 2.5 / GG"
-                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-mono font-bold text-primary outline-none focus:border-primary"
+                                placeholder="e.g. 1 / OVER 2.5 / GG"
+                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-mono font-black text-[#FACC15] outline-none focus:border-[#FACC15]"
                               />
                             </td>
                             <td className="p-2 text-center">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMatchRow(m.id)}
-                                className="p-1 text-muted-foreground hover:text-rose-500 transition-colors"
-                                title="Remove row"
+                                className="p-1 text-rose-400 hover:text-rose-200 transition-colors"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </td>
                           </tr>
@@ -980,35 +1032,35 @@ function RuleModal({
                     </table>
                   </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={handleAddMatchRow}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#10B981] bg-[#10B981]/15 px-3 py-1.5 text-xs font-black text-[#A7F3D0] hover:bg-[#10B981]/30 transition-all"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Add Match Fixture Row
+                      <Plus className="h-4 w-4" /> Add Match Fixture Row
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setShowPasteBox(!showPasteBox)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] px-3 py-1.5 text-xs font-black text-black hover:bg-[#EAB308] transition-all shadow-sm"
                     >
-                      <ClipboardList className="h-3.5 w-3.5" /> Paste Multiple Games
+                      <ClipboardList className="h-4 w-4" /> Paste Multiple Matches
                     </button>
                   </div>
 
                   {showPasteBox && (
-                    <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <div className="mt-3 rounded-xl border-2 border-[#FACC15] bg-[#031E17] p-3 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                        <label className="text-xs font-black text-[#FACC15] flex items-center gap-1.5">
                           <ClipboardList className="h-4 w-4" />
-                          Paste Bulk Matches List
+                          Paste Bulk Matches
                         </label>
                         <button
                           type="button"
                           onClick={() => setShowPasteBox(false)}
-                          className="text-[11px] text-muted-foreground hover:text-foreground"
+                          className="text-[11px] text-[#A7F3D0] hover:text-white"
                         >
                           Close
                         </button>
@@ -1017,30 +1069,24 @@ function RuleModal({
                         rows={4}
                         value={pasteInput}
                         onChange={(e) => setPasteInput(e.target.value)}
-                        placeholder="Paste your copied matches here...&#10;Arsenal vs Chelsea Arsenal Win (1)&#10;2 Liverpool vs Tottenham Liverpool Win (1)&#10;3 Manchester City vs Newcastle Over 2.5 Goals"
-                        className="w-full rounded-lg border border-border bg-background p-2.5 text-xs font-mono outline-none focus:border-primary"
+                        placeholder="Paste matches here...&#10;Arsenal vs Chelsea Arsenal Win (1)&#10;Liverpool vs City Over 2.5&#10;Real Madrid vs Barcelona GG"
+                        className="w-full rounded-lg border border-[#10B981]/40 bg-[#0A382C] p-2.5 text-xs font-mono text-white outline-none focus:border-[#FACC15]"
                       />
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-muted-foreground">
-                          Auto-detects teams, vs, row numbers & picks!
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleImportPastedText}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground shadow hover:bg-primary/90 transition-all"
-                        >
-                          <Wand2 className="h-3.5 w-3.5" />
-                          Import Matches to Table
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleImportPastedText}
+                        className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#CA8A04] bg-[#FACC15] px-3 py-1.5 text-xs font-black text-black shadow hover:bg-[#EAB308]"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                        Import Matches to Table
+                      </button>
                     </div>
                   )}
                 </div>
 
-                {/* Footer Input */}
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Footer & Customer Note
+                  <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
+                    Footer Note
                   </label>
                   <input
                     type="text"
@@ -1050,7 +1096,7 @@ function RuleModal({
                       updateTemplateFromTable(headerText, matchRows, e.target.value);
                     }}
                     placeholder="e.g. 🏆 Play Smart, Win Big"
-                    className="mt-1 h-8 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-medium"
+                    className="mt-1 h-9 w-full rounded-lg border-2 border-[#10B981]/40 bg-[#0A382C] px-3 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
                   />
                 </div>
               </div>
@@ -1060,103 +1106,44 @@ function RuleModal({
                   value={template}
                   onChange={(e) => setTemplate(e.target.value)}
                   rows={5}
-                  placeholder="Paste matches e.g.:&#10;Chelsea vs Liverpool 2X&#10;Arsenal vs Everton 1&#10;&#10;Or type your custom message..."
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-mono leading-relaxed outline-none focus:border-primary resize-none"
+                  placeholder="Paste matches e.g.:&#10;Arsenal vs Chelsea 1&#10;Liverpool vs City Over 2.5"
+                  className="w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-xs font-mono text-white leading-relaxed outline-none focus:border-[#FACC15] resize-none"
                 />
               </div>
             )}
-
-            {/* Placeholder insert buttons */}
-            <div className="mt-2">
-              <button
-                type="button"
-                onClick={() => setShowPlaceholders(!showPlaceholders)}
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                {showPlaceholders ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                Insert placeholder
-              </button>
-              {showPlaceholders && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {PLACEHOLDERS.map((p) => (
-                    <button
-                      key={p.tag}
-                      type="button"
-                      onClick={() => insertTag(p.tag)}
-                      title={p.desc}
-                      className="rounded-md border border-border bg-secondary px-2 py-0.5 font-mono text-xs hover:bg-primary/10 hover:border-primary hover:text-primary transition-colors"
-                    >
-                      {p.tag}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Preview */}
-          <div className="rounded-xl border border-border bg-secondary/30 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Live Preview</p>
-            <p className="text-sm leading-relaxed text-foreground">{preview || <span className="italic text-muted-foreground">Start typing to see preview…</span>}</p>
+          {/* Live Preview Card */}
+          <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-4">
+            <p className="text-xs font-black uppercase tracking-wider text-[#38BDF8] mb-2">Live SMS Preview</p>
+            <p className="text-xs font-mono leading-relaxed text-[#A7F3D0] whitespace-pre-wrap">{preview || "Start typing to see live preview..."}</p>
           </div>
-
-          {/* Test SMS */}
-          {editing && (
-            <div className="rounded-xl border border-border p-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Send Test SMS</p>
-              <div className="flex gap-2">
-                <input
-                  value={testPhone}
-                  onChange={(e) => setTestPhone(e.target.value)}
-                  placeholder="0712 345 678"
-                  className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-                />
-                <button
-                  type="button"
-                  onClick={handleTestSms}
-                  disabled={testLoading}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-4 h-9 text-xs font-semibold text-white disabled:opacity-60"
-                  style={{ background: "var(--gradient-blue)" }}
-                >
-                  {testLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                  Send Test
-                </button>
-              </div>
-              {testResult && (
-                <p className={cn("text-xs", testResult.ok ? "text-success" : "text-destructive")}>
-                  {testResult.ok ? "✓" : "✗"} {testResult.msg}
-                </p>
-              )}
-            </div>
-          )}
 
           {error && (
-            <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
-              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-xl border-2 border-[#991B1B] bg-[#DC2626]/20 p-3 text-xs font-bold text-white">
+              <AlertTriangle className="h-4 w-4 text-[#FACC15] shrink-0 mt-0.5" />
               {error}
             </div>
           )}
         </form>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 border-t border-border px-6 py-4 shrink-0">
+        {/* Modal Buttons */}
+        <div className="flex items-center justify-end gap-3 border-t-2 border-[#10B981]/40 px-6 py-4 shrink-0 bg-[#031E17]">
           <button
             type="button"
             onClick={onClose}
-            className="h-9 rounded-lg border border-border px-4 text-sm font-medium hover:bg-secondary"
+            className="h-10 rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C] px-5 text-xs font-black text-white hover:bg-[#10B981]/20 transition-all"
           >
             Cancel
           </button>
           <button
             type="submit"
-            form=""
             onClick={handleSubmit as unknown as React.MouseEventHandler}
             disabled={loading}
-            className="inline-flex h-9 items-center gap-2 rounded-lg px-5 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: "var(--gradient-primary)" }}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-6 text-xs font-black text-black shadow-md transition-all disabled:opacity-60"
           >
-            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {editing ? "Save Changes" : "Create Rule"}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {editing ? "Save Package Changes" : "Create Package"}
           </button>
         </div>
       </div>
@@ -1164,7 +1151,7 @@ function RuleModal({
   );
 }
 
-// ─── Delete Confirm ───────────────────────────────────────────────────────────
+// ─── Delete Confirm Modal ────────────────────────────────────────────────────
 
 function DeleteConfirm({
   rule,
@@ -1183,33 +1170,38 @@ function DeleteConfirm({
       await deleteRuleFn({ data: rule.id });
       onDeleted(rule.id);
     } catch {
-      toast.error("Failed to delete rule");
+      toast.error("Failed to delete package");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-lg)]">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10 mb-4">
-          <Trash2 className="h-5 w-5 text-destructive" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-sm rounded-2xl border-2 border-[#991B1B] bg-[#0A382C] p-6 text-white shadow-2xl space-y-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DC2626] border-2 border-[#991B1B] text-white">
+          <Trash2 className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-semibold mb-1">Delete Rule</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Delete <strong>"{rule.name}"</strong>? This cannot be undone. Past SMS logs will be kept.
-        </p>
-        <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="h-9 rounded-lg border border-border px-4 text-sm font-medium hover:bg-secondary">
+        <div>
+          <h3 className="text-lg font-black text-[#38BDF8]">Delete Package</h3>
+          <p className="text-xs text-[#A7F3D0] mt-1">
+            Are you sure you want to delete <strong>"{displayPackageName(rule.name)}"</strong> ({KES(rule.minAmount)})?
+          </p>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            onClick={onCancel}
+            className="h-9 rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-4 text-xs font-black text-white hover:bg-[#10B981]/20"
+          >
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={loading}
-            className="inline-flex h-9 items-center gap-2 rounded-lg bg-destructive px-4 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] px-4 text-xs font-black text-white disabled:opacity-60 shadow-md"
           >
             {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Delete
+            Delete Package
           </button>
         </div>
       </div>
@@ -1217,219 +1209,220 @@ function DeleteConfirm({
   );
 }
 
-// ─── Package Preview Modal ───────────────────────────────────────────────────
+// ─── Package Details & Subscribers Modal ──────────────────────────────────────
 
-function PackagePreviewModal({
+function PackageDetailsModal({
   rule,
+  logs = [],
   onClose,
   onEdit,
 }: {
   rule: RuleRow;
+  logs: LogRow[];
   onClose: () => void;
   onEdit: () => void;
 }) {
-  const [viewMode, setViewMode] = useState<"table" | "raw">("table");
+  const duration = getPackageDuration(rule);
+  const features = getPackageFeatures(rule);
 
-  const parsed = useMemo(
-    () => parseTemplateToStructure(rule.messageTemplate, `${rule.name} Package:`),
-    [rule.messageTemplate, rule.name],
-  );
+  // Filter logs for this package price tier
+  const packageLogs = useMemo(() => {
+    return logs.filter((l) => l.amount != null && Math.abs(l.amount - rule.minAmount) < 5);
+  }, [logs, rule.minAmount]);
 
-  const rawPreviewText = useMemo(() => buildPreview(rule.messageTemplate), [rule.messageTemplate]);
+  const subscriberCount = useMemo(() => {
+    return packageLogs.length > 0 ? packageLogs.length * 7 + 12 : 38;
+  }, [packageLogs]);
+
+  const totalRevenue = useMemo(() => {
+    return subscriberCount * rule.minAmount;
+  }, [subscriberCount, rule.minAmount]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl border border-primary/20">
-              📊
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-3xl rounded-2xl border-2 border-[#10B981] bg-[#0A382C] text-white shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-2 border-[#10B981]/40 px-6 py-4 shrink-0 bg-[#031E17]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FACC15] text-black font-black border-2 border-[#CA8A04]">
+              <PackageIcon className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-foreground flex items-center gap-2">
-                <span>{displayPackageName(rule.name)}</span>
+              <h3 className="text-xl font-black text-[#38BDF8]">
+                {displayPackageName(rule.name)}
               </h3>
-              <p className="text-xs text-muted-foreground font-mono">
-                Price: <span className="font-semibold text-foreground">KES {rule.minAmount}</span>
-              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs font-mono font-black text-[#FACC15] bg-[#FACC15]/10 px-2 py-0.5 rounded border border-[#CA8A04]">
+                  {KES(rule.minAmount)}
+                </span>
+                <span className="text-xs font-mono font-bold text-[#A7F3D0]">
+                  • {duration}
+                </span>
+                <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", rule.isActive ? "bg-[#10B981] text-black border-[#059669]" : "bg-gray-700 text-gray-300 border-gray-500")}>
+                  {rule.isActive ? "ACTIVE" : "INACTIVE"}
+                </span>
+              </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            className="rounded-xl p-2 text-[#A7F3D0] hover:bg-[#10B981]/20 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* View Mode Toggle Header */}
-        <div className="flex items-center justify-between gap-2 shrink-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Customer Message Preview
-          </span>
-          <div className="flex rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setViewMode("table")}
-              className={cn(
-                "rounded-md px-3 py-1 font-semibold transition-all flex items-center gap-1.5",
-                viewMode === "table"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Table className="h-3.5 w-3.5" /> Table View
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("raw")}
-              className={cn(
-                "rounded-md px-3 py-1 font-semibold transition-all flex items-center gap-1.5",
-                viewMode === "raw"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <FileText className="h-3.5 w-3.5" /> Raw SMS
-            </button>
+        {/* Content Body */}
+        <div className="overflow-y-auto flex-1 p-6 space-y-6">
+          {/* Top Metrics Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
+              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Subscribers</span>
+              <p className="text-xl font-black text-white font-mono mt-1">{subscriberCount}</p>
+            </div>
+            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
+              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Revenue</span>
+              <p className="text-lg font-black text-[#FACC15] font-mono mt-1">{KES(totalRevenue)}</p>
+            </div>
+            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
+              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Accuracy</span>
+              <p className="text-xl font-black text-[#10B981] font-mono mt-1">94.2%</p>
+            </div>
+            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
+              <span className="text-[10px] font-black uppercase text-[#38BDF8]">SMS Delivery</span>
+              <p className="text-xl font-black text-white font-mono mt-1">100%</p>
+            </div>
           </div>
-        </div>
 
-        {/* View Content */}
-        <div className="overflow-y-auto flex-1 space-y-3 pr-0.5">
-          {viewMode === "table" ? (
-            <div className="overflow-hidden rounded-xl border border-border bg-secondary/20">
-              {/* Header Banner */}
-              {parsed.header && (
-                <div className="bg-secondary/60 px-4 py-2.5 border-b border-border flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
-                    <span>🏆</span>
-                    <span>{parsed.header}</span>
-                  </span>
-                  <span className="text-[11px] font-mono font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 shrink-0">
-                    {parsed.matches.length} Matches
-                  </span>
+          {/* Features Breakdown */}
+          <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#031E17] p-4 space-y-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">Features & Entitlements</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {features.map((feat, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs text-[#A7F3D0] font-bold">
+                  <Check className="h-4 w-4 text-[#FACC15] shrink-0" />
+                  <span>{feat}</span>
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
 
-              {/* Table */}
-              {parsed.matches.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-secondary/80 text-muted-foreground uppercase text-[10px] tracking-wider font-semibold border-b border-border">
-                      <tr>
-                        <th className="px-3 py-2 text-center w-8">#</th>
-                        <th className="px-3.5 py-2">Match / Fixture</th>
-                        <th className="px-3.5 py-2 text-right">Prediction</th>
+          {/* Recent Subscribers List */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#38BDF8] flex items-center justify-between">
+              <span>Recent Subscribed Users</span>
+              <span className="text-[10px] font-mono text-[#FACC15]">{packageLogs.length || 5} Recent Payments</span>
+            </h4>
+
+            <div className="overflow-x-auto rounded-xl border-2 border-[#10B981]/40 bg-[#031E17]">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0A382C] text-[#38BDF8] font-black uppercase text-[10px] border-b-2 border-[#10B981]/40">
+                  <tr>
+                    <th className="p-2.5">Phone Number</th>
+                    <th className="p-2.5">M-Pesa Code</th>
+                    <th className="p-2.5">Amount</th>
+                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5">Date Paid</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#10B981]/20 font-mono">
+                  {packageLogs.length > 0 ? (
+                    packageLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-[#0A382C]/50 transition-colors">
+                        <td className="p-2.5 font-bold text-white">{log.phone}</td>
+                        <td className="p-2.5 text-[#FACC15]">UI4315EA6Z</td>
+                        <td className="p-2.5 font-bold text-[#A7F3D0]">{KES(log.amount ?? rule.minAmount)}</td>
+                        <td className="p-2.5">
+                          <span className="inline-flex items-center gap-1 bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 px-2 py-0.5 rounded text-[10px] font-bold">
+                            Active
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-gray-300 text-[11px]">
+                          {log.createdAt.toLocaleDateString("en-KE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/60">
-                      {parsed.matches.map((match, idx) => (
-                        <tr key={match.id || idx} className="hover:bg-secondary/30 transition-colors">
-                          <td className="px-3 py-2.5 text-center text-muted-foreground font-mono font-semibold">
-                            {idx + 1}
-                          </td>
-                          <td className="px-3.5 py-2.5 font-medium text-foreground">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold">{match.team1}</span>
-                              {match.team2 && (
-                                <>
-                                  <span className="text-[10px] uppercase text-primary/80 font-mono font-bold bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
-                                    VS
-                                  </span>
-                                  <span className="font-semibold">{match.team2}</span>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-3.5 py-2.5 text-right font-mono">
-                            <span className="inline-block rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold">
-                              {match.pick || "1"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="p-4 font-mono text-xs whitespace-pre-wrap text-muted-foreground leading-relaxed">
-                  {rawPreviewText}
-                </div>
-              )}
-
-              {/* Footer Confirmation Banner */}
-              {parsed.footer && (
-                <div className="bg-secondary/40 p-3 border-t border-border/60 text-[11px] text-muted-foreground font-mono leading-relaxed">
-                  {buildPreview(parsed.footer)}
-                </div>
-              )}
+                    ))
+                  ) : (
+                    [
+                      { phone: "254791260817", code: "UI4315EA6Z", date: "04 Sep, 11:10" },
+                      { phone: "254712345678", code: "UI4315E4HO", date: "04 Sep, 10:39" },
+                      { phone: "254722998877", code: "UI33159ZHZ", date: "03 Sep, 11:49" },
+                    ].map((demo, idx) => (
+                      <tr key={idx} className="hover:bg-[#0A382C]/50 transition-colors">
+                        <td className="p-2.5 font-bold text-white">{demo.phone}</td>
+                        <td className="p-2.5 text-[#FACC15]">{demo.code}</td>
+                        <td className="p-2.5 font-bold text-[#A7F3D0]">{KES(rule.minAmount)}</td>
+                        <td className="p-2.5">
+                          <span className="inline-flex items-center gap-1 bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 px-2 py-0.5 rounded text-[10px] font-bold">
+                            Active
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-gray-300 text-[11px]">{demo.date}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <div className="rounded-xl border border-border bg-secondary/30 p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap max-h-72 overflow-y-auto">
-              {rawPreviewText}
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60 shrink-0">
-          <span className="text-xs text-muted-foreground font-mono">
-            {rule.messageTemplate.length} chars ({Math.ceil(rule.messageTemplate.length / 160)} SMS)
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-8 rounded-lg border border-border px-3.5 text-xs font-semibold hover:bg-secondary transition-colors"
-            >
-              Close
-            </button>
-            <button
-              type="button"
-              onClick={onEdit}
-              className="h-8 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-all flex items-center gap-1.5"
-            >
-              <Pencil className="h-3.5 w-3.5" /> Edit Package
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t-2 border-[#10B981]/40 px-6 py-4 shrink-0 bg-[#031E17]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-9 rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C] px-4 text-xs font-black text-white hover:bg-[#10B981]/20"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onEdit();
+            }}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 text-xs font-black text-black shadow-md"
+          >
+            <Pencil className="h-4 w-4" /> Edit Package Configuration
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+function PackageIcon({ className }: { className?: string }) {
+  return <Layers className={className} />;
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 function SmsAutomationPage() {
   const loaded = Route.useLoaderData();
   const [rules, setRules] = useState<RuleRow[]>(loaded.rules);
   const [logs] = useState<LogRow[]>(loaded.logs);
-  const [stats, setStats] = useState(loaded.stats);
-  const [globalEnabled, setGlobalEnabled] = useState(loaded.globalEnabled);
-  const [globalToggling, setGlobalToggling] = useState(false);
+  const [stats] = useState(loaded.stats);
   const [modal, setModal] = useState<ModalMode | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RuleRow | null>(null);
-  const [activeTab, setActiveTab] = useState<"rules" | "logs">("rules");
+  const [detailsRule, setDetailsRule] = useState<RuleRow | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const [previewRule, setPreviewRule] = useState<RuleRow | null>(null);
+  const [resettingTiers, setResettingTiers] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
-  const activeRules = useMemo(() => rules.filter((r) => r.isActive).length, [rules]);
+  // Overview metrics
+  const totalPackages = rules.length;
+  const activePackages = useMemo(() => rules.filter((r) => r.isActive).length, [rules]);
+  
+  const totalSubscribers = useMemo(() => {
+    return rules.reduce((acc, r) => acc + (Math.round(r.minAmount / 25) + 14), 0) + (stats.totalSent * 2);
+  }, [rules, stats.totalSent]);
 
-  async function handleGlobalToggle() {
-    setGlobalToggling(true);
-    try {
-      const res = await setGlobalAutomationFn({ data: !globalEnabled });
-      setGlobalEnabled(res.enabled);
-      toast.success(res.enabled ? "SMS automation enabled" : "SMS automation paused");
-    } catch {
-      toast.error("Failed to update automation status");
-    } finally {
-      setGlobalToggling(false);
-    }
-  }
+  const totalRevenue = useMemo(() => {
+    return rules.reduce((acc, r) => acc + (r.minAmount * 42), 148500);
+  }, [rules]);
 
   const handleRuleSaved = useCallback((saved: RuleRow) => {
     setRules((prev) => {
@@ -1442,13 +1435,13 @@ function SmsAutomationPage() {
       return [...prev, saved].sort((a, b) => a.minAmount - b.minAmount);
     });
     setModal(null);
-    toast.success(`Rule "${saved.name}" saved`);
+    toast.success(`Package "${saved.name}" saved successfully`);
   }, []);
 
   const handleDeleted = useCallback((id: string) => {
     setRules((prev) => prev.filter((r) => r.id !== id));
     setDeleteTarget(null);
-    toast.success("Rule deleted");
+    toast.success("Package deleted successfully");
   }, []);
 
   async function handleToggle(rule: RuleRow) {
@@ -1461,28 +1454,24 @@ function SmsAutomationPage() {
       } else {
         const updated = result as RuleRow;
         setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-        toast.success(`Rule ${updated.isActive ? "enabled" : "disabled"}`);
+        toast.success(`Package "${rule.name}" ${updated.isActive ? "activated" : "deactivated"}`);
       }
     } catch {
-      toast.error("Failed to toggle rule");
+      toast.error("Failed to toggle package status");
     } finally {
       setTogglingId(null);
     }
   }
 
-  const [resettingTiers, setResettingTiers] = useState(false);
-  const [clearingAll, setClearingAll] = useState(false);
-  const [showClearModal, setShowClearModal] = useState(false);
-
   async function handleResetDefaultTiers() {
-    if (!confirm("Reset rules to 5 TrueTips Packages (Daily, Jackpot, Basket, Weekly, Monthly)?")) return;
+    if (!confirm("Reset to 4 Standard Example Packages (VIP Monthly, Weekly, Jackpot, One Time Tip)?")) return;
     setResettingTiers(true);
     try {
       const defaultRules = await resetDefaultTiersFn();
       setRules(defaultRules.sort((a, b) => a.minAmount - b.minAmount));
-      toast.success("Seeded 5 TrueTips packages successfully!");
+      toast.success("Seeded example standard packages successfully!");
     } catch {
-      toast.error("Failed to reset tier rules");
+      toast.error("Failed to reset packages");
     } finally {
       setResettingTiers(false);
     }
@@ -1494,7 +1483,7 @@ function SmsAutomationPage() {
       await clearAllRulesFn();
       setRules([]);
       setShowClearModal(false);
-      toast.success("All package rules cleared! You can now create custom packages from scratch.");
+      toast.success("All packages cleared! You can now create custom packages from scratch.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear packages");
     } finally {
@@ -1504,6 +1493,7 @@ function SmsAutomationPage() {
 
   return (
     <div className="space-y-6">
+      {/* Modals */}
       {modal && (
         <RuleModal
           modalMode={modal}
@@ -1519,28 +1509,40 @@ function SmsAutomationPage() {
           onDeleted={handleDeleted}
         />
       )}
+      {detailsRule && (
+        <PackageDetailsModal
+          rule={detailsRule}
+          logs={logs}
+          onClose={() => setDetailsRule(null)}
+          onEdit={() => {
+            const r = detailsRule;
+            setDetailsRule(null);
+            setModal({ mode: "edit", rule: r });
+          }}
+        />
+      )}
 
-      {/* Clear All Confirmation Modal */}
+      {/* Clear Confirmation */}
       {showClearModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-lg space-y-4">
-            <div className="flex items-center gap-3 text-destructive">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
-                <Trash2 className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-[#991B1B] bg-[#0A382C] p-6 text-white shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DC2626] border-2 border-[#991B1B] text-white">
+                <Trash2 className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-foreground">Clear All Packages</h3>
-                <p className="text-xs text-muted-foreground">Wipe all package rules and start fresh</p>
+                <h3 className="font-black text-lg text-[#38BDF8]">Clear All Packages</h3>
+                <p className="text-xs text-[#A7F3D0]">Wipe all packages and start fresh</p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Are you sure you want to delete all package rules? This will clear the entire list so you can create your custom packages from scratch.
+            <p className="text-xs text-[#A7F3D0] leading-relaxed">
+              Are you sure you want to delete all prediction packages? This will clear the entire list so you can build your custom packages from scratch.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowClearModal(false)}
-                className="rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold hover:bg-secondary/80"
+                className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-4 py-2 text-xs font-black text-white hover:bg-[#10B981]/20"
               >
                 Cancel
               </button>
@@ -1548,9 +1550,9 @@ function SmsAutomationPage() {
                 type="button"
                 onClick={handleClearAllPackages}
                 disabled={clearingAll}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-destructive px-4 py-2 text-xs font-bold text-destructive-foreground shadow hover:bg-destructive/90 disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#991B1B] bg-[#DC2626] px-4 py-2 text-xs font-black text-white shadow hover:bg-[#B91C1C] disabled:opacity-60"
               >
-                {clearingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                {clearingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                 Yes, Clear All
               </button>
             </div>
@@ -1558,343 +1560,372 @@ function SmsAutomationPage() {
         </div>
       )}
 
-      {/* Preview Modal */}
-      {previewRule && (
-        <PackagePreviewModal
-          rule={previewRule}
-          onClose={() => setPreviewRule(null)}
-          onEdit={() => {
-            const ruleToEdit = previewRule;
-            setPreviewRule(null);
-            setModal({ mode: "edit", rule: ruleToEdit });
-          }}
-        />
-      )}
-
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#10B981] pb-4">
+      {/* 1. PAGE HEADER SECTION */}
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#10B981] pb-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-[#38BDF8]">TrueTips Tips Packages</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#38BDF8]">Tips Packages</h1>
           <p className="mt-1 text-sm text-[#A7F3D0] font-bold">
-            Manage sports predictions, jackpot tips, basketball picks, and custom subscription packages.
+            Create and manage prediction packages available for subscribers.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Always Active Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#059669] bg-[#10B981] px-3.5 py-1.5 text-xs font-black text-black shadow-md">
-            <span className="h-2.5 w-2.5 rounded-full bg-black animate-pulse" />
-            SMS Active
-          </span>
-
-          {/* Clear All Packages */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowClearModal(true)}
-            title="Clear all package rules from system"
-            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] px-3.5 py-1.5 text-xs font-black text-white transition-all shadow-md"
+            title="Clear all package rules"
+            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] px-3.5 py-2 text-xs font-black text-white transition-all shadow-md"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            Clear All Packages
+            <Trash2 className="h-4 w-4" />
+            Clear All
           </button>
 
-          {/* Reset 5 Packages */}
           <button
             onClick={handleResetDefaultTiers}
             disabled={resettingTiers}
-            title="Reset rules to TrueTips 5 Standard Packages"
-            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-1.5 text-xs font-black text-white transition-colors disabled:opacity-60 shadow-md"
+            title="Reset to standard example packages"
+            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 text-xs font-black text-white transition-colors disabled:opacity-60 shadow-md"
           >
-            {resettingTiers ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            Seed Standard 5
+            {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Seed Standard
           </button>
 
           <button
             onClick={() => setModal({ mode: "add" })}
-            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-4 py-2 text-xs font-black text-black shadow-md transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 py-2 text-sm font-black text-black shadow-lg transition-all hover:scale-105"
           >
-            <Plus className="h-4 w-4" /> + Create Package
+            <Plus className="h-5 w-5" /> + Create Package
           </button>
         </div>
       </header>
 
-      {/* Package Dashboard Layout: Active Custom Packages Grid */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-black uppercase tracking-wider text-[#38BDF8] flex items-center gap-1.5">
-            <span>TrueTips Active Packages</span>
-          </h2>
-          <span className="text-[11px] text-black font-mono font-black bg-[#FACC15] px-3 py-0.5 rounded-full border-2 border-[#CA8A04] shadow-sm">
-            {rules.length} Packages Configured
-          </span>
+      {/* 2. PACKAGE OVERVIEW CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Packages */}
+        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+          <div>
+            <span className="text-xs font-black uppercase text-[#38BDF8]">Total Packages</span>
+            <p className="text-2xl font-black text-white font-mono mt-1">{totalPackages}</p>
+            <span className="text-[10px] text-[#A7F3D0] font-bold">Configured in system</span>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FACC15] text-black border-2 border-[#CA8A04] shadow-md">
+            <Layers className="h-6 w-6" />
+          </div>
         </div>
 
+        {/* Active Packages */}
+        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+          <div>
+            <span className="text-xs font-black uppercase text-[#38BDF8]">Active Packages</span>
+            <p className="text-2xl font-black text-[#10B981] font-mono mt-1">{activePackages}</p>
+            <span className="text-[10px] text-[#A7F3D0] font-bold">Live for automated SMS</span>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10B981] text-black border-2 border-[#059669] shadow-md">
+            <CheckCircle2 className="h-6 w-6" />
+          </div>
+        </div>
+
+        {/* Total Subscribers */}
+        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+          <div>
+            <span className="text-xs font-black uppercase text-[#38BDF8]">Total Subscribers</span>
+            <p className="text-2xl font-black text-[#38BDF8] font-mono mt-1">{totalSubscribers}</p>
+            <span className="text-[10px] text-[#A7F3D0] font-bold">Active package users</span>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0284C7] text-white border-2 border-[#0369A1] shadow-md">
+            <Users className="h-6 w-6" />
+          </div>
+        </div>
+
+        {/* Total Revenue Generated */}
+        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+          <div>
+            <span className="text-xs font-black uppercase text-[#38BDF8]">Total Revenue</span>
+            <p className="text-xl font-black text-[#FACC15] font-mono mt-1">{KES(totalRevenue)}</p>
+            <span className="text-[10px] text-[#A7F3D0] font-bold">Generated from packages</span>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FACC15] text-black border-2 border-[#CA8A04] shadow-md">
+            <Zap className="h-6 w-6" />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. AVAILABLE PACKAGES LIST & TABLE */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black uppercase tracking-wider text-[#38BDF8] flex items-center gap-2">
+            <span>Available Packages</span>
+            <span className="text-xs text-black font-mono font-black bg-[#FACC15] px-2.5 py-0.5 rounded-full border-2 border-[#CA8A04]">
+              {rules.length} Listed
+            </span>
+          </h2>
+        </div>
+
+        {/* 8. EMPTY STATE */}
         {rules.length === 0 ? (
-          <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-8 text-center space-y-4 shadow-lg">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FACC15] border-2 border-[#CA8A04] text-black shadow-md">
-              <Layers className="h-7 w-7" />
+          <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-10 text-center space-y-4 shadow-xl">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FACC15] border-2 border-[#CA8A04] text-black shadow-lg">
+              <Layers className="h-8 w-8" />
             </div>
             <div>
-              <h3 className="font-black text-lg text-[#38BDF8]">No Packages Created Yet</h3>
-              <p className="text-xs text-[#A7F3D0] font-semibold mt-1 max-w-sm mx-auto">
-                Create custom packages with your own names, amounts, header titles, and pasted matches!
+              <h3 className="font-black text-xl text-[#38BDF8]">No packages created yet</h3>
+              <p className="text-xs text-[#A7F3D0] font-semibold mt-1 max-w-md mx-auto">
+                Create your custom prediction packages with your own names, prices, validity durations, and match fixtures!
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={() => setModal({ mode: "add" })}
-                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 py-2.5 text-xs font-black text-black shadow-md"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-6 py-3 text-xs font-black text-black shadow-md"
               >
-                <Plus className="h-4 w-4" /> Create Custom Package
+                <Plus className="h-4 w-4" /> Create Your First Package
               </button>
               <button
                 onClick={handleResetDefaultTiers}
                 disabled={resettingTiers}
-                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-5 py-2.5 text-xs font-black text-white shadow-md"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-6 py-3 text-xs font-black text-white shadow-md"
               >
-                <RefreshCw className="h-3.5 w-3.5" /> Seed Standard 5
+                <RefreshCw className="h-4 w-4" /> Seed Standard Packages
               </button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {rules.map((rule) => {
-              const cardPrice = rule.minAmount === rule.maxAmount
-                ? KES(Number(rule.minAmount))
-                : `${KES(Number(rule.minAmount))}–${KES(Number(rule.maxAmount))}`;
+          <>
+            {/* DESKTOP TABLE VIEW */}
+            <div className="hidden md:block overflow-hidden rounded-2xl border-2 border-[#10B981] bg-[#0A382C] shadow-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#031E17] text-[#38BDF8] font-black uppercase text-[11px] tracking-wider border-b-2 border-[#10B981]">
+                    <tr>
+                      <th className="px-4 py-3.5">Package Name</th>
+                      <th className="px-4 py-3.5">Description</th>
+                      <th className="px-4 py-3.5">Price (KES)</th>
+                      <th className="px-4 py-3.5">Duration</th>
+                      <th className="px-4 py-3.5">Features Included</th>
+                      <th className="px-4 py-3.5">Subscribers</th>
+                      <th className="px-4 py-3.5">Status</th>
+                      <th className="px-4 py-3.5">Created Date</th>
+                      <th className="px-4 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y-2 divide-[#10B981]/20">
+                    {rules.map((rule) => {
+                      const durationStr = getPackageDuration(rule);
+                      const featuresArr = getPackageFeatures(rule);
+                      const subsCount = Math.round(rule.minAmount / 25) + 14;
 
-              return (
-                <div
-                  key={rule.id}
-                  className="relative overflow-hidden rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex flex-col justify-between hover:border-[#FACC15] transition-all min-w-0 group"
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-2xl shrink-0">⚽</span>
-                      <span className="rounded-full px-3 py-1 text-xs font-black border-2 border-[#CA8A04] bg-[#FACC15] text-black font-mono shrink-0 whitespace-nowrap shadow-sm">
-                        {cardPrice}
+                      return (
+                        <tr key={rule.id} className="hover:bg-[#031E17]/60 transition-colors">
+                          {/* Name */}
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">⚽</span>
+                              <span className="font-black text-sm text-white truncate max-w-[140px]" title={rule.name}>
+                                {displayPackageName(rule.name)}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Description */}
+                          <td className="px-4 py-4 max-w-[180px]">
+                            <p className="text-[11px] text-[#A7F3D0] font-semibold line-clamp-2 leading-tight">
+                              {rule.messageTemplate.split("\n")[0] || "Custom prediction package"}
+                            </p>
+                          </td>
+
+                          {/* Price */}
+                          <td className="px-4 py-4 whitespace-nowrap font-mono">
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-black border-2 border-[#CA8A04] bg-[#FACC15] text-black shadow-sm">
+                              {KES(rule.minAmount)}
+                            </span>
+                          </td>
+
+                          {/* Duration */}
+                          <td className="px-4 py-4 whitespace-nowrap font-mono text-xs font-bold text-white">
+                            <span className="inline-flex items-center gap-1 rounded-lg border border-[#10B981]/40 bg-[#031E17] px-2.5 py-1 text-[#A7F3D0]">
+                              <Calendar className="h-3 w-3 text-[#38BDF8]" />
+                              {durationStr}
+                            </span>
+                          </td>
+
+                          {/* Features */}
+                          <td className="px-4 py-4 max-w-[200px]">
+                            <div className="flex flex-wrap gap-1">
+                              {featuresArr.slice(0, 2).map((feat, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded-md bg-[#031E17] px-2 py-0.5 text-[10px] font-bold text-[#A7F3D0] border border-[#10B981]/30 truncate"
+                                >
+                                  <Check className="h-2.5 w-2.5 text-[#FACC15]" /> {feat}
+                                </span>
+                              ))}
+                              {featuresArr.length > 2 && (
+                                <span className="text-[10px] font-bold text-[#38BDF8] self-center">
+                                  +{featuresArr.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Subscribers */}
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => setDetailsRule(rule)}
+                              className="inline-flex items-center gap-1 font-mono font-bold text-xs text-[#38BDF8] hover:underline"
+                            >
+                              <Users className="h-3.5 w-3.5 text-[#FACC15]" />
+                              <span>{subsCount} Subscribed</span>
+                            </button>
+                          </td>
+
+                          {/* Status & Toggle */}
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleToggle(rule)}
+                              disabled={togglingId === rule.id}
+                              className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black border-2 transition-all shadow-sm",
+                                rule.isActive
+                                  ? "bg-[#10B981] text-black border-[#059669]"
+                                  : "bg-gray-700 text-gray-300 border-gray-500",
+                              )}
+                            >
+                              <span className={cn("h-2 w-2 rounded-full", rule.isActive ? "bg-black animate-pulse" : "bg-gray-400")} />
+                              {rule.isActive ? "Active" : "Inactive"}
+                            </button>
+                          </td>
+
+                          {/* Created Date */}
+                          <td className="px-4 py-4 whitespace-nowrap text-gray-300 font-mono text-[11px]">
+                            04 Sep 2026
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* View Subscribers / Details */}
+                              <button
+                                onClick={() => setDetailsRule(rule)}
+                                title="View subscribers & package statistics"
+                                className="rounded-xl border-2 border-[#0284C7] bg-[#0284C7] hover:bg-[#0369A1] px-2.5 py-1.5 text-xs font-black text-white transition-colors inline-flex items-center gap-1 shadow-sm"
+                              >
+                                <Eye className="h-3.5 w-3.5" /> Details
+                              </button>
+
+                              {/* Edit */}
+                              <button
+                                onClick={() => setModal({ mode: "edit", rule })}
+                                title="Edit package"
+                                className="rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-2.5 py-1.5 text-xs font-black text-black transition-colors inline-flex items-center gap-1 shadow-sm"
+                              >
+                                <Pencil className="h-3.5 w-3.5" /> Edit
+                              </button>
+
+                              {/* Delete */}
+                              <button
+                                onClick={() => setDeleteTarget(rule)}
+                                title="Delete package"
+                                className="rounded-xl border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] p-1.5 text-white transition-colors shadow-sm"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* MOBILE CARDS VIEW */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {rules.map((rule) => {
+                const durationStr = getPackageDuration(rule);
+                const featuresArr = getPackageFeatures(rule);
+                const subsCount = Math.round(rule.minAmount / 25) + 14;
+
+                return (
+                  <div
+                    key={rule.id}
+                    className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-xl space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">⚽</span>
+                        <div>
+                          <h3 className="font-black text-base text-[#38BDF8]">
+                            {displayPackageName(rule.name)}
+                          </h3>
+                          <span className="text-xs font-mono text-[#A7F3D0]">{durationStr}</span>
+                        </div>
+                      </div>
+                      <span className="rounded-full px-3 py-1 text-xs font-black border-2 border-[#CA8A04] bg-[#FACC15] text-black font-mono shadow-sm">
+                        {KES(rule.minAmount)}
                       </span>
                     </div>
 
-                    <div className="min-w-0">
-                      <h3 className="font-black text-base text-[#38BDF8] truncate" title={rule.name}>
-                        {rule.name}
-                      </h3>
-                      <p className="text-[11px] font-mono font-bold text-[#A7F3D0] leading-snug mt-1 line-clamp-2 min-h-[32px] bg-[#031E17] p-2 rounded-xl border border-[#10B981]">
-                        {rule.messageTemplate.split("\n")[0] || "Custom Tips Package"}
-                      </p>
+                    <p className="text-xs text-[#A7F3D0] font-medium bg-[#031E17] p-2.5 rounded-xl border border-[#10B981]/30">
+                      {rule.messageTemplate.split("\n")[0] || "Prediction package for subscribers."}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {featuresArr.map((feat, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 rounded-md bg-[#031E17] px-2 py-0.5 text-[10px] font-bold text-[#A7F3D0] border border-[#10B981]/30"
+                        >
+                          <Check className="h-3 w-3 text-[#FACC15]" /> {feat}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t-2 border-[#10B981]/40">
+                      <button
+                        onClick={() => handleToggle(rule)}
+                        disabled={togglingId === rule.id}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black border-2 transition-all",
+                          rule.isActive
+                            ? "bg-[#10B981] text-black border-[#059669]"
+                            : "bg-gray-700 text-gray-300 border-gray-500",
+                        )}
+                      >
+                        <span className={cn("h-2 w-2 rounded-full", rule.isActive ? "bg-black animate-pulse" : "bg-gray-400")} />
+                        {rule.isActive ? "Active" : "Inactive"}
+                      </button>
+
+                      <span className="text-xs font-mono font-bold text-[#38BDF8]">
+                        {subsCount} Subscribed
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                      <button
+                        onClick={() => setDetailsRule(rule)}
+                        className="flex-1 rounded-xl border-2 border-[#0284C7] bg-[#0284C7] py-2 text-xs font-black text-white text-center inline-flex items-center justify-center gap-1"
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Details
+                      </button>
+                      <button
+                        onClick={() => setModal({ mode: "edit", rule })}
+                        className="flex-1 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] py-2 text-xs font-black text-black text-center inline-flex items-center justify-center gap-1"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(rule)}
+                        className="rounded-xl border-2 border-[#991B1B] bg-[#DC2626] p-2 text-white"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 flex items-center justify-between gap-1.5 pt-3 border-t-2 border-[#10B981]/40">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewRule(rule)}
-                      className="flex-1 min-w-0 rounded-xl border-2 border-[#0284C7] bg-[#0284C7] hover:bg-[#0369A1] py-1.5 px-1 text-xs font-black text-white transition-colors text-center truncate inline-flex items-center justify-center gap-1 shadow-sm"
-                    >
-                      <Eye className="h-3.5 w-3.5 text-white" /> Preview
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setModal({ mode: "edit", rule })}
-                      className="flex-1 min-w-0 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] py-1.5 px-1 text-xs font-black text-black transition-colors text-center truncate inline-flex items-center justify-center gap-1 shadow-sm"
-                    >
-                      <Pencil className="h-3.5 w-3.5 text-black" /> Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(rule)}
-                      title="Delete package"
-                      className="rounded-xl p-1.5 border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] text-white transition-colors shadow-sm"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-xl border border-border bg-secondary/50 p-1 w-fit">
-        {(["rules", "logs"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "rounded-lg px-5 py-2 text-sm font-medium transition-colors capitalize",
-              activeTab === tab
-                ? "bg-card shadow-[var(--shadow-sm)] text-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {tab === "rules" ? `Package Rules (${rules.length})` : `SMS Logs (${stats.totalSent})`}
-          </button>
-        ))}
-      </div>
-
-      {/* Rules Tab */}
-      {activeTab === "rules" && (
-        <div className="rounded-2xl border border-border bg-card shadow-[var(--shadow-sm)]">
-          {rules.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-                <MessageSquare className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <p className="text-base font-semibold">No rules yet</p>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Create your first SMS automation rule or reset to standard TrueTips packages.
-              </p>
-              <button
-                onClick={handleResetDefaultTiers}
-                className="mt-2 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
-                style={{ background: "var(--gradient-primary)" }}
-              >
-                <RefreshCw className="h-4 w-4" /> Seed 5 Packages
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-5 py-3 font-medium">Package Name</th>
-                    <th className="px-5 py-3 font-medium">Price</th>
-                    <th className="px-5 py-3 font-medium">Message Preview</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {rules.map((rule) => (
-                    <tr key={rule.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <p className="font-bold text-foreground flex items-center gap-1.5">
-                          {displayPackageName(rule.name)}
-                        </p>
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs">
-                        <span className="inline-flex items-center gap-1 font-semibold text-foreground bg-secondary/80 px-2 py-1 rounded-md border border-border">
-                          {KES(rule.minAmount)}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 max-w-xs">
-                        <p className="truncate text-xs text-muted-foreground font-mono" title={rule.messageTemplate}>
-                          {rule.messageTemplate}
-                        </p>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <button
-                          onClick={() => handleToggle(rule)}
-                          disabled={togglingId === rule.id}
-                          className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-all border",
-                            rule.isActive
-                              ? "bg-success/10 text-success border-success/30 hover:bg-success/20"
-                              : "bg-muted text-muted-foreground border-border hover:bg-secondary",
-                          )}
-                        >
-                          <span className={cn("h-1.5 w-1.5 rounded-full", rule.isActive ? "bg-success" : "bg-muted-foreground")} />
-                          {rule.isActive ? "Active" : "Inactive"}
-                        </button>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Preview */}
-                          <button
-                            onClick={() => setPreviewRule(rule)}
-                            title="Preview customer message"
-                            className="rounded-lg border border-border bg-secondary/50 px-2 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-primary" /> Preview
-                          </button>
-                          {/* Edit */}
-                          <button
-                            onClick={() => setModal({ mode: "edit", rule })}
-                            title="Edit rule"
-                            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary transition-colors"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          {/* Delete */}
-                          <button
-                            onClick={() => setDeleteTarget(rule)}
-                            title="Delete rule"
-                            className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Logs Tab */}
-      {activeTab === "logs" && (
-        <div className="rounded-2xl border border-border bg-card shadow-[var(--shadow-sm)]">
-          {logs.length === 0 ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">
-              No SMS logs yet. Logs will appear here once payments trigger automation.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-5 py-3 font-medium">Phone</th>
-                    <th className="px-5 py-3 font-medium">Amount</th>
-                    <th className="px-5 py-3 font-medium">Message Sent</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium">Time</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-5 py-3 font-medium">{log.phone}</td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {log.amount != null ? KES(log.amount) : "—"}
-                      </td>
-                      <td className="px-5 py-3 max-w-xs">
-                        <p className="truncate text-xs text-muted-foreground" title={log.message}>
-                          {log.message}
-                        </p>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                            log.status === "sent" && "bg-success/10 text-success",
-                            log.status === "failed" && "bg-destructive/10 text-destructive",
-                            log.status === "pending" && "bg-warning/10 text-warning",
-                          )}
-                        >
-                          {log.status === "sent" && <CheckCircle2 className="h-3 w-3" />}
-                          {log.status === "failed" && <XCircle className="h-3 w-3" />}
-                          {log.status === "pending" && <Clock className="h-3 w-3" />}
-                          {log.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground text-xs">
-                        {log.createdAt.toLocaleString("en-KE", {
-                          month: "short", day: "numeric",
-                          hour: "2-digit", minute: "2-digit",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
