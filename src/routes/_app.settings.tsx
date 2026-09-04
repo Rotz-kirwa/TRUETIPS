@@ -20,8 +20,8 @@ const DEFAULT_ENVS: Record<string, string> = {
   MPESA_ENVIRONMENT: "sandbox",
   SMS_PROVIDER: "onfon",
   ONFON_API_KEY: "",
-  ONFON_CLIENT_ID: "",
-  ONFON_SENDER_ID: "",
+  ONFON_CLIENT_ID: "nebula",
+  ONFON_SENDER_ID: "NEBULA",
 };
 
 function getEnv(key: string): string | null {
