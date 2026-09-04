@@ -52,6 +52,43 @@ export function formatPredictionsTable(
     .join("\n");
 }
 
+export function buildInvalidAmountMessage(amount: number, activeRules: RuleRow[]): string {
+  const formattedAmount = new Intl.NumberFormat("en-KE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+
+  let packagesList = "";
+  if (activeRules && activeRules.length > 0) {
+    packagesList = activeRules
+      .map((r) => {
+        const minStr = Number(r.minAmount);
+        const maxStr = Number(r.maxAmount);
+        const priceStr = minStr === maxStr ? `KES ${minStr}` : `KES ${minStr} - KES ${maxStr}`;
+        return `• ${r.name.toUpperCase()}: ${priceStr}`;
+      })
+      .join("\n");
+  } else {
+    packagesList = [
+      "• DAILY MATCHES: KES 50",
+      "• JACKPOT MATCHES: KES 100",
+      "• WEEKLY VIP: KES 500",
+      "• MONTHLY VIP: KES 1500",
+    ].join("\n");
+  }
+
+  return [
+    `TRUETIPS PAYMENT NOTICE ⚠️`,
+    ``,
+    `You paid KES ${formattedAmount}. This amount does not match any available package.`,
+    ``,
+    `AVAILABLE PACKAGES:`,
+    packagesList,
+    ``,
+    `Please pay the exact package amount to receive your tips automatically.`,
+  ].join("\n");
+}
+
 export function resolvePlaceholders(
   template: string,
   data: {
@@ -425,8 +462,8 @@ export async function processPaymentSms(params: {
   console.log(`[sms-automation] Phone: ${phone.slice(0, 10)}... (may be hashed MSISDN — provider will resolve)`);
 
 
-  // 3. Find matching active rule — use explicit numeric cast to avoid implicit text comparison
-  let [matchedRule] = await db
+  // 3. Find matching active rule — check if amount falls inside valid package price range
+  const [exactMatch] = await db
     .select()
     .from(smsAutomationRules)
     .where(
@@ -439,52 +476,47 @@ export async function processPaymentSms(params: {
     .orderBy(smsAutomationRules.minAmount)
     .limit(1);
 
-  // Fallback: If no exact range matched (e.g. custom payment amount), pick the closest active rule so every payment gets SMS!
-  if (!matchedRule) {
-    console.log(`[sms-automation] No exact range rule for amount ${amount} — finding closest active rule.`);
-    const activeRules = await db
-      .select()
-      .from(smsAutomationRules)
-      .where(eq(smsAutomationRules.isActive, true))
-      .orderBy(sql`ABS(${smsAutomationRules.minAmount}::numeric - ${amount}::numeric)`);
-    matchedRule = activeRules[0];
+  let message = "";
+  let matchedRuleId: string | null = null;
+
+  if (exactMatch) {
+    console.log(`[sms-automation] Matched rule "${exactMatch.name}" (${exactMatch.minAmount}–${exactMatch.maxAmount}) for amount ${amount}`);
+    matchedRuleId = exactMatch.id;
+
+    // Fetch published predictions from DB for auto SMS table
+    let predictionsText = "";
+    try {
+      const { predictions: predictionsTable } = await import("./db/schema");
+      const activePredictions = await db
+        .select({
+          team1: predictionsTable.team1,
+          team2: predictionsTable.team2,
+          prediction: predictionsTable.prediction,
+        })
+        .from(predictionsTable)
+        .where(and(eq(predictionsTable.isPublished, true), eq(predictionsTable.status, "pending")))
+        .limit(10);
+
+      predictionsText = formatPredictionsTable(activePredictions);
+    } catch (err) {
+      console.error("[sms-automation] Error fetching published predictions:", err);
+      predictionsText = formatPredictionsTable([]);
+    }
+
+    message = resolvePlaceholders(exactMatch.messageTemplate, {
+      phone,
+      amount,
+      transactionCode,
+      date: paidAt,
+      predictionsText,
+    });
+  } else {
+    // Customer paid less than min package amount OR outside set package amounts!
+    console.log(`[sms-automation] Amount ${amount} is outside active package ranges — sending correction notice.`);
+    const allRules = await fetchAllRules();
+    const activeRules = allRules.filter((r) => r.isActive);
+    message = buildInvalidAmountMessage(amount, activeRules);
   }
-
-  if (!matchedRule) {
-    console.log(`[sms-automation] No active rules in database — skipping SMS.`);
-    return;
-  }
-
-  console.log(`[sms-automation] Matched rule "${matchedRule.name}" (${matchedRule.minAmount}–${matchedRule.maxAmount}) for amount ${amount}`);
-
-  // Fetch published predictions from DB for auto SMS table
-  let predictionsText = "";
-  try {
-    const { predictions: predictionsTable } = await import("./db/schema");
-    const activePredictions = await db
-      .select({
-        team1: predictionsTable.team1,
-        team2: predictionsTable.team2,
-        prediction: predictionsTable.prediction,
-      })
-      .from(predictionsTable)
-      .where(and(eq(predictionsTable.isPublished, true), eq(predictionsTable.status, "pending")))
-      .limit(10);
-
-    predictionsText = formatPredictionsTable(activePredictions);
-  } catch (err) {
-    console.error("[sms-automation] Error fetching published predictions:", err);
-    predictionsText = formatPredictionsTable([]);
-  }
-
-  // 4. Build message (Contains Package Header Title & Uppercase Matches Table)
-  const message = resolvePlaceholders(matchedRule.messageTemplate, {
-    phone,
-    amount,
-    transactionCode,
-    date: paidAt,
-    predictionsText,
-  });
 
   console.log(`[sms-automation] Message: "${message.slice(0, 80)}${message.length > 80 ? "…" : ""}"`);
 
@@ -504,7 +536,7 @@ export async function processPaymentSms(params: {
     .insert(smsLogs)
     .values({
       paymentId: validPaymentId,
-      ruleId: matchedRule.id,
+      ruleId: matchedRuleId,
       phone,
       amount: String(amount),
       message,
@@ -526,7 +558,7 @@ export async function processPaymentSms(params: {
     .where(eq(smsLogs.id, logRow.id));
 
   console.log(
-    `[sms-automation] SMS ${result.success ? "SENT ✓" : `FAILED ✗ (${result.error})`} — paymentId=${paymentId} rule="${matchedRule.name}" phone=${phone}`,
+    `[sms-automation] SMS ${result.success ? "SENT ✓" : `FAILED ✗ (${result.error})`} — paymentId=${paymentId} ruleId="${matchedRuleId ?? "Correction Notice"}" phone=${phone}`,
   );
 }
 
