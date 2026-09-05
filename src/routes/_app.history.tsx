@@ -27,10 +27,31 @@ const fetchHistoryDataFn = createServerFn({ method: "GET" }).handler(async () =>
   return { history, activeRulesCount: rules.length };
 });
 
+function HistorySkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#10B981]/30 pb-5">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-[#10B981]/20 rounded-xl" />
+          <div className="h-4 w-72 bg-[#10B981]/10 rounded-lg" />
+        </div>
+        <div className="h-10 w-36 bg-[#FACC15]/20 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 rounded-2xl bg-[#0A382C]/60 border-2 border-[#10B981]/20" />
+        ))}
+      </div>
+      <div className="h-96 rounded-3xl bg-[#0A382C]/60 border-2 border-[#10B981]/20" />
+    </div>
+  );
+}
+
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute("/_app/history")({
   loader: () => fetchHistoryDataFn(),
+  pendingComponent: HistorySkeleton,
   component: PackageHistoryPage,
   head: () => ({ meta: [{ title: "Package History — TrueTips Admin" }] }),
 });

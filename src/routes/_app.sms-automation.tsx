@@ -106,10 +106,34 @@ const testSmsFn = createServerFn({ method: "POST" })
     return { success: result.success, message: result.message, error: result.error ?? null };
   });
 
+function SmsAutomationSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#10B981]/30 pb-5">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-[#10B981]/20 rounded-xl" />
+          <div className="h-4 w-72 bg-[#10B981]/10 rounded-lg" />
+        </div>
+        <div className="h-10 w-40 bg-[#FACC15]/20 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="h-24 rounded-2xl bg-[#0A382C]/60 border-2 border-[#10B981]/20" />
+        <div className="h-24 rounded-2xl bg-[#0A382C]/60 border-2 border-[#10B981]/20" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-64 rounded-2xl bg-[#0A382C]/60 border-2 border-[#10B981]/20" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
+  pendingComponent: SmsAutomationSkeleton,
   component: SmsAutomationPage,
   head: () => ({ meta: [{ title: "Tips Packages — TrueTips Admin" }] }),
 });
@@ -1188,17 +1212,23 @@ function SmsAutomationPage() {
 
   async function handleToggle(rule: RuleRow) {
     setTogglingId(rule.id);
+    const targetIsActive = !rule.isActive;
+    // Optimistic UI update for instant feedback
+    setRules((prev) => prev.map((r) => (r.id === rule.id ? { ...r, isActive: targetIsActive } : r)));
+
     try {
-      const result = await toggleRuleFn({ data: { id: rule.id, isActive: !rule.isActive } });
+      const result = await toggleRuleFn({ data: { id: rule.id, isActive: targetIsActive } });
       if (result && "type" in result && result.type === "overlap") {
+        // Revert on overlap conflict
+        setRules((prev) => prev.map((r) => (r.id === rule.id ? rule : r)));
         const names = result.conflicting.map((r: RuleRow) => `"${r.name}"`).join(", ");
         toast.error(`Cannot enable: overlaps with ${names}`);
       } else {
-        const updated = result as RuleRow;
-        setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-        toast.success(`Package "${rule.name}" ${updated.isActive ? "activated" : "deactivated"}`);
+        toast.success(`Package "${rule.name}" ${targetIsActive ? "activated" : "deactivated"}`);
       }
     } catch {
+      // Revert on failure
+      setRules((prev) => prev.map((r) => (r.id === rule.id ? rule : r)));
       toast.error("Failed to toggle package status");
     } finally {
       setTogglingId(null);

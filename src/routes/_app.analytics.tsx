@@ -119,7 +119,7 @@ function AnalyticsPage() {
           <p className="mb-4 text-xs text-muted-foreground">{range.label}</p>
           <div className="h-80 min-h-[320px]">
             {chartsReady ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100} initialDimension={{ width: 400, height: 320 }}>
                 <LineChart data={data} margin={{ left: -12, right: 8, top: 8, bottom: 0 }}>
                   <CartesianGrid stroke="oklch(1 0 0 / 7%)" vertical={false} />
                   <XAxis
@@ -174,7 +174,7 @@ function AnalyticsPage() {
           ) : chartsReady ? (
             <>
               <div className="h-64 min-h-[256px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100} initialDimension={{ width: 250, height: 250 }}>
                   <PieChart>
                     <Pie
                       data={methods}

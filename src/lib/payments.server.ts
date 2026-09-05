@@ -94,13 +94,25 @@ export async function reconcilePendingStkPayments(limit = 20) {
   }
 }
 
-export async function fetchPayments() {
+let paymentsCache: { data: any[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 3000;
+
+export function invalidatePaymentsCache() {
+  paymentsCache = null;
+}
+
+export async function fetchPayments(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && paymentsCache && now - paymentsCache.timestamp < CACHE_TTL_MS) {
+    return paymentsCache.data;
+  }
+
   const user = await getCurrentUser();
   if (!user) return [];
 
   await ensureSchema();
 
-  return db
+  const data = await db
     .select({
       id: mpesaPayments.id,
       source: mpesaPayments.source,
@@ -125,6 +137,9 @@ export async function fetchPayments() {
     .from(mpesaPayments)
     .orderBy(desc(mpesaPayments.createdAt))
     .limit(500);
+
+  paymentsCache = { data, timestamp: now };
+  return data;
 }
 
 export async function initiatePayment(
@@ -136,6 +151,7 @@ export async function initiatePayment(
   const user = await requireCurrentUser();
   const normalizedPhone = normalizeKenyanPhone(phone);
 
+  invalidatePaymentsCache();
   // 1. Insert Pending record FIRST
   const [record] = await db
     .insert(mpesaPayments)

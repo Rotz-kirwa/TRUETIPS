@@ -335,7 +335,7 @@ export async function resetExpiredMidnightMatches(): Promise<number> {
  * Fetches package history records for the last 7 days.
  */
 export async function fetchPackageHistory(): Promise<PackageHistoryRow[]> {
-  await resetExpiredMidnightMatches();
+  await maybeRunMidnightReset();
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const rows = await db
@@ -370,14 +370,37 @@ function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {
   };
 }
 
-export async function fetchAllRules(): Promise<RuleRow[]> {
+let rulesCache: { data: RuleRow[]; timestamp: number } | null = null;
+export function invalidateRulesCache() {
+  rulesCache = null;
+}
+
+// Track the last date we ran the midnight reset so we only do it once per day,
+// not on every cache miss (which was causing 100-500ms DB hits on every navigation).
+let lastMidnightResetDate = "";
+
+async function maybeRunMidnightReset() {
+  const todayKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  if (lastMidnightResetDate === todayKey) return;
   await resetExpiredMidnightMatches();
+  lastMidnightResetDate = todayKey;
+}
+
+export async function fetchAllRules(forceRefresh = false): Promise<RuleRow[]> {
+  const now = Date.now();
+  if (!forceRefresh && rulesCache && now - rulesCache.timestamp < 3000) {
+    return rulesCache.data;
+  }
+  // Only runs once per calendar day instead of on every cache miss
+  await maybeRunMidnightReset();
   const rows = await db
     .select()
     .from(smsAutomationRules)
     .orderBy(smsAutomationRules.minAmount);
 
-  return rows.map(toRuleRow);
+  const rules = rows.map(toRuleRow);
+  rulesCache = { data: rules, timestamp: now };
+  return rules;
 }
 
 export async function createRule(input: {
@@ -397,7 +420,7 @@ export async function createRule(input: {
     return { type: "validation", message: "Message template cannot be empty." };
   }
 
-  await resetExpiredMidnightMatches();
+  await maybeRunMidnightReset();
 
   const [row] = await db
     .insert(smsAutomationRules)

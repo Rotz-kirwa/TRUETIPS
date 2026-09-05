@@ -38,8 +38,32 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 border-white/10">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-emerald-500/20 rounded-xl" />
+          <div className="h-4 w-72 bg-emerald-500/10 rounded-lg" />
+        </div>
+        <div className="h-10 w-36 bg-amber-400/20 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-28 rounded-2xl bg-white/5 border border-white/10" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 h-80 rounded-2xl bg-white/5 border border-white/10" />
+        <div className="h-80 rounded-2xl bg-white/5 border border-white/10" />
+      </div>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/_app/")({
   loader: () => fetchPaymentsFn(),
+  pendingComponent: DashboardSkeleton,
   component: DashboardPage,
   head: () => ({
     meta: [
@@ -278,7 +302,7 @@ function DashboardPage() {
           </div>
           <div className="h-64" style={{ minHeight: "16rem" }}>
             {chartsReady ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100} initialDimension={{ width: 400, height: 250 }}>
                 <BarChart data={chartData} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
                     <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -351,7 +375,7 @@ function DashboardPage() {
           <div className="relative h-52" style={{ minHeight: "13rem" }}>
             {chartsReady ? (
               <>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100} initialDimension={{ width: 250, height: 200 }}>
                   <PieChart>
                     <Pie
                       data={statusCounts}
