@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar } from "lucide-react";
+import { Search, Download, ArrowUpDown, Wallet, TrendingUp, CalendarDays, CalendarRange, Calendar, FileText } from "lucide-react";
 import { useLivePayments } from "@/hooks/use-live-payments";
 import { cn } from "@/lib/utils";
 import { fetchPaymentsFn, initiateStkPushFn, recheckPaymentStatusFn, recordManualPaymentFn, type MpesaPayment } from "@/lib/payments";
@@ -252,6 +252,127 @@ function PaymentsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadPdf = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to download the PDF report");
+      return;
+    }
+
+    const reportDate = new Date().toLocaleString("en-KE", {
+      dateStyle: "full",
+      timeStyle: "medium",
+    });
+
+    const rowsHtml = filtered
+      .map(
+        (p, idx) => `
+        <tr style="border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+          <td style="padding: 8px; text-align: center; color: #64748b;">${idx + 1}</td>
+          <td style="padding: 8px; font-weight: bold; color: #0f172a;">${p.payerName || "M-Pesa Customer"}</td>
+          <td style="padding: 8px; font-family: monospace; color: #334155;">${formatPhone(p.phone)}</td>
+          <td style="padding: 8px; font-family: monospace; font-weight: bold; color: #1d70b8;">${p.mpesaReceiptNumber || "N/A"}</td>
+          <td style="padding: 8px; font-weight: bold; text-align: right; color: #0f172a;">KES ${Number(p.amount).toLocaleString()}</td>
+          <td style="padding: 8px; text-align: center;">
+            <span style="padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; background: ${
+              p.status === "Success" ? "#dcfce7; color: #166534;" : "#fee2e2; color: #991b1b;"
+            }">${p.status}</span>
+          </td>
+          <td style="padding: 8px; text-align: right; color: #64748b; font-size: 10px;">${new Date(p.createdAt).toLocaleString("en-KE")}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const totalAmount = filtered
+      .filter((p) => p.status === "Success")
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>TrueTips Payments Report — ${new Date().toISOString().slice(0, 10)}</title>
+          <style>
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              @page { margin: 15mm; size: A4 portrait; }
+            }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; margin: 0; padding: 24px; background: #ffffff; }
+            .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1d70b8; padding-bottom: 16px; margin-bottom: 20px; }
+            .title { font-size: 22px; font-weight: 900; color: #1d70b8; margin: 0; }
+            .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+            .meta { text-align: right; font-size: 11px; color: #64748b; }
+            .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+            .card-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; }
+            .card-val { font-size: 18px; font-weight: 900; color: #0f172a; margin-top: 4px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th { background: #f1f5f9; color: #334155; font-size: 10px; text-transform: uppercase; font-weight: 800; padding: 8px; text-align: left; border-bottom: 2px solid #cbd5e1; }
+            .footer { margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 12px; text-align: center; font-size: 10px; color: #94a3b8; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">TrueTips Admin Console</h1>
+              <div class="subtitle">M-Pesa Payments Financial Audit Report</div>
+            </div>
+            <div class="meta">
+              <div><strong>Generated:</strong> ${reportDate}</div>
+              <div><strong>Filter:</strong> ${query ? `"${query}"` : "All Transactions"}</div>
+            </div>
+          </div>
+
+          <div class="summary-cards">
+            <div class="card">
+              <div class="card-label">Total Revenue</div>
+              <div class="card-val" style="color: #1d70b8;">KES ${totalAmount.toLocaleString()}</div>
+            </div>
+            <div class="card">
+              <div class="card-label">Transactions Count</div>
+              <div class="card-val">${filtered.length}</div>
+            </div>
+            <div class="card">
+              <div class="card-label">Successful Payments</div>
+              <div class="card-val" style="color: #166534;">${filtered.filter((p) => p.status === "Success").length}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 30px; text-align: center;">#</th>
+                <th>Payer Name</th>
+                <th>Phone Number</th>
+                <th>Receipt No</th>
+                <th style="text-align: right;">Amount</th>
+                <th style="text-align: center;">Status</th>
+                <th style="text-align: right;">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            TrueTips ERP Payment Ledger System • Confidential Internal Financial Audit Report
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   const toggleSort = (key: "date" | "amount") => {
     if (sortBy === key) setSortDesc(!sortDesc);
     else {
@@ -289,9 +410,15 @@ function PaymentsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={exportCsv}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-secondary"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all"
           >
             <Download className="h-4 w-4" /> Export CSV
+          </button>
+          <button
+            onClick={downloadPdf}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-all"
+          >
+            <FileText className="h-4 w-4" /> Download PDF
           </button>
         </div>
       </header>
