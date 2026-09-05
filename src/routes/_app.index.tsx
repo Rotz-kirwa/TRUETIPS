@@ -121,6 +121,7 @@ function computeStats(payments: MpesaPayment[]) {
     totalRevenue: sumSuccess(payments),
     todayRevenue: sumSuccess(todayP),
     todayChange: pct(sumSuccess(todayP), sumSuccess(yesterdayP)),
+    yesterdayRevenue: sumSuccess(yesterdayP),
     monthRevenue: sumSuccess(monthP),
     monthChange: pct(sumSuccess(monthP), sumSuccess(lastMonthP)),
     yearRevenue: sumSuccess(yearP),
@@ -232,7 +233,7 @@ function DashboardPage() {
       </header>
 
       {/* Gradient stat cards */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Total Revenue"
           value={KES(stats.totalRevenue)}
@@ -247,6 +248,13 @@ function DashboardPage() {
           change={stats.todayChange}
           icon={TrendingUp}
           gradient="blue"
+        />
+        <StatCard
+          label="Yesterday's Revenue"
+          value={KES(stats.yesterdayRevenue)}
+          sub="Previous 24 hours"
+          icon={Calendar}
+          gradient="purple"
         />
         <StatCard
           label="This Month"
@@ -278,24 +286,23 @@ function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               {/* Range switcher */}
-              <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="flex gap-0.5 rounded-lg p-0.5 bg-slate-100 border border-slate-200">
                 {RANGE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setChartRange(opt.value)}
-                    className="rounded-md px-3 py-1 text-xs font-medium transition-all"
-                    style={chartRange === opt.value
-                      ? { background: "#14b8a6", color: "#fff", boxShadow: "0 2px 8px rgba(20,184,166,0.35)" }
-                      : { color: "oklch(0.60 0.02 255)" }}
+                    className={cn(
+                      "rounded-md px-3 py-1 text-xs font-bold transition-all",
+                      chartRange === opt.value
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    )}
                   >
                     {opt.label}
                   </button>
                 ))}
               </div>
-              <span
-                className="rounded-xl px-3 py-1 text-sm font-semibold text-white shadow-sm"
-                style={{ background: "var(--gradient-primary)" }}
-              >
+              <span className="rounded-xl px-3 py-1 text-sm font-black text-white bg-blue-600 shadow-sm">
                 {KES(chartData.reduce((a, b) => a + b.revenue, 0))}
               </span>
             </div>
@@ -306,8 +313,8 @@ function DashboardPage() {
                 <BarChart data={chartData} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
                     <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#14b8a6" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#0d9488" stopOpacity={0.75} />
+                      <stop offset="0%" stopColor="#2563EB" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.8} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid

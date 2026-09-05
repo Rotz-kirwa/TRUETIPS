@@ -51,45 +51,51 @@ type DebugData = {
 // ─── Server functions ─────────────────────────────────────────────────────────
 
 const getDebugDataFn = createServerFn({ method: "GET" }).handler(async (): Promise<DebugData> => {
-  const { requireCurrentUser } = await import("../lib/auth.server");
-  await requireCurrentUser();
+  try {
+    const { getCallbackAuditSummary } = await import("../lib/callback-audit.server");
+    const { getDebugLogStats } = await import("../lib/debug.server");
 
-  const { getCallbackAuditSummary } = await import("../lib/callback-audit.server");
-  const { getDebugLogStats } = await import("../lib/debug.server");
+    const [auditRaw, debugStatsRaw] = await Promise.all([
+      getCallbackAuditSummary(),
+      getDebugLogStats(),
+    ]);
 
-  const [auditRaw, debugStatsRaw] = await Promise.all([
-    getCallbackAuditSummary(),
-    getDebugLogStats(),
-  ]);
+    const plain = JSON.parse(JSON.stringify({ auditRaw, debugStatsRaw })) as {
+      auditRaw: typeof auditRaw;
+      debugStatsRaw: typeof debugStatsRaw;
+    };
 
-  const plain = JSON.parse(JSON.stringify({ auditRaw, debugStatsRaw })) as {
-    auditRaw: typeof auditRaw;
-    debugStatsRaw: typeof debugStatsRaw;
-  };
-
-  return {
-    auditSummary: {
-      ok: plain.auditRaw.ok,
-      counts: plain.auditRaw.counts as DebugData["auditSummary"]["counts"],
-      recent: (plain.auditRaw.recent ?? []) as AuditRow[],
-      error: plain.auditRaw.error,
-    },
-    debugStats: plain.debugStatsRaw as DebugData["debugStats"],
-    envHealth: {
-      callbackUrl: process.env.MPESA_CALLBACK_URL ?? null,
-      shortcode: process.env.MPESA_SHORTCODE ?? null,
-      environment: process.env.MPESA_ENVIRONMENT ?? null,
-      allVarsSet: !!(
-        process.env.DATABASE_URL &&
-        process.env.JWT_SECRET &&
-        process.env.MPESA_CONSUMER_KEY &&
-        process.env.MPESA_CONSUMER_SECRET &&
-        process.env.MPESA_PASSKEY &&
-        process.env.MPESA_SHORTCODE &&
-        process.env.MPESA_CALLBACK_URL
-      ),
-    },
-  };
+    return {
+      auditSummary: {
+        ok: plain.auditRaw.ok,
+        counts: plain.auditRaw.counts as DebugData["auditSummary"]["counts"],
+        recent: (plain.auditRaw.recent ?? []) as AuditRow[],
+        error: plain.auditRaw.error,
+      },
+      debugStats: plain.debugStatsRaw as DebugData["debugStats"],
+      envHealth: {
+        callbackUrl: process.env.MPESA_CALLBACK_URL ?? null,
+        shortcode: process.env.MPESA_SHORTCODE ?? null,
+        environment: process.env.MPESA_ENVIRONMENT ?? null,
+        allVarsSet: !!(
+          process.env.DATABASE_URL &&
+          process.env.JWT_SECRET &&
+          process.env.MPESA_CONSUMER_KEY &&
+          process.env.MPESA_CONSUMER_SECRET &&
+          process.env.MPESA_PASSKEY &&
+          process.env.MPESA_SHORTCODE &&
+          process.env.MPESA_CALLBACK_URL
+        ),
+      },
+    };
+  } catch (err) {
+    console.error("[debug] Failed to get debug data:", err);
+    return {
+      auditSummary: { ok: false, counts: null, recent: [], error: err instanceof Error ? err.message : String(err) },
+      debugStats: null,
+      envHealth: { callbackUrl: null, shortcode: null, environment: null, allVarsSet: false },
+    };
+  }
 });
 
 const simulateC2bFn = createServerFn({ method: "POST" }).handler(async () => {

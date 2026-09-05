@@ -7,12 +7,12 @@ import {
   Settings,
   LogOut,
   Menu,
-  Bell,
   X,
   Bot,
   Bug,
   Trophy,
   History,
+  User as UserIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -23,76 +23,52 @@ const NAV = [
     to: "/",
     label: "Dashboard",
     icon: LayoutDashboard,
-    color: "text-sky-400",
-    bgColor: "bg-sky-500/15",
-    activeBg: "bg-sky-500/25",
-    ringColor: "ring-sky-400/40",
+    badgeBg: "bg-blue-500",
   },
   {
     to: "/payments",
     label: "Payments",
     icon: CreditCard,
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/15",
-    activeBg: "bg-emerald-500/25",
-    ringColor: "ring-emerald-400/40",
+    badgeBg: "bg-rose-500",
   },
   {
     to: "/sms-automation",
     label: "Tips Packages",
     icon: Bot,
-    color: "text-violet-400",
-    bgColor: "bg-violet-500/15",
-    activeBg: "bg-violet-500/25",
-    ringColor: "ring-violet-400/40",
+    badgeBg: "bg-purple-500",
   },
   {
     to: "/history",
     label: "Package History",
     icon: History,
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/15",
-    activeBg: "bg-yellow-500/25",
-    ringColor: "ring-yellow-400/40",
+    badgeBg: "bg-amber-500",
   },
   {
     to: "/analytics",
     label: "Analytics",
     icon: BarChart3,
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-500/15",
-    activeBg: "bg-cyan-500/25",
-    ringColor: "ring-cyan-400/40",
+    badgeBg: "bg-emerald-500",
   },
   {
     to: "/settings",
     label: "Settings",
     icon: Settings,
-    color: "text-pink-400",
-    bgColor: "bg-pink-500/15",
-    activeBg: "bg-pink-500/25",
-    ringColor: "ring-pink-400/40",
+    badgeBg: "bg-cyan-500",
   },
   {
     to: "/debug",
     label: "System Debug",
     icon: Bug,
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/15",
-    activeBg: "bg-orange-500/25",
-    ringColor: "ring-orange-400/40",
+    badgeBg: "bg-orange-500",
   },
 ] as const;
 
-// Memoized nav item — only re-renders when its own active state changes
+// Memoized nav item matching the colorful ERP sidebar icons in reference image
 const NavItem = memo(function NavItem({
   to,
   label,
   icon: Icon,
-  color,
-  bgColor,
-  activeBg,
-  ringColor,
+  badgeBg,
   onClick,
 }: (typeof NAV)[number] & { onClick?: () => void }) {
   return (
@@ -100,29 +76,28 @@ const NavItem = memo(function NavItem({
       to={to}
       preload="intent"
       onClick={onClick}
-      className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors duration-100 touch-manipulation active:scale-[0.98]"
+      className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold transition-all duration-100 touch-manipulation active:scale-[0.98]"
       activeProps={{
-        className: "bg-emerald-500/20 text-white shadow-sm ring-1 ring-emerald-500/40 font-bold",
+        className: "bg-blue-600/30 text-white shadow-sm ring-1 ring-blue-400/40 font-black",
       }}
       inactiveProps={{
-        className: "text-white/70 hover:bg-white/10 hover:text-white",
+        className: "text-slate-300 hover:bg-slate-800 hover:text-white",
       }}
     >
       {({ isActive }: { isActive: boolean }) => (
         <>
           <div
             className={cn(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors duration-100",
-              isActive
-                ? `${activeBg} ${color} ring-1 ${ringColor} scale-105 shadow-sm`
-                : `${bgColor} ${color} group-hover:scale-110 group-hover:bg-white/15`,
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white shadow-sm transition-transform duration-100 group-hover:scale-110",
+              badgeBg,
+              isActive && "ring-2 ring-white/60 scale-105"
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0 text-white" />
           </div>
           <span>{label}</span>
           {isActive && (
-            <span className="ml-auto h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+            <span className="ml-auto h-2 w-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
           )}
         </>
       )}
@@ -136,8 +111,6 @@ export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isNavigating = useRouterState({ select: (s) => s.status === "pending" });
 
-  // Auth guard: DashboardLayout enforces login client-side.
-  // Root loader already checked server-side; this handles stale client state.
   if (!isAuthenticated) {
     navigate({ to: "/login", replace: true });
     return null;
@@ -147,11 +120,11 @@ export function DashboardLayout() {
   const roleName = user?.role === "admin" ? "Administrator" : "User";
 
   return (
-    <div className="flex min-h-screen relative" style={{ background: "var(--gradient-subtle)" }}>
-      {/* Top Page Transition Progress Bar — always in DOM, toggled via opacity for hydration safety */}
+    <div className="flex min-h-screen relative bg-[#F1F5F9] text-slate-900">
+      {/* Top Page Transition Progress Bar */}
       <div
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-[#10B981] via-[#FACC15] to-[#38BDF8] animate-pulse shadow-[0_0_10px_#10B981] transition-opacity duration-200 pointer-events-none",
+          "fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-blue-500 via-amber-400 to-emerald-400 animate-pulse shadow-md transition-opacity duration-200 pointer-events-none",
           isNavigating ? "opacity-100" : "opacity-0"
         )}
       />
@@ -159,38 +132,37 @@ export function DashboardLayout() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Left Sidebar (Dark Navy Slate #1E293B matching reference image) */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col transition-transform md:static md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-[#1E293B] text-white border-r border-slate-700/60 transition-transform md:static md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}
       >
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between px-5 shrink-0">
+        {/* Logo Header */}
+        <div className="flex h-16 items-center justify-between px-5 shrink-0 bg-[#0F172A] border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-600 text-slate-950 font-black">
-              <Trophy className="h-5 w-5 text-slate-950" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-black shadow-md">
+              <Trophy className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-extrabold tracking-tight text-sky-400">TrueTips</span>
+            <span className="text-xl font-black tracking-tight text-white">TrueTips</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1 text-white/60 hover:text-white md:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:text-white md:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Nav — each item only re-renders when ITS active state flips */}
-        <nav className="flex-1 space-y-1.5 px-3 py-4">
-          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400/60">
+        {/* Nav Links */}
+        <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto">
+          <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
             Navigation Menu
           </p>
           {NAV.map((item) => (
@@ -202,22 +174,22 @@ export function DashboardLayout() {
           ))}
         </nav>
 
-        {/* User */}
-        <div className="shrink-0 border-t px-3 py-4" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+        {/* User Footer */}
+        <div className="shrink-0 border-t border-slate-700/60 px-3 py-4 bg-[#0F172A]/50">
           <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-slate-950 shadow-md bg-amber-400">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white shadow-md bg-blue-600">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{roleName}</p>
-              <p className="truncate text-xs text-white/50">{email}</p>
+              <p className="truncate text-sm font-bold text-white">{roleName}</p>
+              <p className="truncate text-xs text-slate-400">{email}</p>
             </div>
             <button
               onClick={() => {
                 logout();
                 navigate({ to: "/login", replace: true });
               }}
-              className="rounded-lg p-1.5 text-rose-400/80 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
+              className="rounded-lg p-1.5 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors"
               aria-label="Sign out"
             >
               <LogOut className="h-4 w-4" />
@@ -226,30 +198,33 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
+      {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0">
-        {/* Top header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-card/95 px-4 backdrop-blur-md md:px-8">
+        {/* Top Header Banner — Solid Royal Blue (#1D70B8 / #2563EB) matching reference image */}
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 bg-[#1D70B8] px-4 md:px-8 shadow-md">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-secondary md:hidden"
+            className="rounded-lg p-2 text-white hover:bg-white/10 md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
+          
+          <h1 className="text-xl font-extrabold tracking-tight text-white">
+            TrueTips Admin Console
+          </h1>
+
           <div className="flex-1" />
-          <div className="flex items-center gap-2">
-            <button className="relative rounded-xl p-2 text-sky-400 hover:bg-secondary transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-            </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-slate-950 shadow-sm bg-amber-400">
-              {initials}
+
+          {/* Top Right Header User Avatar */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black text-blue-900 bg-white shadow-md border-2 border-white/80">
+              <UserIcon className="h-5 w-5 text-blue-700" />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8 bg-[#F1F5F9]">
           <Outlet />
         </main>
       </div>

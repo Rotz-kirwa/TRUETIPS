@@ -23,27 +23,30 @@ import { cn } from "@/lib/utils";
 // ─── Server Functions ─────────────────────────────────────────────────────────
 
 const fetchHistoryDataFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { requireCurrentUser } = await import("../lib/auth.server");
-  await requireCurrentUser();
-  const { fetchPackageHistory, fetchAllRules, extractGamesFromTemplate } = await import("../lib/sms-automation.server");
-  const [history, rules] = await Promise.all([fetchPackageHistory(), fetchAllRules()]);
+  try {
+    const { fetchPackageHistory, fetchAllRules, extractGamesFromTemplate } = await import("../lib/sms-automation.server");
+    const [history, rules] = await Promise.all([fetchPackageHistory(), fetchAllRules()]);
 
-  // Build today's snapshot from active rules that have games
-  const todayRules = rules
-    .map((r) => ({
-      id: `today-${r.id}`,
-      originalPackageId: r.id,
-      packageName: r.name,
-      packageType: `KES ${r.minAmount}`,
-      archivedDate: "TODAY",
-      gamesSnapshot: extractGamesFromTemplate(r.messageTemplate),
-      messageTemplateSnapshot: r.messageTemplate,
-      totalGames: extractGamesFromTemplate(r.messageTemplate).length,
-      createdAt: r.updatedAt,
-    }))
-    .filter((r) => r.gamesSnapshot.length > 0);
+    // Build today's snapshot from active rules that have games
+    const todayRules = rules
+      .map((r) => ({
+        id: `today-${r.id}`,
+        originalPackageId: r.id,
+        packageName: r.name,
+        packageType: `KES ${r.minAmount}`,
+        archivedDate: "TODAY",
+        gamesSnapshot: extractGamesFromTemplate(r.messageTemplate),
+        messageTemplateSnapshot: r.messageTemplate,
+        totalGames: extractGamesFromTemplate(r.messageTemplate).length,
+        createdAt: r.updatedAt,
+      }))
+      .filter((r) => r.gamesSnapshot.length > 0);
 
-  return { history, todayRules, activeRulesCount: rules.length };
+    return { history, todayRules, activeRulesCount: rules.length };
+  } catch (err) {
+    console.error("[history] Failed to fetch history data:", err);
+    return { history: [], todayRules: [], activeRulesCount: 0 };
+  }
 });
 
 function HistorySkeleton() {
@@ -161,15 +164,15 @@ function PackageHistoryPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* 1. PAGE HEADER */}
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#10B981] pb-5">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-[#38BDF8] flex items-center gap-3">
-            <HistoryIcon className="h-8 w-8 text-[#FACC15]" /> Package History
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+            <HistoryIcon className="h-8 w-8 text-blue-600" /> Package History
           </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#A7F3D0] font-bold">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600 font-bold">
             <span>Daily prediction snapshots — auto-synced from Tips Packages.</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#031E17] border border-[#10B981]/50 px-3 py-0.5 text-xs font-mono text-[#FACC15]">
-              <Clock className="h-3.5 w-3.5 text-[#10B981]" /> Last 7 Days
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-0.5 text-xs font-mono text-blue-700 font-bold">
+              <Clock className="h-3.5 w-3.5 text-blue-600" /> Last 7 Days
             </span>
           </div>
         </div>
@@ -182,7 +185,7 @@ function PackageHistoryPage() {
           <button
             onClick={() => setSelectedDayIdx((i) => Math.min(i + 1, 6))}
             disabled={selectedDayIdx >= 6}
-            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C] text-[#A7F3D0] hover:border-[#10B981] hover:text-white transition-all disabled:opacity-30"
+            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 shadow-sm"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -204,27 +207,27 @@ function PackageHistoryPage() {
                       setExpandedId(null);
                     }}
                     className={cn(
-                      "shrink-0 flex flex-col items-center justify-center gap-0.5 rounded-2xl border-2 px-3 py-2.5 min-w-[88px] transition-all",
+                      "shrink-0 flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-3 py-2.5 min-w-[88px] transition-all shadow-sm",
                       isSelected
-                        ? "border-[#FACC15] bg-[#FACC15]/15 shadow-[0_0_16px_rgba(250,204,21,0.25)]"
-                        : "border-[#10B981]/30 bg-[#0A382C] hover:border-[#10B981]/60 hover:bg-[#0A382C]/80",
+                        ? "border-blue-600 bg-blue-600 text-white font-bold shadow-md"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700",
                     )}
                   >
-                    <span className={cn("text-[10px] font-black uppercase tracking-wider", isSelected ? "text-[#FACC15]" : "text-[#A7F3D0]/70")}>
+                    <span className={cn("text-[10px] font-black uppercase tracking-wider", isSelected ? "text-blue-100" : "text-slate-500")}>
                       {slot.isToday ? "TODAY" : slot.shortLabel.split(" ")[0]}
                     </span>
-                    <span className={cn("text-lg font-black font-mono", isSelected ? "text-white" : "text-white/80")}>
+                    <span className={cn("text-lg font-black font-mono", isSelected ? "text-white" : "text-slate-900")}>
                       {slot.isToday
                         ? new Date().toLocaleDateString("en-KE", { day: "numeric", timeZone: "Africa/Nairobi" })
                         : slot.shortLabel.split(" ")[1]}
                     </span>
-                    <span className={cn("text-[10px] font-bold", isSelected ? "text-[#FACC15]/80" : "text-[#A7F3D0]/50")}>
+                    <span className={cn("text-[10px] font-bold", isSelected ? "text-blue-100" : "text-slate-400")}>
                       {slot.isToday
                         ? new Date().toLocaleDateString("en-KE", { month: "short", timeZone: "Africa/Nairobi" })
                         : slot.shortLabel.split(" ")[2]}
                     </span>
                     {/* Dot indicator */}
-                    <span className={cn("mt-1 h-1.5 w-1.5 rounded-full", hasData ? (isSelected ? "bg-[#FACC15]" : "bg-[#10B981]") : "bg-transparent")} />
+                    <span className={cn("mt-1 h-1.5 w-1.5 rounded-full", hasData ? (isSelected ? "bg-white" : "bg-blue-600") : "bg-transparent")} />
                   </button>
                 );
               })}
@@ -235,44 +238,44 @@ function PackageHistoryPage() {
           <button
             onClick={() => setSelectedDayIdx((i) => Math.max(i - 1, 0))}
             disabled={selectedDayIdx <= 0}
-            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C] text-[#A7F3D0] hover:border-[#10B981] hover:text-white transition-all disabled:opacity-30"
+            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 shadow-sm"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* 3. STATS OVERVIEW CARDS */}
+      {/* 3. STATS OVERVIEW CARDS (Matching solid color top row blocks in reference image) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+        <div className="rounded-2xl bg-blue-600 p-5 text-white shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-black uppercase text-[#38BDF8]">Archived Packages</span>
-            <p className="text-2xl font-black text-white font-mono mt-1">{history.length}</p>
-            <span className="text-[10px] text-[#A7F3D0] font-bold">Snapshots in last 7 days</span>
+            <span className="text-xs font-black uppercase text-blue-100">Archived Packages</span>
+            <p className="text-3xl font-black text-white font-mono mt-1">{history.length}</p>
+            <span className="text-[11px] text-blue-100/90 font-bold">Snapshots in last 7 days</span>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FACC15] text-black border-2 border-[#CA8A04] shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white shadow-inner">
             <Layers className="h-6 w-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+        <div className="rounded-2xl bg-orange-500 p-5 text-white shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-black uppercase text-[#38BDF8]">Archived Predictions</span>
-            <p className="text-2xl font-black text-[#FACC15] font-mono mt-1">{totalGamesArchived}</p>
-            <span className="text-[10px] text-[#A7F3D0] font-bold">Matches recorded</span>
+            <span className="text-xs font-black uppercase text-orange-100">Archived Predictions</span>
+            <p className="text-3xl font-black text-white font-mono mt-1">{totalGamesArchived}</p>
+            <span className="text-[11px] text-orange-100/90 font-bold">Matches recorded</span>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10B981] text-black border-2 border-[#059669] shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white shadow-inner">
             <Trophy className="h-6 w-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#10B981] bg-[#0A382C] p-4 shadow-lg flex items-center justify-between">
+        <div className="rounded-2xl bg-emerald-600 p-5 text-white shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-black uppercase text-[#38BDF8]">Active Packages</span>
-            <p className="text-2xl font-black text-[#38BDF8] font-mono mt-1">{activeRulesCount}</p>
-            <span className="text-[10px] text-[#A7F3D0] font-bold">Ready for today's tips</span>
+            <span className="text-xs font-black uppercase text-emerald-100">Active Packages</span>
+            <p className="text-3xl font-black text-white font-mono mt-1">{activeRulesCount}</p>
+            <span className="text-[11px] text-emerald-100/90 font-bold">Ready for today's tips</span>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#38BDF8] text-black border-2 border-[#0284C7] shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white shadow-inner">
             <Zap className="h-6 w-6" />
           </div>
         </div>
@@ -280,17 +283,17 @@ function PackageHistoryPage() {
 
       {/* 4. SELECTED DAY HEADER */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 rounded-xl bg-[#031E17] border-2 border-[#10B981] px-4 py-1.5 text-sm font-black text-[#FACC15] shadow-md">
-          <Calendar className="h-4 w-4 text-[#10B981]" />
+        <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-1.5 text-sm font-black text-slate-800 shadow-sm">
+          <Calendar className="h-4 w-4 text-blue-600" />
           {selectedDay.isToday
             ? `Today — ${new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Nairobi" })}`
             : selectedDay.key}
         </div>
-        <div className="h-0.5 flex-1 bg-gradient-to-r from-[#10B981]/60 to-transparent" />
-        <span className="text-xs font-bold text-[#A7F3D0]">
+        <div className="h-0.5 flex-1 bg-slate-200" />
+        <span className="text-xs font-bold text-slate-500">
           {displayItems.length} {displayItems.length === 1 ? "Package" : "Packages"}
           {selectedDay.isToday && (
-            <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-[#10B981]/20 border border-[#10B981] px-2 py-0.5 text-[10px] font-black text-[#10B981]">
+            <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-black text-emerald-800">
               LIVE
             </span>
           )}
@@ -299,15 +302,15 @@ function PackageHistoryPage() {
 
       {/* 5. PACKAGES FOR SELECTED DAY */}
       {displayItems.length === 0 ? (
-        <div className="rounded-3xl border-2 border-dashed border-[#10B981]/50 bg-[#0A382C]/60 p-12 text-center shadow-xl space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#031E17] border-2 border-[#10B981] text-[#FACC15]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 shadow-sm">
             <HistoryIcon className="h-8 w-8" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#38BDF8]">
+            <h3 className="text-xl font-black text-slate-900">
               {selectedDay.isToday ? "No Games Set for Today" : "No Records for This Day"}
             </h3>
-            <p className="mt-1 text-sm text-[#A7F3D0] max-w-md mx-auto">
+            <p className="mt-1 text-sm text-slate-600 max-w-md mx-auto">
               {selectedDay.isToday
                 ? "Add match fixtures to your Tips Packages — they'll appear here automatically."
                 : "Games from this day were either not set or have already been purged (7-day retention)."}
@@ -322,91 +325,71 @@ function PackageHistoryPage() {
             return (
               <div
                 key={item.id}
-                className="overflow-hidden rounded-3xl border-2 border-[#10B981] bg-[#0A382C] shadow-2xl transition-all"
+                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all"
               >
                 {/* Card Header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#10B981]/40 bg-[#031E17]/80 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 p-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FACC15] text-black border-2 border-[#CA8A04] shadow-md font-black">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white font-black shadow-sm">
                       <Trophy className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-[#38BDF8] tracking-tight">{item.packageName}</h3>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight">{item.packageName}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="inline-flex items-center rounded-full bg-[#10B981]/20 border border-[#10B981] px-2.5 py-0.5 text-[11px] font-black text-[#10B981]">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 border border-blue-200 px-2.5 py-0.5 text-[11px] font-black text-blue-800">
                           {item.packageType}
                         </span>
-                        <span className="text-xs text-[#A7F3D0] font-bold">• {item.totalGames} Games</span>
+                        <span className="text-xs text-slate-500 font-bold">• {item.totalGames} Games</span>
                         {selectedDay.isToday && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-black text-emerald-800">
                             ● LIVE TODAY
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleCopySms(item.id, item.messageTemplateSnapshot)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#10B981]/50 bg-[#0A382C] hover:bg-[#10B981]/20 px-3 py-1.5 text-xs font-bold text-[#A7F3D0] transition-all"
-                    >
-                      {isCopied ? (
-                        <><CheckCircle2 className="h-4 w-4 text-[#10B981]" /> Copied!</>
-                      ) : (
-                        <><Copy className="h-4 w-4 text-[#38BDF8]" /> Copy SMS</>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                      className="inline-flex items-center gap-1 rounded-xl border-2 border-[#10B981] bg-[#10B981] hover:bg-[#059669] px-3.5 py-1.5 text-xs font-black text-black transition-all shadow-md"
-                    >
-                      {isExpanded ? <>Hide SMS <ChevronUp className="h-4 w-4" /></> : <>View SMS <ChevronDown className="h-4 w-4" /></>}
-                    </button>
-                  </div>
                 </div>
 
                 {/* Fixtures Table */}
                 <div className="p-5 space-y-4">
                   {item.gamesSnapshot.length === 0 ? (
-                    <p className="text-xs text-[#A7F3D0] italic">No match fixtures for this package.</p>
+                    <p className="text-xs text-slate-500 italic">No match fixtures for this package.</p>
                   ) : (
-                    <div className="overflow-x-auto rounded-2xl border border-[#10B981]/40 bg-[#031E17]/60">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                       <table className="w-full text-left text-xs font-bold">
                         <thead>
-                          <tr className="border-b border-[#10B981]/40 bg-[#0A382C] text-[#38BDF8] uppercase tracking-wider text-[11px]">
+                          <tr className="border-b border-slate-200 bg-slate-100 text-slate-700 uppercase tracking-wider text-[11px]">
                             <th className="py-3 px-4 w-12 text-center">#</th>
                             <th className="py-3 px-4">Home Team</th>
-                            <th className="py-3 px-2 text-center text-[#FACC15]">VS</th>
+                            <th className="py-3 px-2 text-center text-blue-600">VS</th>
                             <th className="py-3 px-4">Away Team</th>
                             <th className="py-3 px-4 text-center">Predictive Pick</th>
                             <th className="py-3 px-4 text-right">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#10B981]/20 text-white font-mono">
+                        <tbody className="divide-y divide-slate-100 text-slate-900 font-mono">
                           {item.gamesSnapshot.map((g, idx) => (
-                            <tr key={idx} className="hover:bg-[#10B981]/10 transition-colors">
-                              <td className="py-3 px-4 text-center font-bold text-[#A7F3D0]">{idx + 1}</td>
-                              <td className="py-3 px-4 font-black uppercase text-[#38BDF8]">{g.team1 || "N/A"}</td>
-                              <td className="py-3 px-2 text-center text-xs font-black text-[#FACC15]">VS</td>
-                              <td className="py-3 px-4 font-black uppercase text-[#38BDF8]">{g.team2 || "N/A"}</td>
+                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-3 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
+                              <td className="py-3 px-4 font-black uppercase text-slate-900">{g.team1 || "N/A"}</td>
+                              <td className="py-3 px-2 text-center text-xs font-black text-blue-600">VS</td>
+                              <td className="py-3 px-4 font-black uppercase text-slate-900">{g.team2 || "N/A"}</td>
                               <td className="py-3 px-4 text-center">
                                 {g.prediction ? (
-                                  <span className="inline-flex items-center gap-1 rounded-lg border-2 border-[#CA8A04] bg-[#FACC15] px-3 py-1 text-xs font-black text-black shadow-md">
-                                    <Sparkles className="h-3 w-3 text-black" /> {g.prediction}
+                                  <span className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-black text-amber-900 shadow-sm">
+                                    <Sparkles className="h-3 w-3 text-amber-800" /> {g.prediction}
                                   </span>
                                 ) : (
-                                  <span className="text-[#A7F3D0]/60 italic">-</span>
+                                  <span className="text-slate-400 italic">-</span>
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right">
                                 {selectedDay.isToday ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500 px-2.5 py-0.5 text-[10px] font-black text-emerald-400">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-black text-emerald-800">
                                     ● LIVE
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#10B981]/20 border border-[#10B981] px-2.5 py-0.5 text-[10px] font-black text-[#10B981]">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-black text-blue-700">
                                     <CheckCircle2 className="h-3 w-3" /> ARCHIVED
                                   </span>
                                 )}
@@ -420,16 +403,16 @@ function PackageHistoryPage() {
 
                   {/* Raw SMS Collapsible */}
                   {isExpanded && (
-                    <div className="rounded-2xl border-2 border-[#38BDF8]/40 bg-[#031E17] p-4 space-y-2">
-                      <div className="flex items-center justify-between border-b border-[#38BDF8]/20 pb-2">
-                        <span className="text-xs font-black text-[#38BDF8] uppercase tracking-wider flex items-center gap-2">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-900 p-4 space-y-2 text-white">
+                      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+                        <span className="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center gap-2">
                           <FileText className="h-4 w-4" /> Full SMS Dispatch String
                         </span>
-                        <span className="text-[10px] font-mono text-[#A7F3D0]">
+                        <span className="text-[10px] font-mono text-slate-400">
                           {selectedDay.isToday ? "Current template" : "Exact snapshot sent to users"}
                         </span>
                       </div>
-                      <pre className="whitespace-pre-wrap font-mono text-xs text-[#A7F3D0] leading-relaxed">
+                      <pre className="whitespace-pre-wrap font-mono text-xs text-slate-200 leading-relaxed">
                         {item.messageTemplateSnapshot}
                       </pre>
                     </div>

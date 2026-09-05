@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Gradient = "primary" | "blue" | "coral" | "green" | "orange";
+type Gradient = "primary" | "blue" | "coral" | "green" | "orange" | "purple";
 
 interface Props {
   label: string;
@@ -20,6 +20,7 @@ const GRADIENTS: Record<Gradient, string> = {
   coral: "var(--gradient-coral)",
   green: "var(--gradient-green)",
   orange: "var(--gradient-orange)",
+  purple: "linear-gradient(135deg, #6366f1, #8b5cf6)",
 };
 
 export function StatCard({ label, value, sub, change, icon: Icon, gradient, accent = "primary" }: Props) {

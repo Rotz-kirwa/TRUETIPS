@@ -39,7 +39,16 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-background">
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-slate-950">
+      {/* Background image with light WebP asset */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-scroll transition-opacity duration-1000"
+        style={{
+          backgroundImage: "url('/login-bg.webp')",
+          filter: "brightness(0.55) contrast(1.1)",
+        }}
+      />
+
       {/* Suppress browser built-in password reveal / autofill overlay icons */}
       <style>{`
         input[type="password"]::-ms-reveal,
@@ -53,14 +62,14 @@ function LoginPage() {
         }
       `}</style>
 
-      {/* Subtle top/bottom vignette to enhance depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none" />
+      {/* Top/bottom dark gradient vignette for enhanced depth and readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/40 to-slate-950/90 pointer-events-none" />
 
-      {/* Subdued dark glow behind the central login card for high text contrast */}
+      {/* Subdued radial glow behind central login card */}
       <div
         className="absolute inset-0 pointer-events-none flex items-center justify-center"
         style={{
-          background: "radial-gradient(circle at center, rgba(5, 8, 18, 0.70) 0%, rgba(5, 8, 18, 0.35) 40%, transparent 75%)",
+          background: "radial-gradient(circle at center, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.4) 50%, transparent 80%)",
         }}
       />
 
@@ -74,42 +83,40 @@ function LoginPage() {
       >
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/20 bg-white/10 backdrop-blur-md">
             <img src={predictionLabLogo} alt="TrueTips" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">TrueTips</h2>
-            <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
+            <h2 className="text-2xl font-black tracking-wide text-white drop-shadow-md">TrueTips</h2>
+            <p className="text-xs text-blue-200/70 tracking-widest uppercase font-bold mt-0.5">Admin ERP Portal</p>
           </div>
         </div>
 
-        {/* Glass card — suppress hydration at the card level so extension-injected
-            nodes (LastPass icon root, Bitwarden overlays, etc.) don't throw */}
+        {/* Glass card */}
         <div
           className="rounded-3xl p-8 shadow-2xl"
           suppressHydrationWarning
           style={{
-            background: "rgba(10, 15, 25, 0.82)",
+            background: "rgba(15, 23, 42, 0.85)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            boxShadow: "0 32px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.10)",
           }}
         >
           <div className="mb-7 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-white">Welcome back</h1>
-            <p className="mt-1.5 text-sm text-white/50">Sign in to continue to your dashboard</p>
+            <h1 className="text-2xl font-black tracking-tight text-white">Welcome Back</h1>
+            <p className="mt-1.5 text-sm text-slate-300 font-medium">Sign in to manage your ERP portal</p>
           </div>
 
-          {/* Render form client-only to prevent extension (LastPass, etc.) hydration mismatches */}
           <form onSubmit={submit} className="space-y-4" suppressHydrationWarning>
             {/* Email field */}
             <div className="group" suppressHydrationWarning>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="email">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="email">
                 Email
               </label>
               <div className="relative" suppressHydrationWarning>
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-400" />
                 <input
                   id="email"
                   type="email"
@@ -118,17 +125,17 @@ function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="joelesabu2@gmail.com"
-                  className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white font-medium outline-none transition-all placeholder:text-slate-400"
+                  style={{ background: "rgba(255, 255, 255, 0.07)", border: "1px solid rgba(255, 255, 255, 0.14)" }}
                   suppressHydrationWarning
                   onFocus={(e) => {
-                    e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.09)";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
+                    e.currentTarget.style.border = "1px solid rgba(29, 112, 184, 0.8)";
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29, 112, 184, 0.25)";
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.14)";
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.07)";
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 />
@@ -137,12 +144,12 @@ function LoginPage() {
 
             {/* Password field */}
             <div className="group" suppressHydrationWarning>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="password">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300" htmlFor="password">
                 Password
               </label>
               <div className="flex items-center gap-2" suppressHydrationWarning>
                 <div className="relative flex-1" suppressHydrationWarning>
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-400" />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -151,17 +158,17 @@ function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
-                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                    className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white font-medium outline-none transition-all placeholder:text-slate-400"
+                    style={{ background: "rgba(255, 255, 255, 0.07)", border: "1px solid rgba(255, 255, 255, 0.14)" }}
                     suppressHydrationWarning
                     onFocus={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.09)";
-                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
+                      e.currentTarget.style.border = "1px solid rgba(29, 112, 184, 0.8)";
+                      e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29, 112, 184, 0.25)";
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.14)";
+                      e.currentTarget.style.background = "rgba(255, 255, 255, 0.07)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   />
@@ -171,10 +178,10 @@ function LoginPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: showPassword ? "rgba(20,184,166,0.30)" : "rgba(255,255,255,0.10)",
-                    color: showPassword ? "rgb(20,184,166)" : "rgba(255,255,255,0.85)",
-                    border: showPassword ? "1px solid rgba(20,184,166,0.5)" : "1px solid rgba(255,255,255,0.18)",
-                    boxShadow: showPassword ? "0 0 12px rgba(20,184,166,0.35)" : "none",
+                    background: showPassword ? "rgba(29, 112, 184, 0.35)" : "rgba(255, 255, 255, 0.10)",
+                    color: showPassword ? "rgb(147, 197, 253)" : "rgba(255, 255, 255, 0.85)",
+                    border: showPassword ? "1px solid rgba(29, 112, 184, 0.6)" : "1px solid rgba(255, 255, 255, 0.18)",
+                    boxShadow: showPassword ? "0 0 12px rgba(29, 112, 184, 0.4)" : "none",
                   }}
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
@@ -186,8 +193,8 @@ function LoginPage() {
 
             {error && (
               <div
-                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-red-400"
-                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.20)" }}
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-rose-300 font-medium"
+                style={{ background: "rgba(225, 29, 72, 0.18)", border: "1px solid rgba(225, 29, 72, 0.3)" }}
               >
                 {error}
               </div>
@@ -196,14 +203,13 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="relative mt-2 h-12 w-full overflow-hidden rounded-xl text-sm font-bold tracking-wide text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
-              style={{ background: "linear-gradient(135deg, oklch(0.50 0.11 183), oklch(0.62 0.15 183))" }}
+              className="relative mt-2 h-12 w-full overflow-hidden rounded-xl text-sm font-black tracking-wide text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 bg-blue-600 hover:bg-blue-700 shadow-blue-900/40"
             >
               <span className="pointer-events-none absolute inset-0 rounded-xl"
-                style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)" }} />
+                style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)" }} />
               <span className="relative flex items-center justify-center gap-2">
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? "Signing in…" : "Sign in"}
+                {loading ? "Signing in…" : "Sign in to TrueTips"}
               </span>
             </button>
           </form>
@@ -211,8 +217,8 @@ function LoginPage() {
 
         {/* Bottom brand text */}
         <div className="mt-8 text-center">
-          <p className="text-xs tracking-widest text-white/50 uppercase font-semibold">
-            TrueTips Admin Portal
+          <p className="text-xs tracking-widest text-white/60 uppercase font-bold drop-shadow-sm">
+            TrueTips ERP Admin System
           </p>
         </div>
       </div>

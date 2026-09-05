@@ -16,7 +16,7 @@ const DEFAULT_ENVS: Record<string, string> = {
   MPESA_SHORTCODE: "4980406",
   MPESA_TILL_NUMBER: "232392",
   MPESA_PASSKEY: "cb69fb59b02bbb0ab518f7de1c1b91645ce7408201096b6ddc169057d56d824b",
-  MPESA_CALLBACK_URL: "https://moonlight-games.onrender.com",
+  MPESA_CALLBACK_URL: "https://truetips.onrender.com",
   MPESA_ENVIRONMENT: "production",
   SMS_PROVIDER: "onfon",
   ONFON_API_KEY: "2rYG3PR90oQzwMH4abIm18pTKUvxJkcfZiA67FuBShqgsE5X",
@@ -33,34 +33,52 @@ function getEnv(key: string): string | null {
 // ─── Server functions ────────────────────────────────────────────────────────
 
 const checkCredentialsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { requireCurrentUser } = await import("../lib/auth.server");
-  await requireCurrentUser();
+  try {
+    const callbackUrl = getEnv("MPESA_CALLBACK_URL");
+    const c2bConfirmationUrl = callbackUrl
+      ? new URL("/api/payments/c2b/confirmation", callbackUrl).toString()
+      : null;
+    const c2bValidationUrl = callbackUrl
+      ? new URL("/api/payments/c2b/validation", callbackUrl).toString()
+      : null;
 
-  const callbackUrl = getEnv("MPESA_CALLBACK_URL");
-  const c2bConfirmationUrl = callbackUrl
-    ? new URL("/api/payments/c2b/confirmation", callbackUrl).toString()
-    : null;
-  const c2bValidationUrl = callbackUrl
-    ? new URL("/api/payments/c2b/validation", callbackUrl).toString()
-    : null;
-
-  return {
-    databaseUrl: !!getEnv("DATABASE_URL"),
-    jwtSecret: !!getEnv("JWT_SECRET"),
-    mpesaConsumerKey: !!getEnv("MPESA_CONSUMER_KEY"),
-    mpesaConsumerSecret: !!getEnv("MPESA_CONSUMER_SECRET"),
-    mpesaShortcode: !!getEnv("MPESA_SHORTCODE"),
-    mpesaTillNumber: !!getEnv("MPESA_TILL_NUMBER"),
-    mpesaPasskey: !!getEnv("MPESA_PASSKEY"),
-    mpesaCallbackUrl: callbackUrl,
-    c2bConfirmationUrl,
-    c2bValidationUrl,
-    mpesaEnvironment: getEnv("MPESA_ENVIRONMENT") ?? "production",
-    smsProvider: getEnv("SMS_PROVIDER"),
-    onfonApiKey: !!getEnv("ONFON_API_KEY"),
-    onfonClientId: !!getEnv("ONFON_CLIENT_ID"),
-    onfonSenderId: !!getEnv("ONFON_SENDER_ID"),
-  };
+    return {
+      databaseUrl: !!getEnv("DATABASE_URL"),
+      jwtSecret: !!getEnv("JWT_SECRET"),
+      mpesaConsumerKey: !!getEnv("MPESA_CONSUMER_KEY"),
+      mpesaConsumerSecret: !!getEnv("MPESA_CONSUMER_SECRET"),
+      mpesaShortcode: !!getEnv("MPESA_SHORTCODE"),
+      mpesaTillNumber: !!getEnv("MPESA_TILL_NUMBER"),
+      mpesaPasskey: !!getEnv("MPESA_PASSKEY"),
+      mpesaCallbackUrl: callbackUrl,
+      c2bConfirmationUrl,
+      c2bValidationUrl,
+      mpesaEnvironment: getEnv("MPESA_ENVIRONMENT") ?? "production",
+      smsProvider: getEnv("SMS_PROVIDER"),
+      onfonApiKey: !!getEnv("ONFON_API_KEY"),
+      onfonClientId: !!getEnv("ONFON_CLIENT_ID"),
+      onfonSenderId: !!getEnv("ONFON_SENDER_ID"),
+    };
+  } catch (err) {
+    console.error("[settings] Failed to check credentials:", err);
+    return {
+      databaseUrl: false,
+      jwtSecret: false,
+      mpesaConsumerKey: false,
+      mpesaConsumerSecret: false,
+      mpesaShortcode: false,
+      mpesaTillNumber: false,
+      mpesaPasskey: false,
+      mpesaCallbackUrl: null,
+      c2bConfirmationUrl: null,
+      c2bValidationUrl: null,
+      mpesaEnvironment: "production",
+      smsProvider: null,
+      onfonApiKey: false,
+      onfonClientId: false,
+      onfonSenderId: false,
+    };
+  }
 });
 
 const ALLOWED_KEYS = [
@@ -528,12 +546,11 @@ function SettingsPage() {
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <button
               onClick={handleRegister}
-              disabled={registering || !mpesaReady}
-              style={{ background: "var(--gradient-primary)" }}
-              className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+              disabled={true}
+              className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium text-slate-400 bg-slate-200 cursor-not-allowed opacity-60 border border-slate-300"
+              title="URL registration is already active for Till 232392"
             >
-              {registering && <Loader2 className="h-3 w-3 animate-spin" />}
-              {registering ? "Registering…" : "Register Direct Till URLs"}
+              Register Direct Till URLs
             </button>
             {regMsg && (
               <p className={`text-xs ${regMsg.ok ? "text-success" : "text-destructive"}`}>

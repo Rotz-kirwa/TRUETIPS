@@ -55,132 +55,131 @@
 :root {
   --radius: 0.75rem;
 
-  /* Dominant Emerald Green Backgrounds */
-  --background: #031E17;
-  --foreground: #FFFFFF;
-  --card: #0A382C;
-  --card-foreground: #FFFFFF;
-  --popover: #0A382C;
-  --popover-foreground: #FFFFFF;
+  /* Modern Clean Light ERP Theme (Matching Reference Image) */
+  --background: #F1F5F9;         /* Soft light slate main canvas */
+  --foreground: #0F172A;         /* Dark navy slate primary text */
+  --card: #FFFFFF;               /* Crisp white card container */
+  --card-foreground: #0F172A;   /* Dark slate card text */
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
 
-  /* Primary Buttons — Strong Electric Yellow */
-  --primary: #FACC15; /* Pure Electric Yellow */
-  --primary-foreground: #000000; /* Deep Black Contrast Text */
-  --primary-glow: #FDE047;
+  /* Primary Accent & Header — Royal Blue (#1D70B8 / #2563EB) */
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --primary-glow: #60A5FA;
 
-  /* Titles & Headings — Strong Sky Blue */
-  --title: #38BDF8;
+  /* Headings */
+  --title: #1E293B;
 
   /* Surfaces & Neutrals */
-  --secondary: #0E4839;
-  --secondary-foreground: #FFFFFF;
-  --muted: #0E4839;
-  --muted-foreground: #A7F3D0;
-  --accent: #125745;
-  --accent-foreground: #FFFFFF;
+  --secondary: #F8FAFC;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #E2E8F0;
+  --accent-foreground: #0F172A;
 
-  /* Multi-Color Semantic Palette: Strong Flat Colors */
-  --success: #10B981; /* Strong Emerald Green */
-  --success-foreground: #000000;
-  --warning: #F97316; /* Strong Tangerine Orange */
-  --warning-foreground: #000000;
-  --destructive: #DC2626; /* Strong Pure Red */
+  /* Semantic Color Palette */
+  --success: #10B981;            /* Emerald Green */
+  --success-foreground: #FFFFFF;
+  --warning: #F97316;            /* Coral Orange */
+  --warning-foreground: #FFFFFF;
+  --destructive: #EF4444;        /* Crimson Red */
   --destructive-foreground: #FFFFFF;
 
   /* Borders & Inputs */
-  --border: #10B981;
-  --input: #10B981;
-  --ring: #FACC15;
+  --border: #E2E8F0;
+  --input: #CBD5E1;
+  --ring: #2563EB;
 
-  /* Strong Solid Colors (No Gradients) */
-  --gradient-primary: #FACC15; /* Solid Electric Yellow */
-  --gradient-blue: #38BDF8;    /* Solid Sky Blue */
-  --gradient-coral: #DC2626;   /* Solid Strong Red */
-  --gradient-green: #10B981;   /* Solid Emerald Green */
-  --gradient-orange: #F97316;  /* Solid Vibrant Orange */
-  --gradient-purple: #A855F7;  /* Solid Amethyst Purple */
-  --gradient-subtle: #031E17;  /* Solid Dark Green */
-  --gradient-sidebar: #02140F; /* Solid Deep Sidebar */
+  /* Stat Card Gradient Blocks (Matching Top Row in Image) */
+  --gradient-primary: #2563EB;   /* Solid Royal Blue */
+  --gradient-blue: #3B82F6;      /* Bright Blue */
+  --gradient-coral: #EF4444;     /* Vibrant Coral Red */
+  --gradient-green: #10B981;     /* Emerald Green */
+  --gradient-orange: #F97316;    /* Vibrant Orange */
+  --gradient-purple: #8B5CF6;    /* Amethyst Purple */
+  --gradient-subtle: #F1F5F9;    /* Page Canvas Light Slate */
+  --gradient-sidebar: #1E293B;   /* Dark Navy Sidebar */
 
-  /* Modern Sharp Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 20px rgba(250, 204, 21, 0.4);
-  --shadow-card: 0 4px 16px rgba(16, 185, 129, 0.25);
+  /* Modern Soft Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.25);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 
   /* Charts */
-  --chart-1: #FACC15;
-  --chart-2: #38BDF8;
+  --chart-1: #2563EB;
+  --chart-2: #F97316;
   --chart-3: #10B981;
-  --chart-4: #F97316;
-  --chart-5: #DC2626;
+  --chart-4: #8B5CF6;
+  --chart-5: #EF4444;
 
-  /* Sidebar Tokens */
-  --sidebar: #02140F;
+  /* Sidebar Tokens (Dark Slate Navy matching image) */
+  --sidebar: #1E293B;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FACC15;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #0A382C;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #334155;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #10B981;
-  --sidebar-ring: #FACC15;
+  --sidebar-border: #334155;
+  --sidebar-ring: #2563EB;
 }
 
 .dark {
-  /* Dark Mode Matches Solid Strong Emerald Palette */
-  --background: #031E17;
-  --foreground: #FFFFFF;
-  --card: #0A382C;
-  --card-foreground: #FFFFFF;
-  --popover: #0A382C;
-  --popover-foreground: #FFFFFF;
+  --background: #F1F5F9;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
 
-  --primary: #FACC15;
-  --primary-foreground: #000000;
-  --primary-glow: #FDE047;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --primary-glow: #60A5FA;
 
-  --secondary: #0E4839;
-  --secondary-foreground: #FFFFFF;
-  --muted: #0E4839;
-  --muted-foreground: #A7F3D0;
-  --accent: #125745;
-  --accent-foreground: #FFFFFF;
+  --secondary: #F8FAFC;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #E2E8F0;
+  --accent-foreground: #0F172A;
 
   --success: #10B981;
-  --success-foreground: #000000;
+  --success-foreground: #FFFFFF;
   --warning: #F97316;
-  --warning-foreground: #000000;
-  --destructive: #DC2626;
+  --warning-foreground: #FFFFFF;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
 
-  --border: #10B981;
-  --input: #10B981;
-  --ring: #FACC15;
+  --border: #E2E8F0;
+  --input: #CBD5E1;
+  --ring: #2563EB;
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 20px rgba(250, 204, 21, 0.4);
-  --shadow-card: 0 4px 16px rgba(16, 185, 129, 0.25);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.25);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 
-  --chart-1: #FACC15;
-  --chart-2: #38BDF8;
+  --chart-1: #2563EB;
+  --chart-2: #F97316;
   --chart-3: #10B981;
-  --chart-4: #F97316;
-  --chart-5: #DC2626;
+  --chart-4: #8B5CF6;
+  --chart-5: #EF4444;
 
-  --sidebar: #02140F;
+  --sidebar: #1E293B;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FACC15;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #0A382C;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #334155;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #10B981;
-  --sidebar-ring: #FACC15;
+  --sidebar-border: #334155;
+  --sidebar-ring: #2563EB;
 
-  --gradient-subtle: #031E17;
-  --gradient-sidebar: #02140F;
+  --gradient-subtle: #F1F5F9;
+  --gradient-sidebar: #1E293B;
 }
 
 @layer base {
@@ -188,29 +187,29 @@
     border-color: var(--color-border);
   }
   body {
-    background-color: #031E17;
-    color: #FFFFFF;
+    background-color: #F1F5F9;
+    color: #0F172A;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Titles & Headings — Strong Solid Electric Sky Blue */
+  /* Titles & Headings — Dark Navy Slate */
   h1, h2, h3, h4, h5, h6 {
-    color: #38BDF8;
+    color: #1E293B;
     font-weight: 800;
   }
 
-  /* Primary Action Buttons — Solid High-Contrast Yellow */
+  /* Primary Action Buttons — Royal Blue ERP Style */
   .btn-primary, button[style*="var(--gradient-primary)"] {
-    background-color: #FACC15 !important;
+    background-color: #2563EB !important;
     background-image: none !important;
-    color: #000000 !important;
-    font-weight: 900 !important;
-    box-shadow: 0 4px 12px rgba(250, 204, 21, 0.4) !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     transition: all 0.15s ease-in-out !important;
   }
 
   .btn-primary:hover, button[style*="var(--gradient-primary)"]:hover {
-    background-color: #EAB308 !important;
+    background-color: #1D4ED8 !important;
     transform: translateY(-1px);
   }
 }
@@ -224,4 +223,3 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
