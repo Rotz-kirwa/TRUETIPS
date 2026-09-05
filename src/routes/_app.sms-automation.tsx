@@ -628,30 +628,33 @@ function RuleModal({
     updateTemplateFromTable(headerText, updated, footerText);
   }
 
-  // Paste Bulk Matches Handlers
-  const [showPasteBox, setShowPasteBox] = useState(false);
-  const [pasteInput, setPasteInput] = useState("");
+  // Smart paste handler — fires when user pastes into any cell.
+  // If the pasted text contains multiple lines / matches, auto-parse all into rows.
+  function handlePasteOnTable(e: React.ClipboardEvent<HTMLInputElement>, rowId: string, field: "team1" | "team2" | "pick") {
+    const pasted = e.clipboardData.getData("text");
+    const lines = pasted.split(/[\n\r]+/).filter((l) => l.trim());
+    // Only intercept multi-line pastes OR any paste into team1 that looks like a full match string
+    const looksLikeBulk =
+      lines.length > 1 ||
+      /\b(vs|v)\.?\b/i.test(pasted);
 
-  function handleImportPastedText() {
-    if (!pasteInput.trim()) {
-      toast.error("Please paste match text first.");
-      return;
+    if (looksLikeBulk) {
+      e.preventDefault();
+      const parsed = parseBulkMatchesText(pasted);
+      if (parsed.length === 0) {
+        toast.error("No valid matches found. Format: TEAM1 VS TEAM2 PICK");
+        return;
+      }
+      setMatchRows((prev) => {
+        // Replace the empty target row with the parsed results; keep other rows
+        const filtered = prev.filter((r) => r.id !== rowId && (r.team1.trim() || r.team2.trim()));
+        const updated = [...filtered, ...parsed];
+        updateTemplateFromTable(headerText, updated, footerText);
+        return updated;
+      });
+      toast.success(`Imported ${parsed.length} match${parsed.length > 1 ? "es" : ""} into table!`);
     }
-    const parsed = parseBulkMatchesText(pasteInput);
-    if (parsed.length === 0) {
-      toast.error("No valid matches found in pasted text.");
-      return;
-    }
-
-    setMatchRows((prev) => {
-      const updated = [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
-      updateTemplateFromTable(headerText, updated, footerText);
-      return updated;
-    });
-
-    toast.success(`Parsed and imported ${parsed.length} match(es) into table!`);
-    setPasteInput("");
-    setShowPasteBox(false);
+    // Otherwise let the default paste behaviour handle it (single cell edit)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -743,7 +746,7 @@ function RuleModal({
                 {editing ? "Edit Tips Package" : "Create New Tips Package"}
               </h2>
               <p className="text-xs text-[#A7F3D0] font-medium">
-                Set package name, price, and add or paste match predictions
+                Set package name and price
               </p>
             </div>
           </div>
@@ -762,7 +765,7 @@ function RuleModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-                Package Name (e.g. OV 1.5, 1, X, 2) *
+                Package Name (e.g. JACKPOT / VIP / DAILY VVIP) *
               </label>
               <input
                 type="text"
@@ -773,7 +776,7 @@ function RuleModal({
                   setHeaderText(upper);
                   updateTemplateFromTable(upper, matchRows, footerText);
                 }}
-                placeholder="e.g. OV 1.5, 1, X, 2, DAILY VIP..."
+                placeholder="e.g. JACKPOT / VIP / DAILY VVIP"
                 className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-black font-mono outline-none focus:border-[#FACC15] uppercase"
               />
             </div>
@@ -865,7 +868,7 @@ function RuleModal({
                         {matchRows.length === 0 ? (
                           <tr className="bg-[#031E17]/40">
                             <td colSpan={6} className="p-4 text-center text-xs font-bold text-[#A7F3D0]">
-                              No match predictions added yet. Click <span className="text-[#FACC15] font-black">+ Add Match Fixture Row</span> below or <span className="text-[#38BDF8] font-black">Paste Multiple Matches</span> to add.
+                              No predictions yet. Click <span className="text-[#FACC15] font-black">+ Add Match Fixture Row</span> — you can type or paste matches directly into the Home Team field.
                             </td>
                           </tr>
                         ) : (
@@ -879,7 +882,8 @@ function RuleModal({
                                   type="text"
                                   value={m.team1}
                                   onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value.toUpperCase())}
-                                  placeholder="e.g. ARSENAL"
+                                  onPaste={(e) => handlePasteOnTable(e, m.id, "team1")}
+                                  placeholder="e.g. LIVERPOOL"
                                   className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15] uppercase"
                                 />
                               </td>
@@ -900,7 +904,7 @@ function RuleModal({
                                   type="text"
                                   value={m.pick}
                                   onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value.toUpperCase())}
-                                  placeholder="e.g. 1 / OVER 2.5 / GG"
+                                  placeholder="e.g. 1"
                                   className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-mono font-black text-[#FACC15] outline-none focus:border-[#FACC15] uppercase"
                                 />
                               </td>
@@ -928,48 +932,10 @@ function RuleModal({
                     >
                       <Plus className="h-4 w-4" /> Add Match Fixture Row
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowPasteBox(!showPasteBox)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] px-3 py-1.5 text-xs font-black text-black hover:bg-[#EAB308] transition-all shadow-sm"
-                    >
-                      <ClipboardList className="h-4 w-4" /> Paste Multiple Matches
-                    </button>
+                    <span className="text-[10px] text-[#A7F3D0]/60 font-bold">
+                      💡 Paste multiple matches into the Home Team field to auto-fill all rows
+                    </span>
                   </div>
-
-                  {showPasteBox && (
-                    <div className="mt-3 rounded-xl border-2 border-[#FACC15] bg-[#031E17] p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-black text-[#FACC15] flex items-center gap-1.5 uppercase">
-                          <ClipboardList className="h-4 w-4" />
-                          Paste Bulk Matches
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowPasteBox(false)}
-                          className="text-[11px] text-[#A7F3D0] hover:text-white"
-                        >
-                          Close
-                        </button>
-                      </div>
-                      <textarea
-                        rows={4}
-                        value={pasteInput}
-                        onChange={(e) => setPasteInput(e.target.value.toUpperCase())}
-                        placeholder="Paste matches here...&#10;ARSENAL VS CHELSEA 1&#10;LIVERPOOL VS CITY OVER 2.5&#10;REAL MADRID VS BARCELONA GG"
-                        className="w-full rounded-lg border border-[#10B981]/40 bg-[#0A382C] p-2.5 text-xs font-mono text-white outline-none focus:border-[#FACC15] uppercase"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleImportPastedText}
-                        className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#CA8A04] bg-[#FACC15] px-3 py-1.5 text-xs font-black text-black shadow hover:bg-[#EAB308]"
-                      >
-                        <Wand2 className="h-4 w-4" />
-                        Import Matches to Table
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             ) : (
@@ -1344,14 +1310,6 @@ function SmsAutomationPage() {
           </div>
         </div>
         <div className="flex items-center gap-2.5">
-          {rules.length > 0 && (
-            <button
-              onClick={() => setShowClearModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/50 bg-red-950/60 hover:bg-red-900/80 px-3.5 py-2 text-xs font-black text-red-200 shadow-md transition-all hover:scale-105"
-            >
-              <Trash2 className="h-4 w-4 text-red-400" /> Clear All Packages
-            </button>
-          )}
           <button
             onClick={() => setModal({ mode: "add" })}
             className="inline-flex items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 py-2 text-sm font-black text-black shadow-lg transition-all hover:scale-105"
