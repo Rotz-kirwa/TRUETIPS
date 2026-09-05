@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { appSettings, smsAutomationRules, smsLogs } from "./db/schema";
 import { sendSms } from "./sms.server";
@@ -157,6 +157,41 @@ export async function findOverlappingActiveRules(
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Gets Nairobi 00:00:00 AM timestamp for today (UTC+3)
+ */
+export function getNairobiMidnightToday(): Date {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Nairobi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(now);
+  const month = parts.find((p) => p.type === "month")?.value || "01";
+  const day = parts.find((p) => p.type === "day")?.value || "01";
+  const year = parts.find((p) => p.type === "year")?.value || "2026";
+  return new Date(`${year}-${month}-${day}T00:00:00+03:00`);
+}
+
+/**
+ * Purges any rules created prior to today's midnight (Africa/Nairobi)
+ */
+export async function purgeExpiredMidnightRules(): Promise<number> {
+  try {
+    const midnightToday = getNairobiMidnightToday();
+    const deleted = await db
+      .delete(smsAutomationRules)
+      .where(lt(smsAutomationRules.createdAt, midnightToday))
+      .returning();
+    return deleted.length;
+  } catch (err) {
+    console.error("Failed to purge expired midnight rules:", err);
+    return 0;
+  }
+}
+
 function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {
   return {
     id: r.id,
@@ -171,6 +206,7 @@ function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {
 }
 
 export async function fetchAllRules(): Promise<RuleRow[]> {
+  await purgeExpiredMidnightRules();
   const rows = await db
     .select()
     .from(smsAutomationRules)
@@ -195,6 +231,14 @@ export async function createRule(input: {
   if (!input.messageTemplate.trim()) {
     return { type: "validation", message: "Message template cannot be empty." };
   }
+
+  // Purge any expired rules from prior days
+  await purgeExpiredMidnightRules();
+
+  // If a package for the exact same amount already exists, replace it cleanly with the new package
+  await db
+    .delete(smsAutomationRules)
+    .where(eq(smsAutomationRules.minAmount, String(input.minAmount)));
 
   const [row] = await db
     .insert(smsAutomationRules)

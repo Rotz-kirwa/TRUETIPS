@@ -1306,11 +1306,22 @@ function SmsAutomationPage() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#10B981] pb-5">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-[#38BDF8]">Tips Packages</h1>
-          <p className="mt-1 text-sm text-[#A7F3D0] font-bold">
-            Create and manage prediction packages available for subscribers.
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#A7F3D0] font-bold">
+            <span>Create and manage prediction packages available for subscribers.</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#031E17] border border-[#10B981]/50 px-2.5 py-0.5 text-[11px] font-mono text-[#FACC15]">
+              🌙 Auto-resets daily at Midnight (EAT)
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2.5">
+          {rules.length > 0 && (
+            <button
+              onClick={() => setShowClearModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/50 bg-red-950/60 hover:bg-red-900/80 px-3.5 py-2 text-xs font-black text-red-200 shadow-md transition-all hover:scale-105"
+            >
+              <Trash2 className="h-4 w-4 text-red-400" /> Clear All Packages
+            </button>
+          )}
           <button
             onClick={() => setModal({ mode: "add" })}
             className="inline-flex items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 py-2 text-sm font-black text-black shadow-lg transition-all hover:scale-105"
