@@ -1,6 +1,18 @@
 import { and, count, desc, eq, gte, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "./db/client";
-import { appSettings, smsAutomationRules, smsLogs } from "./db/schema";
+import { appSettings, packageHistory, smsAutomationRules, smsLogs } from "./db/schema";
+
+export type PackageHistoryRow = {
+  id: string;
+  originalPackageId: string | null;
+  packageName: string;
+  packageType: string;
+  archivedDate: string;
+  gamesSnapshot: Array<{ team1: string; team2: string; prediction: string }>;
+  messageTemplateSnapshot: string;
+  totalGames: number;
+  createdAt: Date;
+};
 import { sendSms } from "./sms.server";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -193,9 +205,72 @@ function cleanTemplateHeaderOnly(rawTemplate: string, fallbackTitle: string): st
   return cleanHeader || fallbackTitle.toUpperCase();
 }
 
+export function extractGamesFromTemplate(rawTemplate: string): Array<{ team1: string; team2: string; prediction: string }> {
+  if (!rawTemplate || !rawTemplate.trim()) return [];
+  const lines = rawTemplate.split("\n");
+  const games: Array<{ team1: string; team2: string; prediction: string }> = [];
+
+  for (const line of lines) {
+    let trimmed = line.trim();
+    if (!trimmed) continue;
+    if (/(🥇|Good luck|Play Smart|Win Big)/i.test(trimmed)) continue;
+    if (!/\b(vs|v)\b/i.test(trimmed) && !trimmed.includes("->") && !trimmed.includes("→") && !trimmed.includes(" : ")) continue;
+
+    // Strip leading numbers e.g. "1. ", "1) "
+    trimmed = trimmed.replace(/^[\d\*\-\•]+[\.\)\:\-\s]+/, "").trim();
+    trimmed = trimmed.replace(/^(vs|v)\.?\s+/i, "").trim();
+
+    let team1 = "";
+    let team2 = "";
+    let pick = "";
+
+    if (trimmed.includes("->") || trimmed.includes("→")) {
+      const parts = trimmed.split(/->|→/);
+      const fixture = parts[0].trim();
+      pick = parts.slice(1).join("->").trim().toUpperCase();
+      const vsParts = fixture.split(/\s+\b(vs|v)\.?\s+/i);
+      team1 = vsParts[0]?.trim() || "";
+      team2 = vsParts.slice(1).join(" ").trim();
+    } else if (trimmed.includes(" : ")) {
+      const parts = trimmed.split(" : ");
+      const fixture = parts[0].trim();
+      pick = parts.slice(1).join(" : ").trim().toUpperCase();
+      const vsParts = fixture.split(/\s+\b(vs|v)\.?\s+/i);
+      team1 = vsParts[0]?.trim() || "";
+      team2 = vsParts.slice(1).join(" ").trim();
+    } else {
+      const vsParts = trimmed.split(/\s+\b(vs|v)\.?\s+/i);
+      team1 = vsParts[0]?.trim() || "";
+      const afterVs = vsParts.slice(1).join(" ").trim();
+      const tokens = afterVs.split(/\s+/);
+      if (tokens.length > 1) {
+        const lastToken = tokens[tokens.length - 1];
+        if (/^(1|2|X|1X|X2|12|GG|NG|BTTS|OVER|UNDER)$/i.test(lastToken.replace(/[\(\)]/g, ""))) {
+          pick = lastToken.replace(/[\(\)]/g, "").toUpperCase();
+          team2 = tokens.slice(0, -1).join(" ");
+        } else {
+          team2 = afterVs;
+        }
+      } else {
+        team2 = afterVs;
+      }
+    }
+
+    if (team1 || team2) {
+      games.push({
+        team1: team1.toUpperCase(),
+        team2: team2.toUpperCase(),
+        prediction: pick.toUpperCase(),
+      });
+    }
+  }
+
+  return games;
+}
+
 /**
  * Resets games/predictions from packages created or updated before today's midnight (00:00 EAT),
- * keeping the package itself intact in the database while clearing out yesterday's games.
+ * archives yesterday's games snapshot into package_history, and keeps the package intact in DB.
  */
 export async function resetExpiredMidnightMatches(): Promise<number> {
   try {
@@ -207,6 +282,30 @@ export async function resetExpiredMidnightMatches(): Promise<number> {
 
     let count = 0;
     for (const row of expiredRows) {
+      const games = extractGamesFromTemplate(row.messageTemplate);
+
+      // If the package contained games set on a previous day, archive them first into package_history
+      if (games.length > 0) {
+        const archivedDate = row.updatedAt.toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Africa/Nairobi",
+        });
+
+        await db.insert(packageHistory).values({
+          originalPackageId: row.id,
+          packageName: row.name,
+          packageType: `KES ${row.minAmount}`,
+          archivedDate,
+          gamesSnapshot: games,
+          messageTemplateSnapshot: row.messageTemplate,
+          totalGames: games.length,
+          createdAt: new Date(),
+        });
+      }
+
+      // Reset template to header + permanent footer (clearing active games while keeping package intact)
       const header = cleanTemplateHeaderOnly(row.messageTemplate, row.name);
       const resetTemplate = `${header}\n\n${PERMANENT_FOOTER}`;
 
@@ -220,11 +319,42 @@ export async function resetExpiredMidnightMatches(): Promise<number> {
 
       count++;
     }
+
+    // Auto-purge package history records older than 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    await db.delete(packageHistory).where(lt(packageHistory.createdAt, sevenDaysAgo));
+
     return count;
   } catch (err) {
-    console.error("Failed to reset expired midnight matches:", err);
+    console.error("Failed to reset and archive expired midnight matches:", err);
     return 0;
   }
+}
+
+/**
+ * Fetches package history records for the last 7 days.
+ */
+export async function fetchPackageHistory(): Promise<PackageHistoryRow[]> {
+  await resetExpiredMidnightMatches();
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const rows = await db
+    .select()
+    .from(packageHistory)
+    .where(gte(packageHistory.createdAt, sevenDaysAgo))
+    .orderBy(desc(packageHistory.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    originalPackageId: r.originalPackageId,
+    packageName: r.packageName,
+    packageType: r.packageType,
+    archivedDate: r.archivedDate,
+    gamesSnapshot: (r.gamesSnapshot as Array<{ team1: string; team2: string; prediction: string }>) || [],
+    messageTemplateSnapshot: r.messageTemplateSnapshot,
+    totalGames: r.totalGames,
+    createdAt: r.createdAt,
+  }));
 }
 
 function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {

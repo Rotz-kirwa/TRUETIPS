@@ -152,6 +152,21 @@ export async function ensureDatabaseTablesAndSeed() {
 
       CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_created_at ON mpesa_callback_events(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_mpesa_callback_events_trans_id ON mpesa_callback_events(trans_id);
+
+      CREATE TABLE IF NOT EXISTS package_history (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        original_package_id UUID REFERENCES sms_automation_rules(id) ON DELETE SET NULL,
+        package_name TEXT NOT NULL,
+        package_type TEXT NOT NULL DEFAULT '',
+        archived_date TEXT NOT NULL,
+        games_snapshot JSONB NOT NULL,
+        message_template_snapshot TEXT NOT NULL,
+        total_games INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_package_history_created_at ON package_history(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_package_history_archived_date ON package_history(archived_date);
     `);
 
     // 2. Ensure default admin user joelesabu2@gmail.com exists with password 'Joel@2030'

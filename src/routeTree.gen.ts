@@ -21,6 +21,7 @@ import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as AppSmsAutomationRouteImport } from './routes/_app.sms-automation'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppPaymentsRouteImport } from './routes/_app.payments'
+import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppDebugRouteImport } from './routes/_app.debug'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
@@ -99,6 +100,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppPaymentsRoute = AppPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDebugRoute = AppDebugRouteImport.update({
@@ -213,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AppAnalyticsRoute
   '/customers': typeof AppCustomersRoute
   '/debug': typeof AppDebugRoute
+  '/history': typeof AppHistoryRoute
   '/payments': typeof AppPaymentsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AppAnalyticsRoute
   '/customers': typeof AppCustomersRoute
   '/debug': typeof AppDebugRoute
+  '/history': typeof AppHistoryRoute
   '/payments': typeof AppPaymentsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/debug': typeof AppDebugRoute
+  '/_app/history': typeof AppHistoryRoute
   '/_app/payments': typeof AppPaymentsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/sms-automation': typeof AppSmsAutomationRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/customers'
     | '/debug'
+    | '/history'
     | '/payments'
     | '/settings'
     | '/sms-automation'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/customers'
     | '/debug'
+    | '/history'
     | '/payments'
     | '/settings'
     | '/sms-automation'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/_app/analytics'
     | '/_app/customers'
     | '/_app/debug'
+    | '/_app/history'
     | '/_app/payments'
     | '/_app/settings'
     | '/_app/sms-automation'
@@ -521,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/payments'
       fullPath: '/payments'
       preLoaderRoute: typeof AppPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/history': {
+      id: '/_app/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/debug': {
@@ -670,6 +689,7 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDebugRoute: typeof AppDebugRoute
+  AppHistoryRoute: typeof AppHistoryRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSmsAutomationRoute: typeof AppSmsAutomationRoute
@@ -680,6 +700,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDebugRoute: AppDebugRoute,
+  AppHistoryRoute: AppHistoryRoute,
   AppPaymentsRoute: AppPaymentsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSmsAutomationRoute: AppSmsAutomationRoute,

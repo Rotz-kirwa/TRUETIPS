@@ -140,3 +140,19 @@ export type AppSetting = typeof appSettings.$inferSelect;
 export type Prediction = typeof predictions.$inferSelect;
 export type Jackpot = typeof jackpots.$inferSelect;
 export type JackpotMatch = typeof jackpotMatches.$inferSelect;
+
+// ─── Package History ──────────────────────────────────────────────────────────
+
+export const packageHistory = pgTable("package_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  originalPackageId: uuid("original_package_id").references(() => smsAutomationRules.id, { onDelete: "set null" }),
+  packageName: text("package_name").notNull(),
+  packageType: text("package_type").notNull().default(""),
+  archivedDate: text("archived_date").notNull(),
+  gamesSnapshot: jsonb("games_snapshot").$type<Array<{ team1: string; team2: string; prediction: string }>>().notNull(),
+  messageTemplateSnapshot: text("message_template_snapshot").notNull(),
+  totalGames: integer("total_games").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PackageHistory = typeof packageHistory.$inferSelect;

@@ -12,6 +12,7 @@ import {
   Bot,
   Bug,
   Trophy,
+  History,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,16 @@ const NAV = [
     activeBg: "bg-violet-500/25",
     ringColor: "ring-violet-400/40",
     dotColor: "bg-violet-400",
+  },
+  {
+    to: "/history",
+    label: "Package History",
+    icon: History,
+    color: "text-yellow-400",
+    bgColor: "bg-yellow-500/15",
+    activeBg: "bg-yellow-500/25",
+    ringColor: "ring-yellow-400/40",
+    dotColor: "bg-yellow-400",
   },
   {
     to: "/analytics",
