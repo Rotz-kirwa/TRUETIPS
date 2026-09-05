@@ -1309,7 +1309,7 @@ function SmsAutomationPage() {
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#A7F3D0] font-bold">
             <span>Create and manage prediction packages available for subscribers.</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#031E17] border border-[#10B981]/50 px-2.5 py-0.5 text-[11px] font-mono text-[#FACC15]">
-              🌙 Auto-resets daily at Midnight (EAT)
+              🌙 Games Auto-Clear Daily at Midnight (EAT) · Packages Remain Saved
             </span>
           </div>
         </div>

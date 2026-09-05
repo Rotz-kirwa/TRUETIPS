@@ -175,19 +175,54 @@ export function getNairobiMidnightToday(): Date {
   return new Date(`${year}-${month}-${day}T00:00:00+03:00`);
 }
 
+const PERMANENT_FOOTER = "🥇 Good Luck! Play Smart & Win Big";
+
+function cleanTemplateHeaderOnly(rawTemplate: string, fallbackTitle: string): string {
+  if (!rawTemplate || !rawTemplate.trim()) return fallbackTitle.toUpperCase();
+  const lines = rawTemplate.split("\n");
+  const headerLines: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const isGoodLuck = /(🥇|Good luck|Play Smart|Win Big)/i.test(trimmed);
+    const isMatch = !isGoodLuck && (/\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→"));
+    if (isGoodLuck || isMatch) break;
+    headerLines.push(trimmed);
+  }
+  const cleanHeader = headerLines.join("\n").trim().toUpperCase();
+  return cleanHeader || fallbackTitle.toUpperCase();
+}
+
 /**
- * Purges any rules created prior to today's midnight (Africa/Nairobi)
+ * Resets games/predictions from packages created or updated before today's midnight (00:00 EAT),
+ * keeping the package itself intact in the database while clearing out yesterday's games.
  */
-export async function purgeExpiredMidnightRules(): Promise<number> {
+export async function resetExpiredMidnightMatches(): Promise<number> {
   try {
     const midnightToday = getNairobiMidnightToday();
-    const deleted = await db
-      .delete(smsAutomationRules)
-      .where(lt(smsAutomationRules.createdAt, midnightToday))
-      .returning();
-    return deleted.length;
+    const expiredRows = await db
+      .select()
+      .from(smsAutomationRules)
+      .where(lt(smsAutomationRules.updatedAt, midnightToday));
+
+    let count = 0;
+    for (const row of expiredRows) {
+      const header = cleanTemplateHeaderOnly(row.messageTemplate, row.name);
+      const resetTemplate = `${header}\n\n${PERMANENT_FOOTER}`;
+
+      await db
+        .update(smsAutomationRules)
+        .set({
+          messageTemplate: resetTemplate,
+          updatedAt: midnightToday,
+        })
+        .where(eq(smsAutomationRules.id, row.id));
+
+      count++;
+    }
+    return count;
   } catch (err) {
-    console.error("Failed to purge expired midnight rules:", err);
+    console.error("Failed to reset expired midnight matches:", err);
     return 0;
   }
 }
@@ -206,7 +241,7 @@ function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {
 }
 
 export async function fetchAllRules(): Promise<RuleRow[]> {
-  await purgeExpiredMidnightRules();
+  await resetExpiredMidnightMatches();
   const rows = await db
     .select()
     .from(smsAutomationRules)
@@ -232,13 +267,7 @@ export async function createRule(input: {
     return { type: "validation", message: "Message template cannot be empty." };
   }
 
-  // Purge any expired rules from prior days
-  await purgeExpiredMidnightRules();
-
-  // If a package for the exact same amount already exists, replace it cleanly with the new package
-  await db
-    .delete(smsAutomationRules)
-    .where(eq(smsAutomationRules.minAmount, String(input.minAmount)));
+  await resetExpiredMidnightMatches();
 
   const [row] = await db
     .insert(smsAutomationRules)
