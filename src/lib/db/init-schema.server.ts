@@ -164,22 +164,6 @@ export async function ensureDatabaseTablesAndSeed() {
       ON CONFLICT (email) DO UPDATE SET password_hash = ${passwordHash}, role = 'admin';
     `);
 
-    // 3. Ensure default SMS automation rules exist if empty
-    const rulesCount = await db.execute(sql`SELECT COUNT(*)::int as count FROM sms_automation_rules`);
-    const count = Number((rulesCount[0] as { count: number })?.count ?? 0);
-
-    if (count === 0) {
-      await db.execute(sql`
-        INSERT INTO sms_automation_rules (name, min_amount, max_amount, message_template, is_active)
-        VALUES
-          ('Daily Matches ⚽', 100, 100, 'DAILY MATCHES ⚽\n\n🏆 Play Smart, Win Big', true),
-          ('Jackpot Matches 🏆', 20, 20, 'JACKPOT MATCHES 🏆\n\n🏆 Play Smart, Win Big', true),
-          ('Basket Matches 🏀', 40, 40, 'BASKET MATCHES 🏀\n\n🏆 Play Smart, Win Big', true),
-          ('Weekly Subscription 📅', 500, 500, 'WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big', true),
-          ('Monthly Subscription 📆', 1500, 1500, 'MONTHLY SUBSCRIPTION 📆\nComplete access to TrueTips premium predictions.\nValid for 30 Days.\n🏆 Play Smart, Win Big', true);
-      `);
-    }
-
     dbInitialized = true;
     console.log("[db-init] Database tables & admin user initialized successfully.");
   } catch (err) {

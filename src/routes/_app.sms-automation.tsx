@@ -188,63 +188,48 @@ function getPackageFeatures(rule: RuleRow): string[] {
   ];
 }
 
+export const PERMANENT_FOOTER = "🥇 Good Luck! Play Smart & Win Big";
+
 const DEFAULT_EXAMPLE_PACKAGES = [
   {
-    name: "VIP Monthly Package 👑",
-    amount: "3000",
-    duration: "30 Days",
-    icon: "👑",
-    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-    description: "Complete premium VIP subscription with full access to daily tips, jackpot predictions, and expert analysis for 30 days.",
-    features: [
-      "Daily VIP predictions",
-      "Jackpot predictions",
-      "Premium analysis",
-      "High accuracy tips",
-    ],
-    template: `VIP MONTHLY PACKAGE 👑\nDaily VIP predictions, Jackpot picks, and premium analysis.\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
-  },
-  {
-    name: "Weekly Package 📅",
-    amount: "800",
-    duration: "7 Days",
-    icon: "📅",
-    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    description: "Full 7-day subscription for high accuracy football predictions and weekend jackpots.",
-    features: [
-      "Unlimited daily access (7 Days)",
-      "VIP predictions",
-      "High accuracy tips",
-    ],
-    template: `WEEKLY PACKAGE 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
-  },
-  {
-    name: "Jackpot Package 🏆",
-    amount: "1500",
-    duration: "7 Days",
-    icon: "🏆",
-    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    description: "Specialized jackpot predictions and expert breakdown for midweek and weekend mega jackpots.",
-    features: [
-      "Full jackpot predictions",
-      "Expert match analysis",
-      "Weekend Mega Jackpot tips",
-    ],
-    template: `JACKPOT PACKAGE 🏆\nMidweek & Weekend Mega Jackpot Predictions.\n🏆 Play Smart, Win Big`,
-  },
-  {
-    name: "One Time Tip ⚡",
+    name: "OV 1.5",
     amount: "500",
     duration: "1 Day",
     icon: "⚡",
     badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    description: "Single-day instant access for high odds prediction fixtures.",
-    features: [
-      "Single day predictions",
-      "High odds pick",
-      "Instant SMS delivery",
-    ],
-    template: `ONE TIME TIP ⚡\nSingle day high-odds prediction.\n🏆 Play Smart, Win Big`,
+    description: "OVER 1.5 TIPS PACKAGE",
+    features: ["OVER 1.5 TIPS"],
+    template: `OV 1.5\n\nARSENAL VS CHELSEA → OVER 1.5\nLIVERPOOL VS MAN CITY → OVER 1.5\nREAL MADRID VS BARCELONA → OVER 1.5\n\n${PERMANENT_FOOTER}`,
+  },
+  {
+    name: "1",
+    amount: "600",
+    duration: "1 Day",
+    icon: "⚽",
+    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    description: "HOME WIN TIPS PACKAGE",
+    features: ["HOME WIN TIPS"],
+    template: `1\n\nMANCHESTER UNITED VS SPURS → 1\nBAYERN MUNICH VS DORTMUND → 1\n\n${PERMANENT_FOOTER}`,
+  },
+  {
+    name: "X",
+    amount: "1000",
+    duration: "1 Day",
+    icon: "🤝",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+    description: "DRAW TIPS PACKAGE",
+    features: ["DRAW TIPS"],
+    template: `X\n\nINTER MILAN VS AC MILAN → X\nJUVENTUS VS LAZIO → X\n\n${PERMANENT_FOOTER}`,
+  },
+  {
+    name: "2",
+    amount: "700",
+    duration: "1 Day",
+    icon: "🚀",
+    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+    description: "AWAY WIN TIPS PACKAGE",
+    features: ["AWAY WIN TIPS"],
+    template: `2\n\nPSG VS MARSEILLE → 2\nROMA VS NAPOLI → 2\n\n${PERMANENT_FOOTER}`,
   },
 ];
 
@@ -267,8 +252,8 @@ export function formatAndCleanMatchLines(text: string): string {
       const teams = parts[0].trim();
       const tip = parts.slice(1).join("→").trim();
       const formattedTeams = teams.replace(/\b\w+/g, (w) => {
-        if (["vs", "v"].includes(w.toLowerCase())) return "vs";
-        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        if (["vs", "v"].includes(w.toLowerCase())) return "VS";
+        return w.toUpperCase();
       });
       return `${formattedTeams} → ${tip.toUpperCase()}`;
     }
@@ -278,15 +263,20 @@ export function formatAndCleanMatchLines(text: string): string {
 }
 
 function buildPreview(template: string): string {
-  return template
-    .replace(/Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi, "🏆 Play Smart, Win Big")
-    .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big")
+  let prev = template
+    .replace(/Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi, PERMANENT_FOOTER)
+    .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, PERMANENT_FOOTER)
     .replace(/\{customer_name\}/gi, "254791260817")
     .replace(/\{phone\}/gi, "254791260817")
     .replace(/\{amount\}/gi, "800.00")
     .replace(/\{transaction_code\}/gi, "UI4315EA6Z")
     .replace(/\{date\}/gi, "04 Sep 2026, 14:30")
     .replace(/\{business_name\}/gi, "TRUETIPS");
+
+  if (!prev.includes("🥇") && !prev.toLowerCase().includes("good luck")) {
+    prev = `${prev}\n\n${PERMANENT_FOOTER}`;
+  }
+  return prev;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -299,6 +289,50 @@ export type MatchRow = {
   team2: string;
   pick: string;
 };
+
+function isPickToken(token: string): boolean {
+  if (!token) return false;
+  const clean = token.toUpperCase().replace(/[\(\)\,\;\:\.\-\@]/g, "");
+  if (/^(1|2|X|1X|X2|12|GG|NG|BTTS|YES|NO|HOME|AWAY|DRAW)$/i.test(clean)) return true;
+  if (/^\d+(\.\d+)?$/i.test(clean)) return true;
+  if (/^(OVER|UNDER|OV|UN)$/i.test(clean)) return true;
+  return false;
+}
+
+function extractTeamAndPick(afterDelimiter: string): { team2: string; pick: string } {
+  const clean = afterDelimiter.replace(/[\r\n\t]/g, " ").trim();
+  if (!clean) return { team2: "", pick: "" };
+
+  const tokens = clean.split(/\s+/);
+  if (tokens.length === 1) {
+    return { team2: tokens[0], pick: "" };
+  }
+
+  // Check if last 2 tokens form a multi-word pick e.g. ["OVER", "2.5"], ["UNDER", "1.5"], ["HOME", "WIN"]
+  if (tokens.length >= 3) {
+    const lastTwo = `${tokens[tokens.length - 2]} ${tokens[tokens.length - 1]}`.toUpperCase().replace(/[\(\)]/g, "");
+    if (/^(OVER|UNDER|OV|UN)\s+[\d\.]+/i.test(lastTwo) || /^(HOME|AWAY)\s+WIN/i.test(lastTwo)) {
+      return {
+        team2: tokens.slice(0, -2).join(" "),
+        pick: lastTwo,
+      };
+    }
+  }
+
+  // Check if last 1 token is a pick e.g. "1", "2", "X", "1X", "X2", "12", "GG", "NG", "BTTS", "(1)"
+  const lastOne = tokens[tokens.length - 1];
+  if (isPickToken(lastOne)) {
+    return {
+      team2: tokens.slice(0, -1).join(" "),
+      pick: lastOne.replace(/[\(\)]/g, "").toUpperCase(),
+    };
+  }
+
+  return {
+    team2: clean,
+    pick: "",
+  };
+}
 
 export function parseBulkMatchesText(rawText: string): MatchRow[] {
   if (!rawText || !rawText.trim()) return [];
@@ -315,106 +349,77 @@ export function parseBulkMatchesText(rawText: string): MatchRow[] {
   const matches: MatchRow[] = [];
 
   for (const line of lines) {
-    let trimmed = line.trim();
+    let trimmed = line.replace(/[\r\t]/g, " ").trim();
     if (!trimmed) continue;
-    trimmed = trimmed.replace(/^[\d\*\-\•]+[\.\)\t\s]+\s*/, "");
 
-    if (trimmed.includes("\t")) {
-      const parts = trimmed.split("\t").map((p) => p.trim()).filter(Boolean);
-      const nonVsParts = parts.filter((p) => !/^(vs|v)\.?$/i.test(p));
-      if (nonVsParts.length >= 3) {
-        matches.push({
-          id: Math.random().toString(36).substring(2, 9),
-          team1: nonVsParts[0],
-          team2: nonVsParts[1],
-          pick: nonVsParts.slice(2).join(" "),
-        });
-        continue;
-      } else if (nonVsParts.length === 2) {
-        matches.push({
-          id: Math.random().toString(36).substring(2, 9),
-          team1: nonVsParts[0],
-          team2: nonVsParts[1],
-          pick: "1",
-        });
-        continue;
-      }
-    }
+    // Strip leading line numbers like "1. ", "1) ", "1 - ", "1 VS ", "1 vs "
+    trimmed = trimmed.replace(/^[\d\*\-\•]+[\.\)\:\-\s]+/, "").trim();
+    // If line still starts with leading "VS " or "V ", strip it
+    trimmed = trimmed.replace(/^(vs|v)\.?\s+/i, "").trim();
+
+    if (!trimmed) continue;
 
     let rest = trimmed;
-    let pick = "";
+    let explicitPick = "";
 
     if (rest.includes("->") || rest.includes("→")) {
       const parts = rest.split(/->|→/);
       rest = parts[0].trim();
-      pick = parts.slice(1).join("->").trim();
-    } else if (rest.includes(":")) {
-      const parts = rest.split(":");
+      explicitPick = parts.slice(1).join("->").trim();
+    } else if (rest.includes(" : ")) {
+      const parts = rest.split(" : ");
       rest = parts[0].trim();
-      pick = parts.slice(1).join(":").trim();
-    } else if (rest.includes(" - ")) {
-      const parts = rest.split(" - ");
-      rest = parts[0].trim();
-      pick = parts.slice(1).join(" - ").trim();
+      explicitPick = parts.slice(1).join(" : ").trim();
     }
 
     let team1 = "";
     let team2 = "";
+    let finalPick = explicitPick;
 
-    if (/\bvs\.?\b/i.test(rest)) {
-      const parts = rest.split(/\bvs\.?\b/i);
-      team1 = parts[0].trim();
-      const afterVs = parts[1].trim();
+    const vsRegex = /\b(vs|v)\.?\b/i;
+    const dashRegex = /\s+-\s+/;
 
-      if (!pick) {
-        const regex = /^(.*?)\s+((?:[A-Z0-9][a-zA-Z0-9\s]*\s+Win(?:\s*\([^\)]+\))?|Over\s+[\d\.]+\s*.*|Under\s+[\d\.]+\s*.*|Both\s+Teams\s+.*|GG|NG|BTTS|[12X]\b|\([^\)]+\)).*)$/i;
-        const match = afterVs.match(regex);
-
-        if (match && match[1].trim()) {
-          team2 = match[1].trim();
-          pick = match[2].trim();
-        } else {
-          const parenMatch = afterVs.match(/^(.*?)\s+(\([^\)]+\))$/);
-          if (parenMatch) {
-            const team2Candidate = parenMatch[1].trim();
-            const lastSpace = team2Candidate.lastIndexOf(" ");
-            if (lastSpace > 0) {
-              team2 = team2Candidate.slice(0, lastSpace).trim();
-              pick = `${team2Candidate.slice(lastSpace).trim()} ${parenMatch[2]}`;
-            } else {
-              team2 = team2Candidate;
-              pick = parenMatch[2];
-            }
-          } else {
-            const lastSpace = afterVs.lastIndexOf(" ");
-            if (lastSpace > 0) {
-              team2 = afterVs.slice(0, lastSpace).trim();
-              pick = afterVs.slice(lastSpace).trim();
-            } else {
-              team2 = afterVs;
-              pick = "1";
-            }
-          }
-        }
-      } else {
-        team2 = afterVs;
-      }
-    } else if (/\bv\.?\b/i.test(rest)) {
-      const parts = rest.split(/\bv\.?\b/i);
-      team1 = parts[0].trim();
-      team2 = parts[1].trim();
-      if (!pick) pick = "1";
-    } else {
-      team1 = rest;
-      if (!pick) pick = "1";
+    let delimiterMatch = rest.match(vsRegex);
+    if (!delimiterMatch && dashRegex.test(rest)) {
+      delimiterMatch = rest.match(dashRegex);
     }
 
-    if (team1 || team2) {
+    if (delimiterMatch && delimiterMatch.index !== undefined) {
+      team1 = rest.slice(0, delimiterMatch.index).trim();
+      const afterDelimiter = rest.slice(delimiterMatch.index + delimiterMatch[0].length).trim();
+
+      if (!finalPick) {
+        const extracted = extractTeamAndPick(afterDelimiter);
+        team2 = extracted.team2;
+        finalPick = extracted.pick;
+      } else {
+        team2 = afterDelimiter;
+      }
+    } else {
+      // Space separated fallback: E.g. "ARSENAL CHELSEA 1" or "ARSENAL ASTON VILLA 1"
+      const parts = rest.split(/\s+/);
+      if (parts.length >= 3) {
+        const lastPart = parts[parts.length - 1];
+        if (isPickToken(lastPart)) {
+          finalPick = lastPart;
+          const remaining = parts.slice(0, -1);
+          const mid = Math.floor(remaining.length / 2);
+          team1 = remaining.slice(0, mid).join(" ");
+          team2 = remaining.slice(mid).join(" ");
+        } else {
+          const mid = Math.floor(parts.length / 2);
+          team1 = parts.slice(0, mid).join(" ");
+          team2 = parts.slice(mid).join(" ");
+        }
+      }
+    }
+
+    if (team1 && team2) {
       matches.push({
         id: Math.random().toString(36).substring(2, 9),
-        team1,
-        team2,
-        pick: pick || "1",
+        team1: team1.toUpperCase(),
+        team2: team2.toUpperCase(),
+        pick: (finalPick || "").toUpperCase(),
       });
     }
   }
@@ -427,13 +432,12 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "VIP Tips
     return {
       header: fallbackTitle,
       matches: [],
-      footer: "🏆 Play Smart, Win Big",
+      footer: PERMANENT_FOOTER,
     };
   }
 
   const lines = rawTemplate.split("\n");
   const headerLines: string[] = [];
-  const footerLines: string[] = [];
   const matchLines: string[] = [];
 
   let phase: "header" | "matches" | "footer" = "header";
@@ -442,9 +446,13 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "VIP Tips
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→") || trimmed.includes(":") || trimmed.includes("\t");
+    // Filter out Good Luck lines so they NEVER end up in header
+    const isGoodLuckLine = /(🥇|Good luck|Play Smart|Win Big)/i.test(trimmed);
+    const isMatchLine = !isGoodLuckLine && (/\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→"));
 
-    if (isMatchLine) {
+    if (isGoodLuckLine) {
+      phase = "footer";
+    } else if (isMatchLine) {
       phase = "matches";
       matchLines.push(line);
     } else {
@@ -452,42 +460,50 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "VIP Tips
         headerLines.push(trimmed);
       } else {
         phase = "footer";
-        footerLines.push(trimmed);
       }
     }
   }
 
   const matches = parseBulkMatchesText(matchLines.join("\n"));
 
-  const rawFooter = footerLines.join("\n");
-  const cleanedFooter = rawFooter
-    .replace(
-      /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
-      "🏆 Play Smart, Win Big",
-    )
-    .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big");
+  const cleanHeader = headerLines
+    .filter((l) => !/(🥇|Good luck|Play Smart|Win Big)/i.test(l))
+    .join("\n") || fallbackTitle;
 
   return {
-    header: headerLines.join("\n") || fallbackTitle,
+    header: cleanHeader,
     matches,
-    footer: cleanedFooter || "🏆 Play Smart, Win Big",
+    footer: PERMANENT_FOOTER,
   };
 }
 
 function buildTemplateFromStructure(header: string, matches: MatchRow[], footer?: string): string {
+  // Strip any Good Luck messages from header so they never duplicate
+  const cleanHeader = (header || "")
+    .split("\n")
+    .filter((l) => !/(🥇|Good luck|Play Smart|Win Big)/i.test(l))
+    .join("\n")
+    .trim()
+    .toUpperCase();
+
   const matchLines = matches
     .filter((m) => m.team1.trim() || m.team2.trim())
     .map((m) => {
       const t1 = m.team1.trim().toUpperCase();
       const t2 = m.team2.trim().toUpperCase();
       const p = m.pick.trim().toUpperCase();
-      return `${t1}${t2 ? ` VS ${t2}` : ""}${p ? `: ${p}` : ""}`;
+      if (t1 && t2) {
+        return p ? `${t1} VS ${t2} → ${p}` : `${t1} VS ${t2}`;
+      }
+      return p ? `${t1 || t2} → ${p}` : `${t1 || t2}`;
     });
 
   const parts = [];
-  if (header && header.trim()) parts.push(header.trim().toUpperCase());
+  if (cleanHeader) parts.push(cleanHeader);
   if (matchLines.length > 0) parts.push(matchLines.join("\n"));
-  if (footer && footer.trim()) parts.push(footer.trim());
+
+  // Footer is always strictly appended once at the very bottom
+  parts.push(PERMANENT_FOOTER);
 
   return parts.join("\n\n");
 }
@@ -508,61 +524,42 @@ function RuleModal({
   const editing = modalMode.mode === "edit" ? modalMode.rule : null;
   const initialPreset = modalMode.mode === "add" ? modalMode.initialPreset : null;
 
-  const [name, setName] = useState(editing?.name ?? initialPreset?.name ?? "");
+  const [name, setName] = useState((editing?.name ?? initialPreset?.name ?? "").toUpperCase());
   const [fixedAmount, setFixedAmount] = useState(
-    editing ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "800",
-  );
-  const [duration, setDuration] = useState(
-    editing ? getPackageDuration(editing) : initialPreset ? initialPreset.duration : "7 Days",
-  );
-  const [description, setDescription] = useState(
-    editing ? (editing.messageTemplate.split("\n")[0] || "Prediction package for subscribers.") : (initialPreset?.description || "Prediction package for subscribers."),
+    editing ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "",
   );
 
-  const initialFeatures = editing
-    ? getPackageFeatures(editing)
-    : initialPreset
-    ? initialPreset.features
-    : ["Daily VIP predictions", "Jackpot predictions", "High accuracy tips"];
+  const initialParsed = useMemo(() => {
+    if (editing) {
+      return parseTemplateToStructure(editing.messageTemplate, editing.name);
+    }
+    if (initialPreset) {
+      return parseTemplateToStructure(initialPreset.template, initialPreset.name);
+    }
+    return { header: "", matches: [], footer: PERMANENT_FOOTER };
+  }, [editing, initialPreset]);
 
-  const [featuresList, setFeaturesList] = useState<string[]>(initialFeatures);
-  const [newFeatureText, setNewFeatureText] = useState("");
+  const [headerText, setHeaderText] = useState(initialParsed.header);
+  const [matchRows, setMatchRows] = useState<MatchRow[]>(initialParsed.matches);
+  const [footerText, setFooterText] = useState(initialParsed.footer);
 
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
       initialPreset?.template ??
-      "WEEKLY PACKAGE 📅\nUnlimited access to premium TrueTips predictions.\nValid for 7 Days.\n🏆 Play Smart, Win Big",
+      buildTemplateFromStructure(initialParsed.header, initialParsed.matches, initialParsed.footer),
   );
-  const [isActive, setIsActive] = useState(editing?.isActive ?? true);
+  const [isActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Table Mode State
   const [inputMode, setInputMode] = useState<"table" | "raw">("table");
-  const initialParsed = useMemo(
-    () => parseTemplateToStructure(editing?.messageTemplate ?? "", name ? `${name}:` : "Tips Package:"),
-    [],
-  );
-
-  const [headerText, setHeaderText] = useState(initialParsed.header);
-  const [matchRows, setMatchRows] = useState<MatchRow[]>(initialParsed.matches);
-  const [footerText, setFooterText] = useState(initialParsed.footer);
 
   const preview = useMemo(() => buildPreview(template), [template]);
 
   function updateTemplateFromTable(h: string, rows: MatchRow[], f: string) {
     const newTpl = buildTemplateFromStructure(h, rows, f);
     setTemplate(newTpl);
-  }
-
-  function handleAddFeature() {
-    if (!newFeatureText.trim()) return;
-    setFeaturesList((prev) => [...prev, newFeatureText.trim()]);
-    setNewFeatureText("");
-  }
-
-  function handleRemoveFeature(index: number) {
-    setFeaturesList((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleMatchRowChange(id: string, field: "team1" | "team2" | "pick", value: string) {
@@ -594,7 +591,7 @@ function RuleModal({
       id: Math.random().toString(36).substring(2, 9),
       team1: "",
       team2: "",
-      pick: "1",
+      pick: "",
     };
     const updated = [...matchRows, newRow];
     setMatchRows(updated);
@@ -637,21 +634,19 @@ function RuleModal({
     e.preventDefault();
     setError("");
 
+    if (!name.trim()) {
+      setError("Package name is required.");
+      return;
+    }
+
     const priceNum = parseFloat(fixedAmount);
     if (isNaN(priceNum) || priceNum <= 0) {
       setError("Price (KES) must be a positive number.");
       return;
     }
 
-    if (!name.trim()) {
-      setError("Package name is required.");
-      return;
-    }
-
-    if (!template.trim()) {
-      setError("Package message template cannot be empty.");
-      return;
-    }
+    const upperName = name.trim().toUpperCase();
+    const finalTemplate = template.trim() || buildTemplateFromStructure(upperName, matchRows, PERMANENT_FOOTER);
 
     setLoading(true);
     try {
@@ -660,20 +655,20 @@ function RuleModal({
         result = await updateRuleFn({
           data: {
             id: editing.id,
-            name: name.trim(),
+            name: upperName,
             minAmount: priceNum,
             maxAmount: priceNum,
-            messageTemplate: template,
+            messageTemplate: finalTemplate,
             isActive,
           },
         });
       } else {
         result = await createRuleFn({
           data: {
-            name: name.trim(),
+            name: upperName,
             minAmount: priceNum,
             maxAmount: priceNum,
-            messageTemplate: template,
+            messageTemplate: finalTemplate,
             isActive,
           },
         });
@@ -699,17 +694,15 @@ function RuleModal({
   }
 
   function handleSelectPreset(preset: typeof DEFAULT_EXAMPLE_PACKAGES[number]) {
-    setName(preset.name);
+    const upperName = preset.name.toUpperCase();
+    setName(upperName);
     setFixedAmount(preset.amount);
-    setDuration(preset.duration);
-    setDescription(preset.description);
-    setFeaturesList(preset.features);
     setTemplate(preset.template);
-    const parsed = parseTemplateToStructure(preset.template, `${preset.name}:`);
+    const parsed = parseTemplateToStructure(preset.template, upperName);
     setHeaderText(parsed.header);
     setMatchRows(parsed.matches);
     setFooterText(parsed.footer);
-    toast.info(`Loaded ${preset.name} (${KES(Number(preset.amount))}) Preset`);
+    toast.info(`Loaded ${upperName} (${KES(Number(preset.amount))}) Preset`);
   }
 
   return (
@@ -726,7 +719,7 @@ function RuleModal({
                 {editing ? "Edit Tips Package" : "Create New Tips Package"}
               </h2>
               <p className="text-xs text-[#A7F3D0] font-medium">
-                Configure pricing, validity duration, features, and matches list
+                Set package name, price, and add or paste match predictions
               </p>
             </div>
           </div>
@@ -740,70 +733,27 @@ function RuleModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          {/* Presets */}
-          {!editing && (
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-                Quick Example Templates
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {DEFAULT_EXAMPLE_PACKAGES.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => handleSelectPreset(p)}
-                    className="flex flex-col items-start rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-2.5 hover:border-[#FACC15] transition-all text-left group"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-lg">{p.icon}</span>
-                      <span className="text-[10px] font-black font-mono text-[#FACC15] bg-[#FACC15]/10 px-1.5 py-0.5 rounded border border-[#CA8A04]">
-                        {KES(Number(p.amount))}
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold text-white mt-1 group-hover:text-[#38BDF8] truncate w-full">
-                      {p.name}
-                    </span>
-                    <span className="text-[10px] text-[#A7F3D0] font-mono">{p.duration}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Fields Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
-              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-                Package Name *
-              </label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. VIP Monthly, Weekly Package..."
-                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold outline-none focus:border-[#FACC15]"
-              />
-            </div>
+          {/* 1. Package Name (auto CAPITAL LETTERS) & 2. Price (KES) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-                Status
+                Package Name (e.g. OV 1.5, 1, X, 2) *
               </label>
-              <button
-                type="button"
-                onClick={() => setIsActive(!isActive)}
-                className={cn(
-                  "mt-1.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl border-2 text-xs font-black transition-all",
-                  isActive
-                    ? "border-[#059669] bg-[#10B981] text-black shadow-md"
-                    : "border-gray-600 bg-gray-800 text-gray-400",
-                )}
-              >
-                {isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-                {isActive ? "Active" : "Inactive"}
-              </button>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  const upper = e.target.value.toUpperCase();
+                  setName(upper);
+                  setHeaderText(upper);
+                  updateTemplateFromTable(upper, matchRows, footerText);
+                }}
+                placeholder="e.g. OV 1.5, 1, X, 2, DAILY VIP..."
+                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-black font-mono outline-none focus:border-[#FACC15] uppercase"
+              />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
                 Price (KES) *
@@ -814,91 +764,13 @@ function RuleModal({
                 step="any"
                 value={fixedAmount}
                 onChange={(e) => setFixedAmount(e.target.value)}
-                placeholder="e.g. 3000"
+                placeholder="e.g. 800"
                 className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold font-mono outline-none focus:border-[#FACC15]"
               />
             </div>
-
-            <div>
-              <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-                Duration / Validity
-              </label>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-sm text-white font-bold outline-none focus:border-[#FACC15]"
-              >
-                <option value="1 Day">1 Day (24 Hours)</option>
-                <option value="7 Days">7 Days (1 Week)</option>
-                <option value="30 Days">30 Days (1 Month)</option>
-                <option value="365 Days">365 Days (1 Year)</option>
-              </select>
-            </div>
           </div>
 
-          <div>
-            <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
-              Description
-            </label>
-            <input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief summary of what subscribers receive with this package..."
-              className="mt-1.5 h-10 w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] px-3.5 text-xs text-[#A7F3D0] font-semibold outline-none focus:border-[#FACC15]"
-            />
-          </div>
-
-          {/* Features Included List Builder */}
-          <div className="space-y-2 rounded-xl border-2 border-[#10B981]/30 bg-[#031E17] p-3.5">
-            <label className="text-xs font-black uppercase tracking-wider text-[#38BDF8] flex items-center justify-between">
-              <span>Features Included</span>
-              <span className="text-[10px] text-[#A7F3D0] font-normal">Subscribers see these highlights</span>
-            </label>
-
-            <div className="flex flex-wrap gap-2">
-              {featuresList.map((feat, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#10B981] bg-[#0A382C] px-3 py-1 text-xs font-bold text-[#A7F3D0]"
-                >
-                  <Check className="h-3.5 w-3.5 text-[#FACC15]" />
-                  <span>{feat}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(idx)}
-                    className="ml-1 text-rose-400 hover:text-white"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <input
-                type="text"
-                value={newFeatureText}
-                onChange={(e) => setNewFeatureText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddFeature();
-                  }
-                }}
-                placeholder="e.g. Premium analysis, High accuracy tips..."
-                className="h-8 flex-1 rounded-lg border border-[#10B981]/40 bg-[#0A382C] px-3 text-xs text-white outline-none focus:border-[#FACC15]"
-              />
-              <button
-                type="button"
-                onClick={handleAddFeature}
-                className="h-8 px-3 rounded-lg border-2 border-[#CA8A04] bg-[#FACC15] text-black text-xs font-black hover:bg-[#EAB308]"
-              >
-                + Add Feature
-              </button>
-            </div>
-          </div>
-
-          {/* Table / Raw Match Builder */}
+          {/* 3. Fill where one is to put or paste the packages */}
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b-2 border-[#10B981]/30 pb-2">
               <div className="flex items-center gap-1.5 rounded-xl bg-[#031E17] p-1 border-2 border-[#10B981]/40">
@@ -906,8 +778,8 @@ function RuleModal({
                   type="button"
                   onClick={() => {
                     if (inputMode !== "table") {
-                      const parsed = parseTemplateToStructure(template, name ? `${name}:` : "Tips Package:");
-                      setHeaderText(parsed.header);
+                      const parsed = parseTemplateToStructure(template, name || "TIPS PACKAGE");
+                      setHeaderText(parsed.header.toUpperCase());
                       setMatchRows(parsed.matches);
                       setFooterText(parsed.footer);
                     }
@@ -946,27 +818,11 @@ function RuleModal({
             {inputMode === "table" ? (
               <div className="space-y-3 rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3.5">
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
-                    Package Header Title
-                  </label>
-                  <input
-                    type="text"
-                    value={headerText}
-                    onChange={(e) => {
-                      setHeaderText(e.target.value);
-                      updateTemplateFromTable(e.target.value, matchRows, footerText);
-                    }}
-                    placeholder="e.g. VIP MONTHLY PACKAGE:"
-                    className="mt-1 h-9 w-full rounded-lg border-2 border-[#10B981]/40 bg-[#0A382C] px-3 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
-                  />
-                </div>
-
-                <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
                       Match Fixtures & Predictive Picks
                     </label>
-                    <span className="text-[10px] text-[#FACC15] font-black">Auto-formats to UPPERCASE</span>
+                    <span className="text-[10px] text-[#FACC15] font-black uppercase">AUTO CAPITAL LETTERS</span>
                   </div>
 
                   <div className="overflow-x-auto rounded-xl border-2 border-[#10B981]/40 bg-[#0A382C]">
@@ -982,52 +838,60 @@ function RuleModal({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#10B981]/20">
-                        {matchRows.map((m, idx) => (
-                          <tr key={m.id} className="hover:bg-[#031E17]/60 transition-colors">
-                            <td className="p-2 text-center font-mono font-bold text-[#A7F3D0]">
-                              {idx + 1}
-                            </td>
-                            <td className="p-2">
-                              <input
-                                type="text"
-                                value={m.team1}
-                                onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value)}
-                                placeholder="e.g. ARSENAL"
-                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
-                              />
-                            </td>
-                            <td className="p-2 text-center text-[10px] font-black text-[#FACC15]">
-                              VS
-                            </td>
-                            <td className="p-2">
-                              <input
-                                type="text"
-                                value={m.team2}
-                                onChange={(e) => handleMatchRowChange(m.id, "team2", e.target.value)}
-                                placeholder="e.g. CHELSEA"
-                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <input
-                                type="text"
-                                value={m.pick}
-                                onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value)}
-                                placeholder="e.g. 1 / OVER 2.5 / GG"
-                                className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-mono font-black text-[#FACC15] outline-none focus:border-[#FACC15]"
-                              />
-                            </td>
-                            <td className="p-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveMatchRow(m.id)}
-                                className="p-1 text-rose-400 hover:text-rose-200 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                        {matchRows.length === 0 ? (
+                          <tr className="bg-[#031E17]/40">
+                            <td colSpan={6} className="p-4 text-center text-xs font-bold text-[#A7F3D0]">
+                              No match predictions added yet. Click <span className="text-[#FACC15] font-black">+ Add Match Fixture Row</span> below or <span className="text-[#38BDF8] font-black">Paste Multiple Matches</span> to add.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          matchRows.map((m, idx) => (
+                            <tr key={m.id} className="hover:bg-[#031E17]/60 transition-colors">
+                              <td className="p-2 text-center font-mono font-bold text-[#A7F3D0]">
+                                {idx + 1}
+                              </td>
+                              <td className="p-2">
+                                <input
+                                  type="text"
+                                  value={m.team1}
+                                  onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value.toUpperCase())}
+                                  placeholder="e.g. ARSENAL"
+                                  className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15] uppercase"
+                                />
+                              </td>
+                              <td className="p-2 text-center text-[10px] font-black text-[#FACC15]">
+                                VS
+                              </td>
+                              <td className="p-2">
+                                <input
+                                  type="text"
+                                  value={m.team2}
+                                  onChange={(e) => handleMatchRowChange(m.id, "team2", e.target.value.toUpperCase())}
+                                  placeholder="e.g. CHELSEA"
+                                  className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-bold text-white outline-none focus:border-[#FACC15] uppercase"
+                                />
+                              </td>
+                              <td className="p-2">
+                                <input
+                                  type="text"
+                                  value={m.pick}
+                                  onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value.toUpperCase())}
+                                  placeholder="e.g. 1 / OVER 2.5 / GG"
+                                  className="w-full rounded-md border border-[#10B981]/40 bg-[#031E17] p-1.5 text-xs font-mono font-black text-[#FACC15] outline-none focus:border-[#FACC15] uppercase"
+                                />
+                              </td>
+                              <td className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMatchRow(m.id)}
+                                  className="p-1 text-rose-400 hover:text-rose-200 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1053,7 +917,7 @@ function RuleModal({
                   {showPasteBox && (
                     <div className="mt-3 rounded-xl border-2 border-[#FACC15] bg-[#031E17] p-3 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-black text-[#FACC15] flex items-center gap-1.5">
+                        <label className="text-xs font-black text-[#FACC15] flex items-center gap-1.5 uppercase">
                           <ClipboardList className="h-4 w-4" />
                           Paste Bulk Matches
                         </label>
@@ -1068,9 +932,9 @@ function RuleModal({
                       <textarea
                         rows={4}
                         value={pasteInput}
-                        onChange={(e) => setPasteInput(e.target.value)}
-                        placeholder="Paste matches here...&#10;Arsenal vs Chelsea Arsenal Win (1)&#10;Liverpool vs City Over 2.5&#10;Real Madrid vs Barcelona GG"
-                        className="w-full rounded-lg border border-[#10B981]/40 bg-[#0A382C] p-2.5 text-xs font-mono text-white outline-none focus:border-[#FACC15]"
+                        onChange={(e) => setPasteInput(e.target.value.toUpperCase())}
+                        placeholder="Paste matches here...&#10;ARSENAL VS CHELSEA 1&#10;LIVERPOOL VS CITY OVER 2.5&#10;REAL MADRID VS BARCELONA GG"
+                        className="w-full rounded-lg border border-[#10B981]/40 bg-[#0A382C] p-2.5 text-xs font-mono text-white outline-none focus:border-[#FACC15] uppercase"
                       />
                       <button
                         type="button"
@@ -1083,31 +947,15 @@ function RuleModal({
                     </div>
                   )}
                 </div>
-
-                <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-[#38BDF8]">
-                    Footer Note
-                  </label>
-                  <input
-                    type="text"
-                    value={footerText}
-                    onChange={(e) => {
-                      setFooterText(e.target.value);
-                      updateTemplateFromTable(headerText, matchRows, e.target.value);
-                    }}
-                    placeholder="e.g. 🏆 Play Smart, Win Big"
-                    className="mt-1 h-9 w-full rounded-lg border-2 border-[#10B981]/40 bg-[#0A382C] px-3 text-xs font-bold text-white outline-none focus:border-[#FACC15]"
-                  />
-                </div>
               </div>
             ) : (
               <div>
                 <textarea
                   value={template}
-                  onChange={(e) => setTemplate(e.target.value)}
+                  onChange={(e) => setTemplate(e.target.value.toUpperCase())}
                   rows={5}
-                  placeholder="Paste matches e.g.:&#10;Arsenal vs Chelsea 1&#10;Liverpool vs City Over 2.5"
-                  className="w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-xs font-mono text-white leading-relaxed outline-none focus:border-[#FACC15] resize-none"
+                  placeholder="Paste matches e.g.:&#10;ARSENAL VS CHELSEA 1&#10;LIVERPOOL VS CITY OVER 2.5"
+                  className="w-full rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-xs font-mono text-white leading-relaxed outline-none focus:border-[#FACC15] resize-none uppercase"
                 />
               </div>
             )}
@@ -1213,30 +1061,15 @@ function DeleteConfirm({
 
 function PackageDetailsModal({
   rule,
-  logs = [],
   onClose,
   onEdit,
 }: {
   rule: RuleRow;
-  logs: LogRow[];
+  logs?: LogRow[];
   onClose: () => void;
   onEdit: () => void;
 }) {
   const duration = getPackageDuration(rule);
-  const features = getPackageFeatures(rule);
-
-  // Filter logs for this package price tier
-  const packageLogs = useMemo(() => {
-    return logs.filter((l) => l.amount != null && Math.abs(l.amount - rule.minAmount) < 5);
-  }, [logs, rule.minAmount]);
-
-  const subscriberCount = useMemo(() => {
-    return packageLogs.length > 0 ? packageLogs.length * 7 + 12 : 38;
-  }, [packageLogs]);
-
-  const totalRevenue = useMemo(() => {
-    return subscriberCount * rule.minAmount;
-  }, [subscriberCount, rule.minAmount]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -1273,96 +1106,13 @@ function PackageDetailsModal({
         </div>
 
         {/* Content Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-6">
-          {/* Top Metrics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
-              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Subscribers</span>
-              <p className="text-xl font-black text-white font-mono mt-1">{subscriberCount}</p>
-            </div>
-            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
-              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Revenue</span>
-              <p className="text-lg font-black text-[#FACC15] font-mono mt-1">{KES(totalRevenue)}</p>
-            </div>
-            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
-              <span className="text-[10px] font-black uppercase text-[#38BDF8]">Accuracy</span>
-              <p className="text-xl font-black text-[#10B981] font-mono mt-1">94.2%</p>
-            </div>
-            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-3 text-center">
-              <span className="text-[10px] font-black uppercase text-[#38BDF8]">SMS Delivery</span>
-              <p className="text-xl font-black text-white font-mono mt-1">100%</p>
-            </div>
-          </div>
-
-          {/* Features Breakdown */}
-          <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#031E17] p-4 space-y-2">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">Features & Entitlements</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              {features.map((feat, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-xs text-[#A7F3D0] font-bold">
-                  <Check className="h-4 w-4 text-[#FACC15] shrink-0" />
-                  <span>{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Subscribers List */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#38BDF8] flex items-center justify-between">
-              <span>Recent Subscribed Users</span>
-              <span className="text-[10px] font-mono text-[#FACC15]">{packageLogs.length || 5} Recent Payments</span>
+        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+          <div className="space-y-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#38BDF8]">
+              Automated Package SMS Template Preview
             </h4>
-
-            <div className="overflow-x-auto rounded-xl border-2 border-[#10B981]/40 bg-[#031E17]">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#0A382C] text-[#38BDF8] font-black uppercase text-[10px] border-b-2 border-[#10B981]/40">
-                  <tr>
-                    <th className="p-2.5">Phone Number</th>
-                    <th className="p-2.5">M-Pesa Code</th>
-                    <th className="p-2.5">Amount</th>
-                    <th className="p-2.5">Status</th>
-                    <th className="p-2.5">Date Paid</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#10B981]/20 font-mono">
-                  {packageLogs.length > 0 ? (
-                    packageLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-[#0A382C]/50 transition-colors">
-                        <td className="p-2.5 font-bold text-white">{log.phone}</td>
-                        <td className="p-2.5 text-[#FACC15]">UI4315EA6Z</td>
-                        <td className="p-2.5 font-bold text-[#A7F3D0]">{KES(log.amount ?? rule.minAmount)}</td>
-                        <td className="p-2.5">
-                          <span className="inline-flex items-center gap-1 bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 px-2 py-0.5 rounded text-[10px] font-bold">
-                            Active
-                          </span>
-                        </td>
-                        <td className="p-2.5 text-gray-300 text-[11px]">
-                          {log.createdAt.toLocaleDateString("en-KE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    [
-                      { phone: "254791260817", code: "UI4315EA6Z", date: "04 Sep, 11:10" },
-                      { phone: "254712345678", code: "UI4315E4HO", date: "04 Sep, 10:39" },
-                      { phone: "254722998877", code: "UI33159ZHZ", date: "03 Sep, 11:49" },
-                    ].map((demo, idx) => (
-                      <tr key={idx} className="hover:bg-[#0A382C]/50 transition-colors">
-                        <td className="p-2.5 font-bold text-white">{demo.phone}</td>
-                        <td className="p-2.5 text-[#FACC15]">{demo.code}</td>
-                        <td className="p-2.5 font-bold text-[#A7F3D0]">{KES(rule.minAmount)}</td>
-                        <td className="p-2.5">
-                          <span className="inline-flex items-center gap-1 bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 px-2 py-0.5 rounded text-[10px] font-bold">
-                            Active
-                          </span>
-                        </td>
-                        <td className="p-2.5 text-gray-300 text-[11px]">{demo.date}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="rounded-xl border-2 border-[#10B981]/40 bg-[#031E17] p-4 font-mono text-xs text-[#A7F3D0] whitespace-pre-wrap leading-relaxed shadow-inner">
+              {rule.messageTemplate}
             </div>
           </div>
         </div>
@@ -1562,25 +1312,6 @@ function SmsAutomationPage() {
         </div>
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setShowClearModal(true)}
-            title="Clear all package rules"
-            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#991B1B] bg-[#DC2626] hover:bg-[#B91C1C] px-3.5 py-2 text-xs font-black text-white transition-all shadow-md"
-          >
-            <Trash2 className="h-4 w-4" />
-            Clear All
-          </button>
-
-          <button
-            onClick={handleResetDefaultTiers}
-            disabled={resettingTiers}
-            title="Reset to standard example packages"
-            className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 text-xs font-black text-white transition-colors disabled:opacity-60 shadow-md"
-          >
-            {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Seed Standard
-          </button>
-
-          <button
             onClick={() => setModal({ mode: "add" })}
             className="inline-flex items-center gap-2 rounded-xl border-2 border-[#CA8A04] bg-[#FACC15] hover:bg-[#EAB308] px-5 py-2 text-sm font-black text-black shadow-lg transition-all hover:scale-105"
           >
@@ -1646,13 +1377,6 @@ function SmsAutomationPage() {
               >
                 <Plus className="h-4 w-4" /> Create Your First Package
               </button>
-              <button
-                onClick={handleResetDefaultTiers}
-                disabled={resettingTiers}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#9A3412] bg-[#EA580C] hover:bg-[#C2410C] px-6 py-3 text-xs font-black text-white shadow-md"
-              >
-                <RefreshCw className="h-4 w-4" /> Seed Standard Packages
-              </button>
             </div>
           </div>
         ) : (
@@ -1667,7 +1391,6 @@ function SmsAutomationPage() {
                       <th className="px-4 py-3.5">Price (KES)</th>
                       <th className="px-4 py-3.5">Duration</th>
                       <th className="px-4 py-3.5">Status</th>
-                      <th className="px-4 py-3.5">Created Date</th>
                       <th className="px-4 py-3.5 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -1717,11 +1440,6 @@ function SmsAutomationPage() {
                               <span className={cn("h-2 w-2 rounded-full", rule.isActive ? "bg-black animate-pulse" : "bg-gray-400")} />
                               {rule.isActive ? "Active" : "Inactive"}
                             </button>
-                          </td>
-
-                          {/* Created Date */}
-                          <td className="px-4 py-4 whitespace-nowrap text-gray-300 font-mono text-[11px]">
-                            04 Sep 2026
                           </td>
 
                           {/* Actions */}

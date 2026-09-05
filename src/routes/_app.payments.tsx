@@ -267,18 +267,6 @@ function PaymentsPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowStkModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            ⚡ Trigger STK Push
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            + Record Payment
-          </button>
-          <button
             onClick={exportCsv}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-secondary"
           >

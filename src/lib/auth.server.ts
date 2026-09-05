@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import { db } from "./db/client";
 import { users } from "./db/schema";
+import { ensureDatabaseTablesAndSeed } from "./db/init-schema.server";
 
 const AUTH_COOKIE_NAME = "paykit_session";
 const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -24,8 +25,6 @@ function getSecret() {
 function clearAuthCookie() {
   deleteCookie(AUTH_COOKIE_NAME, { path: "/" });
 }
-
-import { ensureDatabaseTablesAndSeed } from "./db/init-schema.server";
 
 async function findUserById(id: string) {
   await ensureDatabaseTablesAndSeed();
