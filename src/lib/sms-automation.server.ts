@@ -66,7 +66,7 @@ export function formatPredictionsTable(
 
 export function buildInvalidAmountMessage(amount: number, activeRules: RuleRow[]): string {
   const formattedAmount = new Intl.NumberFormat("en-KE", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 
@@ -92,12 +92,16 @@ export function buildInvalidAmountMessage(amount: number, activeRules: RuleRow[]
   return [
     `TRUETIPS PAYMENT NOTICE ⚠️`,
     ``,
-    `You paid KES ${formattedAmount}. This amount does not match any available package.`,
+    `Your payment of KES ${formattedAmount} has been received.`,
+    ``,
+    `However, this amount does not match any active TrueTips package.`,
     ``,
     `AVAILABLE PACKAGES:`,
     packagesList,
     ``,
-    `Please pay the exact package amount to receive your tips automatically.`,
+    `Please make a payment using the exact package amount to unlock your tips automatically.`,
+    ``,
+    `Thank you for choosing TrueTips.`,
   ].join("\n");
 }
 
